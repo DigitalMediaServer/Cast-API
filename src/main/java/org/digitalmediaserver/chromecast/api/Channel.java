@@ -16,6 +16,7 @@
 package org.digitalmediaserver.chromecast.api;
 
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -33,6 +34,8 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.GeneralSecurityException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.Map;
@@ -234,7 +237,7 @@ class Channel implements Closeable {
             this.responseClass = responseClass;
         }
 
-        public void put(String jsonMSG) throws IOException {
+        public void put(String jsonMSG) throws JsonMappingException, JsonProcessingException {
             synchronized (this) {
                 this.result = jsonMapper.readValue(jsonMSG, responseClass);
                 this.notify();
@@ -271,9 +274,10 @@ class Channel implements Closeable {
      * <p>This function must be called before any other usage.</p>
      *
      * @throws IOException
-     * @throws GeneralSecurityException
+     * @throws KeyManagementException
+     * @throws NoSuchAlgorithmException
      */
-    public void open() throws IOException, GeneralSecurityException {
+    public void open() throws IOException, KeyManagementException, NoSuchAlgorithmException {
         if (!closed) {
             throw new ChromeCastException("Channel already opened.");
         }
@@ -283,7 +287,7 @@ class Channel implements Closeable {
     /**
      * Establish connection to the ChromeCast device
      */
-    private void connect() throws IOException, GeneralSecurityException {
+    private void connect() throws IOException, NoSuchAlgorithmException, KeyManagementException {
         synchronized (closedSync) {
             if (socket == null || socket.isClosed()) {
                 SSLContext sc = SSLContext.getInstance("SSL");
@@ -412,34 +416,37 @@ class Channel implements Closeable {
     }
 
     private void write(CastChannel.CastMessage message) throws IOException {
-        socket.getOutputStream().write(toArray(message.getSerializedSize()));
-        message.writeTo(socket.getOutputStream());
+        synchronized (closedSync) {
+            socket.getOutputStream().write(toArray(message.getSerializedSize()));
+            message.writeTo(socket.getOutputStream());
+        }
     }
 
     private CastChannel.CastMessage read() throws IOException {
-        InputStream is = socket.getInputStream();
         byte[] buf = new byte[4];
+        synchronized (closedSync) {
+            InputStream is = socket.getInputStream();
 
-        int read = 0;
-        while (read < buf.length) {
-            int nextByte = is.read();
-            if (nextByte == -1) {
-                throw new ChromeCastException("Remote socket closed");
+            int read = 0;
+            while (read < buf.length) {
+                int nextByte = is.read();
+                if (nextByte == -1) {
+                    throw new ChromeCastException("Remote socket closed");
+                }
+                buf[read++] = (byte) nextByte;
             }
-            buf[read++] = (byte) nextByte;
-        }
 
-        int size = fromArray(buf);
-        buf = new byte[size];
-        read = 0;
-        while (read < size) {
-            int nowRead = is.read(buf, read, buf.length - read);
-            if (nowRead == -1) {
-                throw new ChromeCastException("Remote socket closed");
+            int size = fromArray(buf);
+            buf = new byte[size];
+            read = 0;
+            while (read < size) {
+                int nowRead = is.read(buf, read, buf.length - read);
+                if (nowRead == -1) {
+                    throw new ChromeCastException("Remote socket closed");
+                }
+                read += nowRead;
             }
-            read += nowRead;
         }
-
         return CastChannel.CastMessage.parseFrom(buf);
     }
 
@@ -449,13 +456,13 @@ class Channel implements Closeable {
         }
     }
 
-    private void notifyListenersOfSpontaneousEvent(JsonNode json) throws IOException {
+    private void notifyListenersOfSpontaneousEvent(JsonNode json) throws JsonProcessingException {
         if (this.eventListener != null) {
             this.eventListener.deliverEvent(json);
         }
     }
 
-    private void notifyListenersAppEvent(AppEvent event) throws IOException {
+    private void notifyListenersAppEvent(AppEvent event) {
         if (this.eventListener != null) {
             this.eventListener.deliverAppEvent(event);
         }

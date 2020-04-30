@@ -21,6 +21,8 @@ import static org.digitalmediaserver.chromecast.api.Util.getContentType;
 import static org.digitalmediaserver.chromecast.api.Util.getMediaTitle;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -146,7 +148,7 @@ public class ChromeCast {
             try {
                 connect();
             } catch (GeneralSecurityException e) {
-                throw new IOException(e);
+                throw new IOException("Security error: " + e.getMessage(), e);
             }
         }
 
@@ -157,7 +159,7 @@ public class ChromeCast {
         return runningApp.transportId == null ? runningApp.sessionId : runningApp.transportId;
     }
 
-    public final synchronized void connect() throws IOException, GeneralSecurityException {
+    public final synchronized void connect() throws IOException, KeyManagementException, NoSuchAlgorithmException {
         if (channel == null || channel.isClosed()) {
             channel = new Channel(this.address, this.port, this.eventListenerHolder);
             channel.open();
@@ -173,7 +175,7 @@ public class ChromeCast {
         channel = null;
     }
 
-    public final boolean isConnected() {
+    public final synchronized boolean isConnected() {
         return channel != null && !channel.isClosed();
     }
 
@@ -187,7 +189,7 @@ public class ChromeCast {
      * @see #connect()
      * @see #disconnect()
      */
-    public void setAutoReconnect(boolean autoReconnect) {
+    public synchronized void setAutoReconnect(boolean autoReconnect) {
         this.autoReconnect = autoReconnect;
     }
 
@@ -197,7 +199,7 @@ public class ChromeCast {
      *
      * @see #setAutoReconnect(boolean)
      */
-    public boolean isAutoReconnect() {
+    public synchronized boolean isAutoReconnect() {
         return autoReconnect;
     }
 
@@ -205,7 +207,7 @@ public class ChromeCast {
      * Set up how much time to wait until request is processed (in milliseconds).
      * @param requestTimeout value in milliseconds until request times out waiting for response
      */
-    public void setRequestTimeout(long requestTimeout) {
+    public synchronized void setRequestTimeout(long requestTimeout) {
         channel.setRequestTimeout(requestTimeout);
     }
 
