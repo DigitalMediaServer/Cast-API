@@ -21,6 +21,9 @@ import java.io.IOException;
  * Generic error, which may happen during interaction with ChromeCast device. Contains some descriptive message.
  */
 public class ChromeCastException extends IOException {
+
+    private static final long serialVersionUID = 1L;
+
     public ChromeCastException(String message) {
         super(message);
     }

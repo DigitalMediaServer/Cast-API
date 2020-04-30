@@ -41,7 +41,8 @@ final class CastChannel {
         public static final int RSASSA_PSS_VALUE = 2;
 
 
-        public final int getNumber() { return value; }
+        @Override
+        public int getNumber() { return value; }
 
         public static SignatureAlgorithm valueOf(int value) {
             switch (value) {
@@ -59,6 +60,7 @@ final class CastChannel {
         private static com.google.protobuf.Internal.EnumLiteMap<SignatureAlgorithm>
                 internalValueMap =
                 new com.google.protobuf.Internal.EnumLiteMap<SignatureAlgorithm>() {
+                    @Override
                     public SignatureAlgorithm findValueByNumber(int number) {
                         return SignatureAlgorithm.valueOf(number);
                     }
@@ -243,7 +245,7 @@ final class CastChannel {
             // @@protoc_insertion_point(message_implements:org.digitalmediaserver.chromecast.api.CastMessage)
             CastMessageOrBuilder {
         // Use CastMessage.newBuilder() to construct.
-        private CastMessage(com.google.protobuf.GeneratedMessageLite.Builder builder) {
+        private CastMessage(com.google.protobuf.GeneratedMessageLite.Builder<?, ?> builder) {
             super(builder);
             this.unknownFields = builder.getUnknownFields();
         }
@@ -254,6 +256,7 @@ final class CastChannel {
             return defaultInstance;
         }
 
+        @Override
         public CastMessage getDefaultInstanceForType() {
             return defaultInstance;
         }
@@ -264,7 +267,6 @@ final class CastChannel {
                 com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                 throws com.google.protobuf.InvalidProtocolBufferException {
             initFields();
-            int mutable_bitField0_ = 0;
             com.google.protobuf.ByteString.Output unknownFieldsOutput =
                     com.google.protobuf.ByteString.newOutput();
             com.google.protobuf.CodedOutputStream unknownFieldsCodedOutput =
@@ -358,6 +360,7 @@ final class CastChannel {
         }
         public static com.google.protobuf.Parser<CastMessage> PARSER =
                 new com.google.protobuf.AbstractParser<CastMessage>() {
+                    @Override
                     public CastMessage parsePartialFrom(
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -393,7 +396,8 @@ final class CastChannel {
             public static final int CASTV2_1_0_VALUE = 0;
 
 
-            public final int getNumber() { return value; }
+            @Override
+            public int getNumber() { return value; }
 
             public static ProtocolVersion valueOf(int value) {
                 switch (value) {
@@ -409,6 +413,7 @@ final class CastChannel {
             private static com.google.protobuf.Internal.EnumLiteMap<ProtocolVersion>
                     internalValueMap =
                     new com.google.protobuf.Internal.EnumLiteMap<ProtocolVersion>() {
+                        @Override
                         public ProtocolVersion findValueByNumber(int number) {
                             return ProtocolVersion.valueOf(number);
                         }
@@ -452,7 +457,8 @@ final class CastChannel {
             public static final int BINARY_VALUE = 1;
 
 
-            public final int getNumber() { return value; }
+            @Override
+            public int getNumber() { return value; }
 
             public static PayloadType valueOf(int value) {
                 switch (value) {
@@ -469,6 +475,7 @@ final class CastChannel {
             private static com.google.protobuf.Internal.EnumLiteMap<PayloadType>
                     internalValueMap =
                     new com.google.protobuf.Internal.EnumLiteMap<PayloadType>() {
+                        @Override
                         public PayloadType findValueByNumber(int number) {
                             return PayloadType.valueOf(number);
                         }
@@ -489,12 +496,14 @@ final class CastChannel {
         /**
          * <code>required .org.digitalmediaserver.chromecast.api.CastMessage.ProtocolVersion protocol_version = 1;</code>
          */
+        @Override
         public boolean hasProtocolVersion() {
             return ((bitField0_ & 0x00000001) == 0x00000001);
         }
         /**
          * <code>required .org.digitalmediaserver.chromecast.api.CastMessage.ProtocolVersion protocol_version = 1;</code>
          */
+        @Override
         public org.digitalmediaserver.chromecast.api.CastChannel.CastMessage.ProtocolVersion getProtocolVersion() {
             return protocolVersion_;
         }
@@ -518,6 +527,7 @@ final class CastChannel {
          * wildcard destination_id '*' can be used.
          * </pre>
          */
+        @Override
         public boolean hasSourceId() {
             return ((bitField0_ & 0x00000002) == 0x00000002);
         }
@@ -538,6 +548,7 @@ final class CastChannel {
          * wildcard destination_id '*' can be used.
          * </pre>
          */
+        @Override
         public java.lang.String getSourceId() {
             java.lang.Object ref = sourceId_;
             if (ref instanceof java.lang.String) {
@@ -569,6 +580,7 @@ final class CastChannel {
          * wildcard destination_id '*' can be used.
          * </pre>
          */
+        @Override
         public com.google.protobuf.ByteString
         getSourceIdBytes() {
             java.lang.Object ref = sourceId_;
@@ -588,12 +600,14 @@ final class CastChannel {
         /**
          * <code>required string destination_id = 3;</code>
          */
+        @Override
         public boolean hasDestinationId() {
             return ((bitField0_ & 0x00000004) == 0x00000004);
         }
         /**
          * <code>required string destination_id = 3;</code>
          */
+        @Override
         public java.lang.String getDestinationId() {
             java.lang.Object ref = destinationId_;
             if (ref instanceof java.lang.String) {
@@ -611,6 +625,7 @@ final class CastChannel {
         /**
          * <code>required string destination_id = 3;</code>
          */
+        @Override
         public com.google.protobuf.ByteString
         getDestinationIdBytes() {
             java.lang.Object ref = destinationId_;
@@ -636,6 +651,7 @@ final class CastChannel {
          * namespace defines the protocol and semantics of the message.
          * </pre>
          */
+        @Override
         public boolean hasNamespace() {
             return ((bitField0_ & 0x00000008) == 0x00000008);
         }
@@ -648,6 +664,7 @@ final class CastChannel {
          * namespace defines the protocol and semantics of the message.
          * </pre>
          */
+        @Override
         public java.lang.String getNamespace() {
             java.lang.Object ref = namespace_;
             if (ref instanceof java.lang.String) {
@@ -671,6 +688,7 @@ final class CastChannel {
          * namespace defines the protocol and semantics of the message.
          * </pre>
          */
+        @Override
         public com.google.protobuf.ByteString
         getNamespaceBytes() {
             java.lang.Object ref = namespace_;
@@ -690,12 +708,14 @@ final class CastChannel {
         /**
          * <code>required .org.digitalmediaserver.chromecast.api.CastMessage.PayloadType payload_type = 5;</code>
          */
+        @Override
         public boolean hasPayloadType() {
             return ((bitField0_ & 0x00000010) == 0x00000010);
         }
         /**
          * <code>required .org.digitalmediaserver.chromecast.api.CastMessage.PayloadType payload_type = 5;</code>
          */
+        @Override
         public org.digitalmediaserver.chromecast.api.CastChannel.CastMessage.PayloadType getPayloadType() {
             return payloadType_;
         }
@@ -710,6 +730,7 @@ final class CastChannel {
          * will always be set.
          * </pre>
          */
+        @Override
         public boolean hasPayloadUtf8() {
             return ((bitField0_ & 0x00000020) == 0x00000020);
         }
@@ -721,6 +742,7 @@ final class CastChannel {
          * will always be set.
          * </pre>
          */
+        @Override
         public java.lang.String getPayloadUtf8() {
             java.lang.Object ref = payloadUtf8_;
             if (ref instanceof java.lang.String) {
@@ -743,6 +765,7 @@ final class CastChannel {
          * will always be set.
          * </pre>
          */
+        @Override
         public com.google.protobuf.ByteString
         getPayloadUtf8Bytes() {
             java.lang.Object ref = payloadUtf8_;
@@ -762,12 +785,14 @@ final class CastChannel {
         /**
          * <code>optional bytes payload_binary = 7;</code>
          */
+        @Override
         public boolean hasPayloadBinary() {
             return ((bitField0_ & 0x00000040) == 0x00000040);
         }
         /**
          * <code>optional bytes payload_binary = 7;</code>
          */
+        @Override
         public com.google.protobuf.ByteString getPayloadBinary() {
             return payloadBinary_;
         }
@@ -782,7 +807,8 @@ final class CastChannel {
             payloadBinary_ = com.google.protobuf.ByteString.EMPTY;
         }
         private byte memoizedIsInitialized = -1;
-        public final boolean isInitialized() {
+        @Override
+        public boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
             if (isInitialized == 1) return true;
             if (isInitialized == 0) return false;
@@ -811,6 +837,7 @@ final class CastChannel {
             return true;
         }
 
+        @Override
         public void writeTo(com.google.protobuf.CodedOutputStream output)
                 throws java.io.IOException {
             getSerializedSize();
@@ -839,6 +866,7 @@ final class CastChannel {
         }
 
         private int memoizedSerializedSize = -1;
+        @Override
         public int getSerializedSize() {
             int size = memoizedSerializedSize;
             if (size != -1) return size;
@@ -938,10 +966,12 @@ final class CastChannel {
         }
 
         public static Builder newBuilder() { return Builder.create(); }
+        @Override
         public Builder newBuilderForType() { return newBuilder(); }
         public static Builder newBuilder(org.digitalmediaserver.chromecast.api.CastChannel.CastMessage prototype) {
             return newBuilder().mergeFrom(prototype);
         }
+        @Override
         public Builder toBuilder() { return newBuilder(this); }
 
         /**
@@ -964,6 +994,7 @@ final class CastChannel {
                 return new Builder();
             }
 
+            @Override
             public Builder clear() {
                 super.clear();
                 protocolVersion_ = org.digitalmediaserver.chromecast.api.CastChannel.CastMessage.ProtocolVersion.CASTV2_1_0;
@@ -983,14 +1014,17 @@ final class CastChannel {
                 return this;
             }
 
+            @Override
             public Builder clone() {
                 return create().mergeFrom(buildPartial());
             }
 
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.CastMessage getDefaultInstanceForType() {
                 return org.digitalmediaserver.chromecast.api.CastChannel.CastMessage.getDefaultInstance();
             }
 
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.CastMessage build() {
                 org.digitalmediaserver.chromecast.api.CastChannel.CastMessage result = buildPartial();
                 if (!result.isInitialized()) {
@@ -999,6 +1033,7 @@ final class CastChannel {
                 return result;
             }
 
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.CastMessage buildPartial() {
                 org.digitalmediaserver.chromecast.api.CastChannel.CastMessage result = new org.digitalmediaserver.chromecast.api.CastChannel.CastMessage(this);
                 int from_bitField0_ = bitField0_;
@@ -1035,6 +1070,7 @@ final class CastChannel {
                 return result;
             }
 
+            @Override
             public Builder mergeFrom(org.digitalmediaserver.chromecast.api.CastChannel.CastMessage other) {
                 if (other == org.digitalmediaserver.chromecast.api.CastChannel.CastMessage.getDefaultInstance()) return this;
                 if (other.hasProtocolVersion()) {
@@ -1071,7 +1107,8 @@ final class CastChannel {
                 return this;
             }
 
-            public final boolean isInitialized() {
+            @Override
+            public boolean isInitialized() {
                 if (!hasProtocolVersion()) {
 
                     return false;
@@ -1095,6 +1132,7 @@ final class CastChannel {
                 return true;
             }
 
+            @Override
             public Builder mergeFrom(
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1118,12 +1156,14 @@ final class CastChannel {
             /**
              * <code>required .org.digitalmediaserver.chromecast.api.CastMessage.ProtocolVersion protocol_version = 1;</code>
              */
+            @Override
             public boolean hasProtocolVersion() {
                 return ((bitField0_ & 0x00000001) == 0x00000001);
             }
             /**
              * <code>required .org.digitalmediaserver.chromecast.api.CastMessage.ProtocolVersion protocol_version = 1;</code>
              */
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.CastMessage.ProtocolVersion getProtocolVersion() {
                 return protocolVersion_;
             }
@@ -1167,6 +1207,7 @@ final class CastChannel {
              * wildcard destination_id '*' can be used.
              * </pre>
              */
+            @Override
             public boolean hasSourceId() {
                 return ((bitField0_ & 0x00000002) == 0x00000002);
             }
@@ -1187,6 +1228,7 @@ final class CastChannel {
              * wildcard destination_id '*' can be used.
              * </pre>
              */
+            @Override
             public java.lang.String getSourceId() {
                 java.lang.Object ref = sourceId_;
                 if (!(ref instanceof java.lang.String)) {
@@ -1218,6 +1260,7 @@ final class CastChannel {
              * wildcard destination_id '*' can be used.
              * </pre>
              */
+            @Override
             public com.google.protobuf.ByteString
             getSourceIdBytes() {
                 java.lang.Object ref = sourceId_;
@@ -1313,12 +1356,14 @@ final class CastChannel {
             /**
              * <code>required string destination_id = 3;</code>
              */
+            @Override
             public boolean hasDestinationId() {
                 return ((bitField0_ & 0x00000004) == 0x00000004);
             }
             /**
              * <code>required string destination_id = 3;</code>
              */
+            @Override
             public java.lang.String getDestinationId() {
                 java.lang.Object ref = destinationId_;
                 if (!(ref instanceof java.lang.String)) {
@@ -1336,6 +1381,7 @@ final class CastChannel {
             /**
              * <code>required string destination_id = 3;</code>
              */
+            @Override
             public com.google.protobuf.ByteString
             getDestinationIdBytes() {
                 java.lang.Object ref = destinationId_;
@@ -1395,6 +1441,7 @@ final class CastChannel {
              * namespace defines the protocol and semantics of the message.
              * </pre>
              */
+            @Override
             public boolean hasNamespace() {
                 return ((bitField0_ & 0x00000008) == 0x00000008);
             }
@@ -1407,6 +1454,7 @@ final class CastChannel {
              * namespace defines the protocol and semantics of the message.
              * </pre>
              */
+            @Override
             public java.lang.String getNamespace() {
                 java.lang.Object ref = namespace_;
                 if (!(ref instanceof java.lang.String)) {
@@ -1430,6 +1478,7 @@ final class CastChannel {
              * namespace defines the protocol and semantics of the message.
              * </pre>
              */
+            @Override
             public com.google.protobuf.ByteString
             getNamespaceBytes() {
                 java.lang.Object ref = namespace_;
@@ -1501,12 +1550,14 @@ final class CastChannel {
             /**
              * <code>required .org.digitalmediaserver.chromecast.api.CastMessage.PayloadType payload_type = 5;</code>
              */
+            @Override
             public boolean hasPayloadType() {
                 return ((bitField0_ & 0x00000010) == 0x00000010);
             }
             /**
              * <code>required .org.digitalmediaserver.chromecast.api.CastMessage.PayloadType payload_type = 5;</code>
              */
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.CastMessage.PayloadType getPayloadType() {
                 return payloadType_;
             }
@@ -1541,6 +1592,7 @@ final class CastChannel {
              * will always be set.
              * </pre>
              */
+            @Override
             public boolean hasPayloadUtf8() {
                 return ((bitField0_ & 0x00000020) == 0x00000020);
             }
@@ -1552,6 +1604,7 @@ final class CastChannel {
              * will always be set.
              * </pre>
              */
+            @Override
             public java.lang.String getPayloadUtf8() {
                 java.lang.Object ref = payloadUtf8_;
                 if (!(ref instanceof java.lang.String)) {
@@ -1574,6 +1627,7 @@ final class CastChannel {
              * will always be set.
              * </pre>
              */
+            @Override
             public com.google.protobuf.ByteString
             getPayloadUtf8Bytes() {
                 java.lang.Object ref = payloadUtf8_;
@@ -1642,12 +1696,14 @@ final class CastChannel {
             /**
              * <code>optional bytes payload_binary = 7;</code>
              */
+            @Override
             public boolean hasPayloadBinary() {
                 return ((bitField0_ & 0x00000040) == 0x00000040);
             }
             /**
              * <code>optional bytes payload_binary = 7;</code>
              */
+            @Override
             public com.google.protobuf.ByteString getPayloadBinary() {
                 return payloadBinary_;
             }
@@ -1709,7 +1765,7 @@ final class CastChannel {
             // @@protoc_insertion_point(message_implements:org.digitalmediaserver.chromecast.api.AuthChallenge)
             AuthChallengeOrBuilder {
         // Use AuthChallenge.newBuilder() to construct.
-        private AuthChallenge(com.google.protobuf.GeneratedMessageLite.Builder builder) {
+        private AuthChallenge(com.google.protobuf.GeneratedMessageLite.Builder<?, ?> builder) {
             super(builder);
             this.unknownFields = builder.getUnknownFields();
         }
@@ -1720,6 +1776,7 @@ final class CastChannel {
             return defaultInstance;
         }
 
+        @Override
         public AuthChallenge getDefaultInstanceForType() {
             return defaultInstance;
         }
@@ -1730,7 +1787,6 @@ final class CastChannel {
                 com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                 throws com.google.protobuf.InvalidProtocolBufferException {
             initFields();
-            int mutable_bitField0_ = 0;
             com.google.protobuf.ByteString.Output unknownFieldsOutput =
                     com.google.protobuf.ByteString.newOutput();
             com.google.protobuf.CodedOutputStream unknownFieldsCodedOutput =
@@ -1783,6 +1839,7 @@ final class CastChannel {
         }
         public static com.google.protobuf.Parser<AuthChallenge> PARSER =
                 new com.google.protobuf.AbstractParser<AuthChallenge>() {
+                    @Override
                     public AuthChallenge parsePartialFrom(
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1802,12 +1859,14 @@ final class CastChannel {
         /**
          * <code>optional .org.digitalmediaserver.chromecast.api.SignatureAlgorithm signature_algorithm = 1 [default = RSASSA_PKCS1v15];</code>
          */
+        @Override
         public boolean hasSignatureAlgorithm() {
             return ((bitField0_ & 0x00000001) == 0x00000001);
         }
         /**
          * <code>optional .org.digitalmediaserver.chromecast.api.SignatureAlgorithm signature_algorithm = 1 [default = RSASSA_PKCS1v15];</code>
          */
+        @Override
         public org.digitalmediaserver.chromecast.api.CastChannel.SignatureAlgorithm getSignatureAlgorithm() {
             return signatureAlgorithm_;
         }
@@ -1816,7 +1875,8 @@ final class CastChannel {
             signatureAlgorithm_ = org.digitalmediaserver.chromecast.api.CastChannel.SignatureAlgorithm.RSASSA_PKCS1v15;
         }
         private byte memoizedIsInitialized = -1;
-        public final boolean isInitialized() {
+        @Override
+        public boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
             if (isInitialized == 1) return true;
             if (isInitialized == 0) return false;
@@ -1825,6 +1885,7 @@ final class CastChannel {
             return true;
         }
 
+        @Override
         public void writeTo(com.google.protobuf.CodedOutputStream output)
                 throws java.io.IOException {
             getSerializedSize();
@@ -1835,6 +1896,7 @@ final class CastChannel {
         }
 
         private int memoizedSerializedSize = -1;
+        @Override
         public int getSerializedSize() {
             int size = memoizedSerializedSize;
             if (size != -1) return size;
@@ -1910,10 +1972,12 @@ final class CastChannel {
         }
 
         public static Builder newBuilder() { return Builder.create(); }
+        @Override
         public Builder newBuilderForType() { return newBuilder(); }
         public static Builder newBuilder(org.digitalmediaserver.chromecast.api.CastChannel.AuthChallenge prototype) {
             return newBuilder().mergeFrom(prototype);
         }
+        @Override
         public Builder toBuilder() { return newBuilder(this); }
 
         /**
@@ -1940,6 +2004,7 @@ final class CastChannel {
                 return new Builder();
             }
 
+            @Override
             public Builder clear() {
                 super.clear();
                 signatureAlgorithm_ = org.digitalmediaserver.chromecast.api.CastChannel.SignatureAlgorithm.RSASSA_PKCS1v15;
@@ -1947,14 +2012,17 @@ final class CastChannel {
                 return this;
             }
 
+            @Override
             public Builder clone() {
                 return create().mergeFrom(buildPartial());
             }
 
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.AuthChallenge getDefaultInstanceForType() {
                 return org.digitalmediaserver.chromecast.api.CastChannel.AuthChallenge.getDefaultInstance();
             }
 
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.AuthChallenge build() {
                 org.digitalmediaserver.chromecast.api.CastChannel.AuthChallenge result = buildPartial();
                 if (!result.isInitialized()) {
@@ -1963,6 +2031,7 @@ final class CastChannel {
                 return result;
             }
 
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.AuthChallenge buildPartial() {
                 org.digitalmediaserver.chromecast.api.CastChannel.AuthChallenge result = new org.digitalmediaserver.chromecast.api.CastChannel.AuthChallenge(this);
                 int from_bitField0_ = bitField0_;
@@ -1975,6 +2044,7 @@ final class CastChannel {
                 return result;
             }
 
+            @Override
             public Builder mergeFrom(org.digitalmediaserver.chromecast.api.CastChannel.AuthChallenge other) {
                 if (other == org.digitalmediaserver.chromecast.api.CastChannel.AuthChallenge.getDefaultInstance()) return this;
                 if (other.hasSignatureAlgorithm()) {
@@ -1985,10 +2055,12 @@ final class CastChannel {
                 return this;
             }
 
-            public final boolean isInitialized() {
+            @Override
+            public boolean isInitialized() {
                 return true;
             }
 
+            @Override
             public Builder mergeFrom(
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2012,12 +2084,14 @@ final class CastChannel {
             /**
              * <code>optional .org.digitalmediaserver.chromecast.api.SignatureAlgorithm signature_algorithm = 1 [default = RSASSA_PKCS1v15];</code>
              */
+            @Override
             public boolean hasSignatureAlgorithm() {
                 return ((bitField0_ & 0x00000001) == 0x00000001);
             }
             /**
              * <code>optional .org.digitalmediaserver.chromecast.api.SignatureAlgorithm signature_algorithm = 1 [default = RSASSA_PKCS1v15];</code>
              */
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.SignatureAlgorithm getSignatureAlgorithm() {
                 return signatureAlgorithm_;
             }
@@ -2106,7 +2180,7 @@ final class CastChannel {
             // @@protoc_insertion_point(message_implements:org.digitalmediaserver.chromecast.api.AuthResponse)
             AuthResponseOrBuilder {
         // Use AuthResponse.newBuilder() to construct.
-        private AuthResponse(com.google.protobuf.GeneratedMessageLite.Builder builder) {
+        private AuthResponse(com.google.protobuf.GeneratedMessageLite.Builder<?, ?> builder) {
             super(builder);
             this.unknownFields = builder.getUnknownFields();
         }
@@ -2117,6 +2191,7 @@ final class CastChannel {
             return defaultInstance;
         }
 
+        @Override
         public AuthResponse getDefaultInstanceForType() {
             return defaultInstance;
         }
@@ -2201,6 +2276,7 @@ final class CastChannel {
         }
         public static com.google.protobuf.Parser<AuthResponse> PARSER =
                 new com.google.protobuf.AbstractParser<AuthResponse>() {
+                    @Override
                     public AuthResponse parsePartialFrom(
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2220,12 +2296,14 @@ final class CastChannel {
         /**
          * <code>required bytes signature = 1;</code>
          */
+        @Override
         public boolean hasSignature() {
             return ((bitField0_ & 0x00000001) == 0x00000001);
         }
         /**
          * <code>required bytes signature = 1;</code>
          */
+        @Override
         public com.google.protobuf.ByteString getSignature() {
             return signature_;
         }
@@ -2235,12 +2313,14 @@ final class CastChannel {
         /**
          * <code>required bytes client_auth_certificate = 2;</code>
          */
+        @Override
         public boolean hasClientAuthCertificate() {
             return ((bitField0_ & 0x00000002) == 0x00000002);
         }
         /**
          * <code>required bytes client_auth_certificate = 2;</code>
          */
+        @Override
         public com.google.protobuf.ByteString getClientAuthCertificate() {
             return clientAuthCertificate_;
         }
@@ -2250,6 +2330,7 @@ final class CastChannel {
         /**
          * <code>repeated bytes intermediate_certificate = 3;</code>
          */
+        @Override
         public java.util.List<com.google.protobuf.ByteString>
         getIntermediateCertificateList() {
             return intermediateCertificate_;
@@ -2257,12 +2338,14 @@ final class CastChannel {
         /**
          * <code>repeated bytes intermediate_certificate = 3;</code>
          */
+        @Override
         public int getIntermediateCertificateCount() {
             return intermediateCertificate_.size();
         }
         /**
          * <code>repeated bytes intermediate_certificate = 3;</code>
          */
+        @Override
         public com.google.protobuf.ByteString getIntermediateCertificate(int index) {
             return intermediateCertificate_.get(index);
         }
@@ -2272,12 +2355,14 @@ final class CastChannel {
         /**
          * <code>optional .org.digitalmediaserver.chromecast.api.SignatureAlgorithm signature_algorithm = 4 [default = RSASSA_PKCS1v15];</code>
          */
+        @Override
         public boolean hasSignatureAlgorithm() {
             return ((bitField0_ & 0x00000004) == 0x00000004);
         }
         /**
          * <code>optional .org.digitalmediaserver.chromecast.api.SignatureAlgorithm signature_algorithm = 4 [default = RSASSA_PKCS1v15];</code>
          */
+        @Override
         public org.digitalmediaserver.chromecast.api.CastChannel.SignatureAlgorithm getSignatureAlgorithm() {
             return signatureAlgorithm_;
         }
@@ -2289,7 +2374,8 @@ final class CastChannel {
             signatureAlgorithm_ = org.digitalmediaserver.chromecast.api.CastChannel.SignatureAlgorithm.RSASSA_PKCS1v15;
         }
         private byte memoizedIsInitialized = -1;
-        public final boolean isInitialized() {
+        @Override
+        public boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
             if (isInitialized == 1) return true;
             if (isInitialized == 0) return false;
@@ -2306,6 +2392,7 @@ final class CastChannel {
             return true;
         }
 
+        @Override
         public void writeTo(com.google.protobuf.CodedOutputStream output)
                 throws java.io.IOException {
             getSerializedSize();
@@ -2325,6 +2412,7 @@ final class CastChannel {
         }
 
         private int memoizedSerializedSize = -1;
+        @Override
         public int getSerializedSize() {
             int size = memoizedSerializedSize;
             if (size != -1) return size;
@@ -2417,10 +2505,12 @@ final class CastChannel {
         }
 
         public static Builder newBuilder() { return Builder.create(); }
+        @Override
         public Builder newBuilderForType() { return newBuilder(); }
         public static Builder newBuilder(org.digitalmediaserver.chromecast.api.CastChannel.AuthResponse prototype) {
             return newBuilder().mergeFrom(prototype);
         }
+        @Override
         public Builder toBuilder() { return newBuilder(this); }
 
         /**
@@ -2443,6 +2533,7 @@ final class CastChannel {
                 return new Builder();
             }
 
+            @Override
             public Builder clear() {
                 super.clear();
                 signature_ = com.google.protobuf.ByteString.EMPTY;
@@ -2456,14 +2547,17 @@ final class CastChannel {
                 return this;
             }
 
+            @Override
             public Builder clone() {
                 return create().mergeFrom(buildPartial());
             }
 
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.AuthResponse getDefaultInstanceForType() {
                 return org.digitalmediaserver.chromecast.api.CastChannel.AuthResponse.getDefaultInstance();
             }
 
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.AuthResponse build() {
                 org.digitalmediaserver.chromecast.api.CastChannel.AuthResponse result = buildPartial();
                 if (!result.isInitialized()) {
@@ -2472,6 +2566,7 @@ final class CastChannel {
                 return result;
             }
 
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.AuthResponse buildPartial() {
                 org.digitalmediaserver.chromecast.api.CastChannel.AuthResponse result = new org.digitalmediaserver.chromecast.api.CastChannel.AuthResponse(this);
                 int from_bitField0_ = bitField0_;
@@ -2497,6 +2592,7 @@ final class CastChannel {
                 return result;
             }
 
+            @Override
             public Builder mergeFrom(org.digitalmediaserver.chromecast.api.CastChannel.AuthResponse other) {
                 if (other == org.digitalmediaserver.chromecast.api.CastChannel.AuthResponse.getDefaultInstance()) return this;
                 if (other.hasSignature()) {
@@ -2523,7 +2619,8 @@ final class CastChannel {
                 return this;
             }
 
-            public final boolean isInitialized() {
+            @Override
+            public boolean isInitialized() {
                 if (!hasSignature()) {
 
                     return false;
@@ -2535,6 +2632,7 @@ final class CastChannel {
                 return true;
             }
 
+            @Override
             public Builder mergeFrom(
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2558,12 +2656,14 @@ final class CastChannel {
             /**
              * <code>required bytes signature = 1;</code>
              */
+            @Override
             public boolean hasSignature() {
                 return ((bitField0_ & 0x00000001) == 0x00000001);
             }
             /**
              * <code>required bytes signature = 1;</code>
              */
+            @Override
             public com.google.protobuf.ByteString getSignature() {
                 return signature_;
             }
@@ -2593,12 +2693,14 @@ final class CastChannel {
             /**
              * <code>required bytes client_auth_certificate = 2;</code>
              */
+            @Override
             public boolean hasClientAuthCertificate() {
                 return ((bitField0_ & 0x00000002) == 0x00000002);
             }
             /**
              * <code>required bytes client_auth_certificate = 2;</code>
              */
+            @Override
             public com.google.protobuf.ByteString getClientAuthCertificate() {
                 return clientAuthCertificate_;
             }
@@ -2634,6 +2736,7 @@ final class CastChannel {
             /**
              * <code>repeated bytes intermediate_certificate = 3;</code>
              */
+            @Override
             public java.util.List<com.google.protobuf.ByteString>
             getIntermediateCertificateList() {
                 return java.util.Collections.unmodifiableList(intermediateCertificate_);
@@ -2641,12 +2744,14 @@ final class CastChannel {
             /**
              * <code>repeated bytes intermediate_certificate = 3;</code>
              */
+            @Override
             public int getIntermediateCertificateCount() {
                 return intermediateCertificate_.size();
             }
             /**
              * <code>repeated bytes intermediate_certificate = 3;</code>
              */
+            @Override
             public com.google.protobuf.ByteString getIntermediateCertificate(int index) {
                 return intermediateCertificate_.get(index);
             }
@@ -2700,12 +2805,14 @@ final class CastChannel {
             /**
              * <code>optional .org.digitalmediaserver.chromecast.api.SignatureAlgorithm signature_algorithm = 4 [default = RSASSA_PKCS1v15];</code>
              */
+            @Override
             public boolean hasSignatureAlgorithm() {
                 return ((bitField0_ & 0x00000008) == 0x00000008);
             }
             /**
              * <code>optional .org.digitalmediaserver.chromecast.api.SignatureAlgorithm signature_algorithm = 4 [default = RSASSA_PKCS1v15];</code>
              */
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.SignatureAlgorithm getSignatureAlgorithm() {
                 return signatureAlgorithm_;
             }
@@ -2763,7 +2870,7 @@ final class CastChannel {
             // @@protoc_insertion_point(message_implements:org.digitalmediaserver.chromecast.api.AuthError)
             AuthErrorOrBuilder {
         // Use AuthError.newBuilder() to construct.
-        private AuthError(com.google.protobuf.GeneratedMessageLite.Builder builder) {
+        private AuthError(com.google.protobuf.GeneratedMessageLite.Builder<?, ?> builder) {
             super(builder);
             this.unknownFields = builder.getUnknownFields();
         }
@@ -2774,6 +2881,7 @@ final class CastChannel {
             return defaultInstance;
         }
 
+        @Override
         public AuthError getDefaultInstanceForType() {
             return defaultInstance;
         }
@@ -2784,7 +2892,6 @@ final class CastChannel {
                 com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                 throws com.google.protobuf.InvalidProtocolBufferException {
             initFields();
-            int mutable_bitField0_ = 0;
             com.google.protobuf.ByteString.Output unknownFieldsOutput =
                     com.google.protobuf.ByteString.newOutput();
             com.google.protobuf.CodedOutputStream unknownFieldsCodedOutput =
@@ -2837,6 +2944,7 @@ final class CastChannel {
         }
         public static com.google.protobuf.Parser<AuthError> PARSER =
                 new com.google.protobuf.AbstractParser<AuthError>() {
+                    @Override
                     public AuthError parsePartialFrom(
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2891,7 +2999,8 @@ final class CastChannel {
             public static final int SIGNATURE_ALGORITHM_UNAVAILABLE_VALUE = 2;
 
 
-            public final int getNumber() { return value; }
+            @Override
+            public int getNumber() { return value; }
 
             public static ErrorType valueOf(int value) {
                 switch (value) {
@@ -2909,6 +3018,7 @@ final class CastChannel {
             private static com.google.protobuf.Internal.EnumLiteMap<ErrorType>
                     internalValueMap =
                     new com.google.protobuf.Internal.EnumLiteMap<ErrorType>() {
+                        @Override
                         public ErrorType findValueByNumber(int number) {
                             return ErrorType.valueOf(number);
                         }
@@ -2929,12 +3039,14 @@ final class CastChannel {
         /**
          * <code>required .org.digitalmediaserver.chromecast.api.AuthError.ErrorType error_type = 1;</code>
          */
+        @Override
         public boolean hasErrorType() {
             return ((bitField0_ & 0x00000001) == 0x00000001);
         }
         /**
          * <code>required .org.digitalmediaserver.chromecast.api.AuthError.ErrorType error_type = 1;</code>
          */
+        @Override
         public org.digitalmediaserver.chromecast.api.CastChannel.AuthError.ErrorType getErrorType() {
             return errorType_;
         }
@@ -2943,7 +3055,8 @@ final class CastChannel {
             errorType_ = org.digitalmediaserver.chromecast.api.CastChannel.AuthError.ErrorType.INTERNAL_ERROR;
         }
         private byte memoizedIsInitialized = -1;
-        public final boolean isInitialized() {
+        @Override
+        public boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
             if (isInitialized == 1) return true;
             if (isInitialized == 0) return false;
@@ -2956,6 +3069,7 @@ final class CastChannel {
             return true;
         }
 
+        @Override
         public void writeTo(com.google.protobuf.CodedOutputStream output)
                 throws java.io.IOException {
             getSerializedSize();
@@ -2966,6 +3080,7 @@ final class CastChannel {
         }
 
         private int memoizedSerializedSize = -1;
+        @Override
         public int getSerializedSize() {
             int size = memoizedSerializedSize;
             if (size != -1) return size;
@@ -3041,10 +3156,12 @@ final class CastChannel {
         }
 
         public static Builder newBuilder() { return Builder.create(); }
+        @Override
         public Builder newBuilderForType() { return newBuilder(); }
         public static Builder newBuilder(org.digitalmediaserver.chromecast.api.CastChannel.AuthError prototype) {
             return newBuilder().mergeFrom(prototype);
         }
+        @Override
         public Builder toBuilder() { return newBuilder(this); }
 
         /**
@@ -3067,6 +3184,7 @@ final class CastChannel {
                 return new Builder();
             }
 
+            @Override
             public Builder clear() {
                 super.clear();
                 errorType_ = org.digitalmediaserver.chromecast.api.CastChannel.AuthError.ErrorType.INTERNAL_ERROR;
@@ -3074,14 +3192,17 @@ final class CastChannel {
                 return this;
             }
 
+            @Override
             public Builder clone() {
                 return create().mergeFrom(buildPartial());
             }
 
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.AuthError getDefaultInstanceForType() {
                 return org.digitalmediaserver.chromecast.api.CastChannel.AuthError.getDefaultInstance();
             }
 
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.AuthError build() {
                 org.digitalmediaserver.chromecast.api.CastChannel.AuthError result = buildPartial();
                 if (!result.isInitialized()) {
@@ -3090,6 +3211,7 @@ final class CastChannel {
                 return result;
             }
 
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.AuthError buildPartial() {
                 org.digitalmediaserver.chromecast.api.CastChannel.AuthError result = new org.digitalmediaserver.chromecast.api.CastChannel.AuthError(this);
                 int from_bitField0_ = bitField0_;
@@ -3102,6 +3224,7 @@ final class CastChannel {
                 return result;
             }
 
+            @Override
             public Builder mergeFrom(org.digitalmediaserver.chromecast.api.CastChannel.AuthError other) {
                 if (other == org.digitalmediaserver.chromecast.api.CastChannel.AuthError.getDefaultInstance()) return this;
                 if (other.hasErrorType()) {
@@ -3112,7 +3235,8 @@ final class CastChannel {
                 return this;
             }
 
-            public final boolean isInitialized() {
+            @Override
+            public boolean isInitialized() {
                 if (!hasErrorType()) {
 
                     return false;
@@ -3120,6 +3244,7 @@ final class CastChannel {
                 return true;
             }
 
+            @Override
             public Builder mergeFrom(
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3143,12 +3268,14 @@ final class CastChannel {
             /**
              * <code>required .org.digitalmediaserver.chromecast.api.AuthError.ErrorType error_type = 1;</code>
              */
+            @Override
             public boolean hasErrorType() {
                 return ((bitField0_ & 0x00000001) == 0x00000001);
             }
             /**
              * <code>required .org.digitalmediaserver.chromecast.api.AuthError.ErrorType error_type = 1;</code>
              */
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.AuthError.ErrorType getErrorType() {
                 return errorType_;
             }
@@ -3240,7 +3367,7 @@ final class CastChannel {
             // @@protoc_insertion_point(message_implements:org.digitalmediaserver.chromecast.api.DeviceAuthMessage)
             DeviceAuthMessageOrBuilder {
         // Use DeviceAuthMessage.newBuilder() to construct.
-        private DeviceAuthMessage(com.google.protobuf.GeneratedMessageLite.Builder builder) {
+        private DeviceAuthMessage(com.google.protobuf.GeneratedMessageLite.Builder<?, ?> builder) {
             super(builder);
             this.unknownFields = builder.getUnknownFields();
         }
@@ -3251,6 +3378,7 @@ final class CastChannel {
             return defaultInstance;
         }
 
+        @Override
         public DeviceAuthMessage getDefaultInstanceForType() {
             return defaultInstance;
         }
@@ -3261,7 +3389,6 @@ final class CastChannel {
                 com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                 throws com.google.protobuf.InvalidProtocolBufferException {
             initFields();
-            int mutable_bitField0_ = 0;
             com.google.protobuf.ByteString.Output unknownFieldsOutput =
                     com.google.protobuf.ByteString.newOutput();
             com.google.protobuf.CodedOutputStream unknownFieldsCodedOutput =
@@ -3341,6 +3468,7 @@ final class CastChannel {
         }
         public static com.google.protobuf.Parser<DeviceAuthMessage> PARSER =
                 new com.google.protobuf.AbstractParser<DeviceAuthMessage>() {
+                    @Override
                     public DeviceAuthMessage parsePartialFrom(
                             com.google.protobuf.CodedInputStream input,
                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3364,6 +3492,7 @@ final class CastChannel {
          * Request fields
          * </pre>
          */
+        @Override
         public boolean hasChallenge() {
             return ((bitField0_ & 0x00000001) == 0x00000001);
         }
@@ -3374,6 +3503,7 @@ final class CastChannel {
          * Request fields
          * </pre>
          */
+        @Override
         public org.digitalmediaserver.chromecast.api.CastChannel.AuthChallenge getChallenge() {
             return challenge_;
         }
@@ -3387,6 +3517,7 @@ final class CastChannel {
          * Response fields
          * </pre>
          */
+        @Override
         public boolean hasResponse() {
             return ((bitField0_ & 0x00000002) == 0x00000002);
         }
@@ -3397,6 +3528,7 @@ final class CastChannel {
          * Response fields
          * </pre>
          */
+        @Override
         public org.digitalmediaserver.chromecast.api.CastChannel.AuthResponse getResponse() {
             return response_;
         }
@@ -3406,12 +3538,14 @@ final class CastChannel {
         /**
          * <code>optional .org.digitalmediaserver.chromecast.api.AuthError error = 3;</code>
          */
+        @Override
         public boolean hasError() {
             return ((bitField0_ & 0x00000004) == 0x00000004);
         }
         /**
          * <code>optional .org.digitalmediaserver.chromecast.api.AuthError error = 3;</code>
          */
+        @Override
         public org.digitalmediaserver.chromecast.api.CastChannel.AuthError getError() {
             return error_;
         }
@@ -3422,7 +3556,8 @@ final class CastChannel {
             error_ = org.digitalmediaserver.chromecast.api.CastChannel.AuthError.getDefaultInstance();
         }
         private byte memoizedIsInitialized = -1;
-        public final boolean isInitialized() {
+        @Override
+        public boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
             if (isInitialized == 1) return true;
             if (isInitialized == 0) return false;
@@ -3443,6 +3578,7 @@ final class CastChannel {
             return true;
         }
 
+        @Override
         public void writeTo(com.google.protobuf.CodedOutputStream output)
                 throws java.io.IOException {
             getSerializedSize();
@@ -3459,6 +3595,7 @@ final class CastChannel {
         }
 
         private int memoizedSerializedSize = -1;
+        @Override
         public int getSerializedSize() {
             int size = memoizedSerializedSize;
             if (size != -1) return size;
@@ -3542,10 +3679,12 @@ final class CastChannel {
         }
 
         public static Builder newBuilder() { return Builder.create(); }
+        @Override
         public Builder newBuilderForType() { return newBuilder(); }
         public static Builder newBuilder(org.digitalmediaserver.chromecast.api.CastChannel.DeviceAuthMessage prototype) {
             return newBuilder().mergeFrom(prototype);
         }
+        @Override
         public Builder toBuilder() { return newBuilder(this); }
 
         /**
@@ -3568,6 +3707,7 @@ final class CastChannel {
                 return new Builder();
             }
 
+            @Override
             public Builder clear() {
                 super.clear();
                 challenge_ = org.digitalmediaserver.chromecast.api.CastChannel.AuthChallenge.getDefaultInstance();
@@ -3579,14 +3719,17 @@ final class CastChannel {
                 return this;
             }
 
+            @Override
             public Builder clone() {
                 return create().mergeFrom(buildPartial());
             }
 
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.DeviceAuthMessage getDefaultInstanceForType() {
                 return org.digitalmediaserver.chromecast.api.CastChannel.DeviceAuthMessage.getDefaultInstance();
             }
 
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.DeviceAuthMessage build() {
                 org.digitalmediaserver.chromecast.api.CastChannel.DeviceAuthMessage result = buildPartial();
                 if (!result.isInitialized()) {
@@ -3595,6 +3738,7 @@ final class CastChannel {
                 return result;
             }
 
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.DeviceAuthMessage buildPartial() {
                 org.digitalmediaserver.chromecast.api.CastChannel.DeviceAuthMessage result = new org.digitalmediaserver.chromecast.api.CastChannel.DeviceAuthMessage(this);
                 int from_bitField0_ = bitField0_;
@@ -3615,6 +3759,7 @@ final class CastChannel {
                 return result;
             }
 
+            @Override
             public Builder mergeFrom(org.digitalmediaserver.chromecast.api.CastChannel.DeviceAuthMessage other) {
                 if (other == org.digitalmediaserver.chromecast.api.CastChannel.DeviceAuthMessage.getDefaultInstance()) return this;
                 if (other.hasChallenge()) {
@@ -3631,7 +3776,8 @@ final class CastChannel {
                 return this;
             }
 
-            public final boolean isInitialized() {
+            @Override
+            public boolean isInitialized() {
                 if (hasResponse()) {
                     if (!getResponse().isInitialized()) {
 
@@ -3647,6 +3793,7 @@ final class CastChannel {
                 return true;
             }
 
+            @Override
             public Builder mergeFrom(
                     com.google.protobuf.CodedInputStream input,
                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3674,6 +3821,7 @@ final class CastChannel {
              * Request fields
              * </pre>
              */
+            @Override
             public boolean hasChallenge() {
                 return ((bitField0_ & 0x00000001) == 0x00000001);
             }
@@ -3684,6 +3832,7 @@ final class CastChannel {
              * Request fields
              * </pre>
              */
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.AuthChallenge getChallenge() {
                 return challenge_;
             }
@@ -3758,6 +3907,7 @@ final class CastChannel {
              * Response fields
              * </pre>
              */
+            @Override
             public boolean hasResponse() {
                 return ((bitField0_ & 0x00000002) == 0x00000002);
             }
@@ -3768,6 +3918,7 @@ final class CastChannel {
              * Response fields
              * </pre>
              */
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.AuthResponse getResponse() {
                 return response_;
             }
@@ -3838,12 +3989,14 @@ final class CastChannel {
             /**
              * <code>optional .org.digitalmediaserver.chromecast.api.AuthError error = 3;</code>
              */
+            @Override
             public boolean hasError() {
                 return ((bitField0_ & 0x00000004) == 0x00000004);
             }
             /**
              * <code>optional .org.digitalmediaserver.chromecast.api.AuthError error = 3;</code>
              */
+            @Override
             public org.digitalmediaserver.chromecast.api.CastChannel.AuthError getError() {
                 return error_;
             }

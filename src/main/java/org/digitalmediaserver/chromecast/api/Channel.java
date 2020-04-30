@@ -184,8 +184,7 @@ class Channel implements Closeable {
                         continue;
                     }
 
-                    if (isAppEvent(parsed)) {
-                        // This handles when parsed == null.
+                    if (parsed == null || isAppEvent(parsed)) {
                         AppEvent event = new AppEvent(message.getNamespace(), message.getPayloadUtf8());
                         notifyListenersAppEvent(event);
                     } else {
