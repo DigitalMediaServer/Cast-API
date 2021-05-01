@@ -21,18 +21,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Device descriptor.
  */
 public class Device {
-    public final String name;
-    public final int capabilities;
-    public final String deviceId;
-    public final Volume volume;
 
-    public Device(@JsonProperty("name") String name,
-                  @JsonProperty("capabilities") int capabilities,
-                  @JsonProperty("deviceId") String deviceId,
-                  @JsonProperty("volume") Volume volume) {
-        this.name = name;
-        this.capabilities = capabilities;
-        this.deviceId = deviceId;
-        this.volume = volume;
-    }
+	public final String name;
+	public final int capabilities;
+	public final String deviceId;
+	public final Volume volume;
+
+	public Device(@JsonProperty("name") String name, @JsonProperty("capabilities") int capabilities,
+		@JsonProperty("deviceId") String deviceId, @JsonProperty("volume") Volume volume) {
+		this.name = name;
+		this.capabilities = capabilities;
+		this.deviceId = deviceId;
+		this.volume = volume;
+	}
 }

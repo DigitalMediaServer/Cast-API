@@ -22,150 +22,168 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.Map;
 
 /**
- * Parent class for transport object representing messages received FROM ChromeCast device.
+ * Parent class for transport object representing messages received FROM
+ * ChromeCast device.
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "responseType")
-@JsonSubTypes({@JsonSubTypes.Type(name = "PING", value = StandardResponse.Ping.class),
-               @JsonSubTypes.Type(name = "PONG", value = StandardResponse.Pong.class),
-               @JsonSubTypes.Type(name = "RECEIVER_STATUS", value = StandardResponse.Status.class),
-               @JsonSubTypes.Type(name = "GET_APP_AVAILABILITY", value = StandardResponse.AppAvailability.class),
-               @JsonSubTypes.Type(name = "INVALID_REQUEST", value = StandardResponse.Invalid.class),
-               @JsonSubTypes.Type(name = "MEDIA_STATUS", value = StandardResponse.MediaStatus.class),
-               @JsonSubTypes.Type(name = "MULTIZONE_STATUS", value = StandardResponse.MultizoneStatus.class),
-               @JsonSubTypes.Type(name = "CLOSE", value = StandardResponse.Close.class),
-               @JsonSubTypes.Type(name = "LOAD_FAILED", value = StandardResponse.LoadFailed.class),
-               @JsonSubTypes.Type(name = "LAUNCH_ERROR", value = StandardResponse.LaunchError.class),
-               @JsonSubTypes.Type(name = "DEVICE_ADDED", value = StandardResponse.DeviceAdded.class),
-               @JsonSubTypes.Type(name = "DEVICE_UPDATED", value = StandardResponse.DeviceUpdated.class),
-               @JsonSubTypes.Type(name = "DEVICE_REMOVED", value = StandardResponse.DeviceRemoved.class)})
+@JsonSubTypes({
+	@JsonSubTypes.Type(name = "PING", value = StandardResponse.Ping.class),
+	@JsonSubTypes.Type(name = "PONG", value = StandardResponse.Pong.class),
+	@JsonSubTypes.Type(name = "RECEIVER_STATUS", value = StandardResponse.Status.class),
+	@JsonSubTypes.Type(name = "GET_APP_AVAILABILITY", value = StandardResponse.AppAvailability.class),
+	@JsonSubTypes.Type(name = "INVALID_REQUEST", value = StandardResponse.Invalid.class),
+	@JsonSubTypes.Type(name = "MEDIA_STATUS", value = StandardResponse.MediaStatus.class),
+	@JsonSubTypes.Type(name = "MULTIZONE_STATUS", value = StandardResponse.MultizoneStatus.class),
+	@JsonSubTypes.Type(name = "CLOSE", value = StandardResponse.Close.class),
+	@JsonSubTypes.Type(name = "LOAD_FAILED", value = StandardResponse.LoadFailed.class),
+	@JsonSubTypes.Type(name = "LAUNCH_ERROR", value = StandardResponse.LaunchError.class),
+	@JsonSubTypes.Type(name = "DEVICE_ADDED", value = StandardResponse.DeviceAdded.class),
+	@JsonSubTypes.Type(name = "DEVICE_UPDATED", value = StandardResponse.DeviceUpdated.class),
+	@JsonSubTypes.Type(name = "DEVICE_REMOVED", value = StandardResponse.DeviceRemoved.class)
+})
 abstract class StandardResponse implements Response {
-    Long requestId;
 
-    @Override
-    public final Long getRequestId() {
-        return requestId;
-    }
+	Long requestId;
 
-    @Override
-    public final void setRequestId(Long requestId) {
-        this.requestId = requestId;
-    }
+	@Override
+	public final Long getRequestId() {
+		return requestId;
+	}
 
-    /**
-     * Request to send 'Pong' message in reply.
-     */
-    static class Ping extends StandardResponse {}
+	@Override
+	public final void setRequestId(Long requestId) {
+		this.requestId = requestId;
+	}
 
-    /**
-     * Response in reply to 'Ping' message.
-     */
-    static class Pong extends StandardResponse {}
+	/**
+	 * Request to send 'Pong' message in reply.
+	 */
+	static class Ping extends StandardResponse {
+	}
 
-    /**
-     * Request to 'Close' connection.
-     */
-    static class Close extends StandardResponse {}
+	/**
+	 * Response in reply to 'Ping' message.
+	 */
+	static class Pong extends StandardResponse {
+	}
 
-    /**
-     * Identifies that loading of media has failed.
-     */
-    static class LoadFailed extends StandardResponse {}
+	/**
+	 * Request to 'Close' connection.
+	 */
+	static class Close extends StandardResponse {
+	}
 
-    /**
-     * Request was invalid for some <code>reason</code>.
-     */
-    static class Invalid extends StandardResponse {
-        final String reason;
+	/**
+	 * Identifies that loading of media has failed.
+	 */
+	static class LoadFailed extends StandardResponse {
+	}
 
-        Invalid(@JsonProperty("reason") String reason) {
-            this.reason = reason;
-        }
-    }
+	/**
+	 * Request was invalid for some <code>reason</code>.
+	 */
+	static class Invalid extends StandardResponse {
 
-    /**
-     * Application cannot be launched for some <code>reason</code>.
-     */
-    static class LaunchError extends StandardResponse {
-        final String reason;
+		final String reason;
 
-        LaunchError(@JsonProperty("reason") String reason) {
-            this.reason = reason;
-        }
-    }
+		Invalid(@JsonProperty("reason") String reason) {
+			this.reason = reason;
+		}
+	}
 
-    /**
-     * Response to "Status" request.
-     */
-    static class Status extends StandardResponse {
-        @JsonProperty
-        final org.digitalmediaserver.cast.Status status;
+	/**
+	 * Application cannot be launched for some <code>reason</code>.
+	 */
+	static class LaunchError extends StandardResponse {
 
-        Status(@JsonProperty("status") org.digitalmediaserver.cast.Status status) {
-            this.status = status;
-        }
-    }
+		final String reason;
 
-    /**
-     * Response to "MediaStatus" request.
-     */
-    static class MediaStatus extends StandardResponse {
-        final org.digitalmediaserver.cast.MediaStatus[] statuses;
+		LaunchError(@JsonProperty("reason") String reason) {
+			this.reason = reason;
+		}
+	}
 
-        MediaStatus(@JsonProperty("status") org.digitalmediaserver.cast.MediaStatus... statuses) {
-            this.statuses = statuses;
-        }
-    }
+	/**
+	 * Response to "Status" request.
+	 */
+	static class Status extends StandardResponse {
 
-    /**
-     * Response to "AppAvailability" request.
-     */
-    static class AppAvailability extends StandardResponse {
-        @JsonProperty
-        Map<String, String> availability;
-    }
+		@JsonProperty
+		final org.digitalmediaserver.cast.Status status;
 
-    /**
-     * Multi-Zone status for the case when there are multiple ChromeCast devices in different zones (rooms).
-     */
-    static class MultizoneStatus extends StandardResponse {
-        @JsonProperty
-        final org.digitalmediaserver.cast.MultizoneStatus status;
+		Status(@JsonProperty("status") org.digitalmediaserver.cast.Status status) {
+			this.status = status;
+		}
+	}
 
-        MultizoneStatus(@JsonProperty("status") org.digitalmediaserver.cast.MultizoneStatus status) {
-            this.status = status;
-        }
-    }
+	/**
+	 * Response to "MediaStatus" request.
+	 */
+	static class MediaStatus extends StandardResponse {
 
-    /**
-     * Received when power is cycled on ChromeCast Audio device in a group.
-     */
-    static class DeviceAdded extends StandardResponse {
-        final Device device;
+		final org.digitalmediaserver.cast.MediaStatus[] statuses;
 
-        DeviceAdded(@JsonProperty("device") Device device) {
-            this.device = device;
-        }
-    }
+		MediaStatus(@JsonProperty("status") org.digitalmediaserver.cast.MediaStatus... statuses) {
+			this.statuses = statuses;
+		}
+	}
 
-    /**
-     * Received when volume is changed in ChromeCast Audio group.
-     */
-    static class DeviceUpdated extends StandardResponse {
-        final Device device;
+	/**
+	 * Response to "AppAvailability" request.
+	 */
+	static class AppAvailability extends StandardResponse {
 
-        DeviceUpdated(@JsonProperty("device") Device device) {
-            this.device = device;
-        }
-    }
+		@JsonProperty
+		Map<String, String> availability;
+	}
 
-    /**
-     * Received when power is cycled on ChromeCast Audio device in a group.
-     */
-    static class DeviceRemoved extends StandardResponse {
-        final String deviceId;
+	/**
+	 * Multi-Zone status for the case when there are multiple ChromeCast devices
+	 * in different zones (rooms).
+	 */
+	static class MultizoneStatus extends StandardResponse {
 
-        DeviceRemoved(@JsonProperty("deviceId") String deviceId) {
-            this.deviceId = deviceId;
-        }
-    }
+		@JsonProperty
+		final org.digitalmediaserver.cast.MultizoneStatus status;
+
+		MultizoneStatus(@JsonProperty("status") org.digitalmediaserver.cast.MultizoneStatus status) {
+			this.status = status;
+		}
+	}
+
+	/**
+	 * Received when power is cycled on ChromeCast Audio device in a group.
+	 */
+	static class DeviceAdded extends StandardResponse {
+
+		final Device device;
+
+		DeviceAdded(@JsonProperty("device") Device device) {
+			this.device = device;
+		}
+	}
+
+	/**
+	 * Received when volume is changed in ChromeCast Audio group.
+	 */
+	static class DeviceUpdated extends StandardResponse {
+
+		final Device device;
+
+		DeviceUpdated(@JsonProperty("device") Device device) {
+			this.device = device;
+		}
+	}
+
+	/**
+	 * Received when power is cycled on ChromeCast Audio device in a group.
+	 */
+	static class DeviceRemoved extends StandardResponse {
+
+		final String deviceId;
+
+		DeviceRemoved(@JsonProperty("deviceId") String deviceId) {
+			this.deviceId = deviceId;
+		}
+	}
 }

@@ -20,183 +20,206 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Map;
 
 /**
- * Parent class for transport object representing messages sent TO ChromeCast device.
+ * Parent class for transport object representing messages sent TO ChromeCast
+ * device.
  */
 abstract class StandardRequest extends StandardMessage implements Request {
-    Long requestId;
 
-    @Override
-    public final void setRequestId(Long requestId) {
-        this.requestId = requestId;
-    }
+	Long requestId;
 
-    @Override
-    public final Long getRequestId() {
-        return requestId;
-    }
+	@Override
+	public final void setRequestId(Long requestId) {
+		this.requestId = requestId;
+	}
 
-    /**
-     * Request for current status of ChromeCast device.
-     */
-    static class Status extends StandardRequest {}
+	@Override
+	public final Long getRequestId() {
+		return requestId;
+	}
 
-    /**
-     * Request for availability of applications with specified identifiers.
-     */
-    static class AppAvailability extends StandardRequest {
-        @JsonProperty
-        final String[] appId;
+	/**
+	 * Request for current status of ChromeCast device.
+	 */
+	static class Status extends StandardRequest {
+	}
 
-        AppAvailability(String... appId) {
-            this.appId = appId;
-        }
-    }
+	/**
+	 * Request for availability of applications with specified identifiers.
+	 */
+	static class AppAvailability extends StandardRequest {
 
-    /**
-     * Request to launch application with specified identifiers.
-     */
-    static class Launch extends StandardRequest {
-        @JsonProperty
-        final String appId;
+		@JsonProperty
+		final String[] appId;
 
-        Launch(@JsonProperty("appId") String appId) {
-            this.appId = appId;
-        }
-    }
+		AppAvailability(String... appId) {
+			this.appId = appId;
+		}
+	}
 
-    /**
-     * Request to stop currently running application.
-     */
-    static class Stop extends StandardRequest {
-        @JsonProperty
-        final String sessionId;
+	/**
+	 * Request to launch application with specified identifiers.
+	 */
+	static class Launch extends StandardRequest {
 
-        Stop(String sessionId) {
-            this.sessionId = sessionId;
-        }
-    }
+		@JsonProperty
+		final String appId;
 
-    /**
-     * Request to load media.
-     */
-    static class Load extends StandardRequest {
-        @JsonProperty
-        final String sessionId;
-        @JsonProperty
-        final Media media;
-        @JsonProperty
-        final boolean autoplay;
-        @JsonProperty
-        final double currentTime;
-        @JsonProperty
-        final Object customData;
+		Launch(@JsonProperty("appId") String appId) {
+			this.appId = appId;
+		}
+	}
 
-        Load(String sessionId, Media media, boolean autoplay, double currentTime,
-             final Map<String, String> customData) {
-            this.sessionId = sessionId;
-            this.media = media;
-            this.autoplay = autoplay;
-            this.currentTime = currentTime;
+	/**
+	 * Request to stop currently running application.
+	 */
+	static class Stop extends StandardRequest {
 
-            this.customData = customData == null ? null : new Object() {
-                @JsonProperty
-                Map<String, String> payload = customData;
-            };
-        }
-    }
+		@JsonProperty
+		final String sessionId;
 
-    /**
-     * Abstract request for an action with currently played media.
-     */
-    abstract static class MediaRequest extends StandardRequest {
-        @JsonProperty
-        final long mediaSessionId;
-        @JsonProperty
-        final String sessionId;
+		Stop(String sessionId) {
+			this.sessionId = sessionId;
+		}
+	}
 
-        MediaRequest(long mediaSessionId, String sessionId) {
-            this.mediaSessionId = mediaSessionId;
-            this.sessionId = sessionId;
-        }
-    }
+	/**
+	 * Request to load media.
+	 */
+	static class Load extends StandardRequest {
 
-    /**
-     * Request to start/resume playback.
-     */
-    static class Play extends MediaRequest {
-        Play(long mediaSessionId, String sessionId) {
-            super(mediaSessionId, sessionId);
-        }
-    }
+		@JsonProperty
+		final String sessionId;
+		@JsonProperty
+		final Media media;
+		@JsonProperty
+		final boolean autoplay;
+		@JsonProperty
+		final double currentTime;
+		@JsonProperty
+		final Object customData;
 
-    /**
-     * Request to pause playback.
-     */
-    static class Pause extends MediaRequest {
-        Pause(long mediaSessionId, String sessionId) {
-            super(mediaSessionId, sessionId);
-        }
-    }
+		public Load(
+			String sessionId,
+			Media media,
+			boolean autoplay,
+			double currentTime,
+			final Map<String, String> customData
+		) {
+			this.sessionId = sessionId;
+			this.media = media;
+			this.autoplay = autoplay;
+			this.currentTime = currentTime;
 
-    /**
-     * Request to change current playback position.
-     */
-    static class Seek extends MediaRequest {
-        @JsonProperty
-        final double currentTime;
+			this.customData = customData == null ? null : new Object() {
 
-        Seek(long mediaSessionId, String sessionId, double currentTime) {
-            super(mediaSessionId, sessionId);
-            this.currentTime = currentTime;
-        }
-    }
+				@JsonProperty
+				Map<String, String> payload = customData;
+			};
+		}
+	}
 
-    /**
-     * Request to change volume.
-     */
-    static class SetVolume extends StandardRequest {
-        @JsonProperty
-        final Volume volume;
+	/**
+	 * Abstract request for an action with currently played media.
+	 */
+	abstract static class MediaRequest extends StandardRequest {
 
-        SetVolume(Volume volume) {
-            this.volume = volume;
-        }
-    }
+		@JsonProperty
+		final long mediaSessionId;
+		@JsonProperty
+		final String sessionId;
 
-    static Status status() {
-        return new Status();
-    }
+		MediaRequest(long mediaSessionId, String sessionId) {
+			this.mediaSessionId = mediaSessionId;
+			this.sessionId = sessionId;
+		}
+	}
 
-    static AppAvailability appAvailability(String... appId) {
-        return new AppAvailability(appId);
-    }
+	/**
+	 * Request to start/resume playback.
+	 */
+	static class Play extends MediaRequest {
 
-    static Launch launch(String appId) {
-        return new Launch(appId);
-    }
+		Play(long mediaSessionId, String sessionId) {
+			super(mediaSessionId, sessionId);
+		}
+	}
 
-    static Stop stop(String sessionId) {
-        return new Stop(sessionId);
-    }
+	/**
+	 * Request to pause playback.
+	 */
+	static class Pause extends MediaRequest {
 
-    static Load load(String sessionId, Media media, boolean autoplay, double currentTime,
-                     Map<String, String> customData) {
-        return new Load(sessionId, media, autoplay, currentTime, customData);
-    }
+		Pause(long mediaSessionId, String sessionId) {
+			super(mediaSessionId, sessionId);
+		}
+	}
 
-    static Play play(String sessionId, long mediaSessionId) {
-        return new Play(mediaSessionId, sessionId);
-    }
+	/**
+	 * Request to change current playback position.
+	 */
+	static class Seek extends MediaRequest {
 
-    static Pause pause(String sessionId, long mediaSessionId) {
-        return new Pause(mediaSessionId, sessionId);
-    }
+		@JsonProperty
+		final double currentTime;
 
-    static Seek seek(String sessionId, long mediaSessionId, double currentTime) {
-        return new Seek(mediaSessionId, sessionId, currentTime);
-    }
+		Seek(long mediaSessionId, String sessionId, double currentTime) {
+			super(mediaSessionId, sessionId);
+			this.currentTime = currentTime;
+		}
+	}
 
-    static SetVolume setVolume(Volume volume) {
-        return new SetVolume(volume);
-    }
+	/**
+	 * Request to change volume.
+	 */
+	static class SetVolume extends StandardRequest {
+
+		@JsonProperty
+		final Volume volume;
+
+		SetVolume(Volume volume) {
+			this.volume = volume;
+		}
+	}
+
+	static Status status() {
+		return new Status();
+	}
+
+	static AppAvailability appAvailability(String... appId) {
+		return new AppAvailability(appId);
+	}
+
+	static Launch launch(String appId) {
+		return new Launch(appId);
+	}
+
+	static Stop stop(String sessionId) {
+		return new Stop(sessionId);
+	}
+
+	static Load load(
+		String sessionId,
+		Media media,
+		boolean autoplay,
+		double currentTime,
+		Map<String, String> customData
+	) {
+		return new Load(sessionId, media, autoplay, currentTime, customData);
+	}
+
+	static Play play(String sessionId, long mediaSessionId) {
+		return new Play(mediaSessionId, sessionId);
+	}
+
+	static Pause pause(String sessionId, long mediaSessionId) {
+		return new Pause(mediaSessionId, sessionId);
+	}
+
+	static Seek seek(String sessionId, long mediaSessionId, double currentTime) {
+		return new Seek(mediaSessionId, sessionId, currentTime);
+	}
+
+	static SetVolume setVolume(Volume volume) {
+		return new SetVolume(volume);
+	}
 }

@@ -18,11 +18,14 @@ package org.digitalmediaserver.cast;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Implementation must be a request object, which can be serialized to JSON with Jackson library.
+ * Implementation must be a request object, which can be serialized to JSON with
+ * Jackson library.
  */
 public interface Request extends Message {
-    @JsonProperty
-    Long getRequestId();
-    @JsonProperty
-    void setRequestId(Long requestId);
+
+	@JsonProperty
+	Long getRequestId();
+
+	@JsonProperty
+	void setRequestId(Long requestId);
 }

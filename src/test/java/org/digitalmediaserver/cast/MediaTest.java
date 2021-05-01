@@ -16,8 +16,6 @@
 package org.digitalmediaserver.cast;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.digitalmediaserver.cast.JacksonHelper;
-import org.digitalmediaserver.cast.Media;
 import org.digitalmediaserver.cast.Media.StreamType;
 import org.junit.Test;
 import java.util.HashMap;
@@ -28,35 +26,36 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
 
 public class MediaTest {
-    final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 
-    @Test
-    public void itIncludesOptionalFieldsWhenSet() throws Exception {
-        Map<String, Object> customData = new HashMap<String, Object>();
-        customData.put("a", "b");
-        Map<String, Object> metadata = new HashMap<String, Object>();
-        metadata.put("1", "2");
-        Media m = new Media(null, null, 123.456d, StreamType.BUFFERED, customData, metadata, null, null);
+	final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 
-        String json = jsonMapper.writeValueAsString(m);
+	@Test
+	public void itIncludesOptionalFieldsWhenSet() throws Exception {
+		Map<String, Object> customData = new HashMap<String, Object>();
+		customData.put("a", "b");
+		Map<String, Object> metadata = new HashMap<String, Object>();
+		metadata.put("1", "2");
+		Media m = new Media(null, null, 123.456d, StreamType.BUFFERED, customData, metadata, null, null);
 
-        assertThat(json, containsString("\"duration\":123.456"));
-        assertThat(json, containsString("\"streamType\":\"BUFFERED\""));
-        assertThat(json, containsString("\"customData\":{\"a\":\"b\"}"));
-        assertThat(json, containsString("\"metadata\":{\"1\":\"2\"}"));
-    }
+		String json = jsonMapper.writeValueAsString(m);
 
-    @Test
-    public void itDoesNotContainOptionalFieldsWhenNotSet() throws Exception {
-        Media m = new Media(null, null, null, null, null, null, null, null);
+		assertThat(json, containsString("\"duration\":123.456"));
+		assertThat(json, containsString("\"streamType\":\"BUFFERED\""));
+		assertThat(json, containsString("\"customData\":{\"a\":\"b\"}"));
+		assertThat(json, containsString("\"metadata\":{\"1\":\"2\"}"));
+	}
 
-        String json = jsonMapper.writeValueAsString(m);
+	@Test
+	public void itDoesNotContainOptionalFieldsWhenNotSet() throws Exception {
+		Media m = new Media(null, null, null, null, null, null, null, null);
 
-        assertThat(json, not(containsString("duration")));
-        assertThat(json, not(containsString("streamType")));
-        assertThat(json, not(containsString("customData")));
-        assertThat(json, not(containsString("metadata")));
-        assertThat(json, not(containsString("metadataType")));
-    }
+		String json = jsonMapper.writeValueAsString(m);
+
+		assertThat(json, not(containsString("duration")));
+		assertThat(json, not(containsString("streamType")));
+		assertThat(json, not(containsString("customData")));
+		assertThat(json, not(containsString("metadata")));
+		assertThat(json, not(containsString("metadataType")));
+	}
 
 }

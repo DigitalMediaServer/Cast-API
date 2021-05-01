@@ -16,22 +16,24 @@
 package org.digitalmediaserver.cast;
 
 /**
- * Event fired when connection to ChromeCast device is either established or closed.
+ * Event fired when connection to ChromeCast device is either established or
+ * closed.
  */
 public class ChromeCastConnectionEvent {
-    /**
-     * Identifies type of event.
-     *
-     * <code>true</code> value means connection was established.
-     * <code>false</code> value means connection was closed.
-     */
-    private final boolean connected;
 
-    ChromeCastConnectionEvent(final boolean connected) {
-        this.connected = connected;
-    }
+	/**
+	 * Identifies type of event.
+	 *
+	 * <code>true</code> value means connection was established.
+	 * <code>false</code> value means connection was closed.
+	 */
+	private final boolean connected;
 
-    public final boolean isConnected() {
-        return connected;
-    }
+	ChromeCastConnectionEvent(final boolean connected) {
+		this.connected = connected;
+	}
+
+	public final boolean isConnected() {
+		return connected;
+	}
 }

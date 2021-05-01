@@ -20,29 +20,33 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * Track meta data information.
  *
- * @see <a href="https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.Track">
- *     https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.Track</a>
+ * @see <a href=
+ *      "https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.Track">
+ *      https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.Track</a>
  */
 public class Track {
-    /**
-     * Media track type.
-     *
-     * @see <a href="https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media#.TrackType">
-     *     https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media#.TrackType</a>
-     */
-    public enum TrackType { TEXT, AUDIO, VIDEO }
 
-    public final long id;
-    public final TrackType type;
+	/**
+	 * Media track type.
+	 *
+	 * @see <a href=
+	 *      "https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media#.TrackType">
+	 *      https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media#.TrackType</a>
+	 */
+	public enum TrackType {
+		TEXT, AUDIO, VIDEO
+	}
 
-    public Track(@JsonProperty("trackId") long id,
-                 @JsonProperty("trackType") TrackType type) {
-        this.id = id;
-        this.type = type;
-    }
+	public final long id;
+	public final TrackType type;
 
-    @Override
-    public final String toString() {
-        return String.format("Track{id: %d, type: %s}", this.id, this.type);
-    }
+	public Track(@JsonProperty("trackId") long id, @JsonProperty("trackType") TrackType type) {
+		this.id = id;
+		this.type = type;
+	}
+
+	@Override
+	public final String toString() {
+		return String.format("Track{id: %d, type: %s}", this.id, this.type);
+	}
 }

@@ -21,34 +21,35 @@ import java.util.Random;
  * Utility class for generating random strings of human-readable characters.
  */
 class RandomString {
-    private static char[] symbols;
 
-    static {
-        StringBuilder tmp = new StringBuilder();
-        for (char ch = '0'; ch <= '9'; ++ch) {
-            tmp.append(ch);
-        }
-        for (char ch = 'a'; ch <= 'z'; ++ch) {
-            tmp.append(ch);
-        }
-        symbols = tmp.toString().toCharArray();
-    }
+	private static char[] symbols;
 
-    private final Random random = new Random();
+	static {
+		StringBuilder tmp = new StringBuilder();
+		for (char ch = '0'; ch <= '9'; ++ch) {
+			tmp.append(ch);
+		}
+		for (char ch = 'a'; ch <= 'z'; ++ch) {
+			tmp.append(ch);
+		}
+		symbols = tmp.toString().toCharArray();
+	}
 
-    private final char[] buf;
+	private final Random random = new Random();
 
-    RandomString(int length) {
-        if (length < 1) {
-            throw new IllegalArgumentException("length < 1: " + length);
-        }
-        buf = new char[length];
-    }
+	private final char[] buf;
 
-    final String nextString() {
-        for (int idx = 0; idx < buf.length; ++idx) {
-            buf[idx] = symbols[random.nextInt(symbols.length)];
-        }
-        return new String(buf);
-    }
+	RandomString(int length) {
+		if (length < 1) {
+			throw new IllegalArgumentException("length < 1: " + length);
+		}
+		buf = new char[length];
+	}
+
+	final String nextString() {
+		for (int idx = 0; idx < buf.length; ++idx) {
+			buf[idx] = symbols[random.nextInt(symbols.length)];
+		}
+		return new String(buf);
+	}
 }

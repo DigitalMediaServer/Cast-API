@@ -16,10 +16,6 @@
 package org.digitalmediaserver.cast;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.digitalmediaserver.cast.Device;
-import org.digitalmediaserver.cast.JacksonHelper;
-import org.digitalmediaserver.cast.StandardResponse;
-import org.digitalmediaserver.cast.Volume;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -30,57 +26,53 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 public class DeviceTest {
-    final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 
-    @Test
-    public void testDeviceAdded() throws IOException {
-        final String jsonMSG = FixtureHelper.fixtureAsString("/device-added.json")
-                .replaceFirst("\"type\"", "\"responseType\"");
-        final StandardResponse.DeviceAdded response = jsonMapper.readValue(jsonMSG, StandardResponse.DeviceAdded.class);
+	final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 
-        assertNotNull(response.device);
-        Device device = response.device;
-        assertEquals("Amplifier", device.name);
-        assertEquals("123456", device.deviceId);
-        assertEquals(4, device.capabilities);
-        assertNotNull(device.volume);
-        Volume volume = device.volume;
-        assertEquals(0.24, volume.level, 0.001);
-        assertFalse(volume.muted);
-        assertNotNull(volume.increment);
-        assertNotNull(volume.stepInterval);
-        assertNull(volume.controlType);
-    }
+	@Test
+	public void testDeviceAdded() throws IOException {
+		final String jsonMSG = FixtureHelper.fixtureAsString("/device-added.json").replaceFirst("\"type\"", "\"responseType\"");
+		final StandardResponse.DeviceAdded response = jsonMapper.readValue(jsonMSG, StandardResponse.DeviceAdded.class);
 
-    @Test
-    public void testDeviceRemoved() throws IOException {
-        final String jsonMSG = FixtureHelper.fixtureAsString("/device-removed.json")
-                .replaceFirst("\"type\"", "\"responseType\"");
-        final StandardResponse.DeviceRemoved response =
-                jsonMapper.readValue(jsonMSG, StandardResponse.DeviceRemoved.class);
+		assertNotNull(response.device);
+		Device device = response.device;
+		assertEquals("Amplifier", device.name);
+		assertEquals("123456", device.deviceId);
+		assertEquals(4, device.capabilities);
+		assertNotNull(device.volume);
+		Volume volume = device.volume;
+		assertEquals(0.24, volume.level, 0.001);
+		assertFalse(volume.muted);
+		assertNotNull(volume.increment);
+		assertNotNull(volume.stepInterval);
+		assertNull(volume.controlType);
+	}
 
-        assertNotNull(response.deviceId);
-        assertEquals("111111", response.deviceId);
-    }
+	@Test
+	public void testDeviceRemoved() throws IOException {
+		final String jsonMSG = FixtureHelper.fixtureAsString("/device-removed.json").replaceFirst("\"type\"", "\"responseType\"");
+		final StandardResponse.DeviceRemoved response = jsonMapper.readValue(jsonMSG, StandardResponse.DeviceRemoved.class);
 
-    @Test
-    public void testDeviceUpdated() throws IOException {
-        final String jsonMSG = FixtureHelper.fixtureAsString("/device-updated.json")
-                .replaceFirst("\"type\"", "\"responseType\"");
-        final StandardResponse.DeviceUpdated response =
-                jsonMapper.readValue(jsonMSG, StandardResponse.DeviceUpdated.class);
+		assertNotNull(response.deviceId);
+		assertEquals("111111", response.deviceId);
+	}
 
-        assertNotNull(response.device);
-        Device device = response.device;
-        assertEquals("Amplifier", device.name);
-        assertEquals("654321", device.deviceId);
-        assertEquals(4, device.capabilities);
-        assertNotNull(device.volume);
-        Volume volume = device.volume;
-        assertEquals(0.35, volume.level, 0.001);
-        assertFalse(volume.muted);
-        assertNotNull(volume.increment);
-        assertNotNull(volume.stepInterval);
-        assertNull(volume.controlType);
-    }
+	@Test
+	public void testDeviceUpdated() throws IOException {
+		final String jsonMSG = FixtureHelper.fixtureAsString("/device-updated.json").replaceFirst("\"type\"", "\"responseType\"");
+		final StandardResponse.DeviceUpdated response = jsonMapper.readValue(jsonMSG, StandardResponse.DeviceUpdated.class);
+
+		assertNotNull(response.device);
+		Device device = response.device;
+		assertEquals("Amplifier", device.name);
+		assertEquals("654321", device.deviceId);
+		assertEquals(4, device.capabilities);
+		assertNotNull(device.volume);
+		Volume volume = device.volume;
+		assertEquals(0.35, volume.level, 0.001);
+		assertFalse(volume.muted);
+		assertNotNull(volume.increment);
+		assertNotNull(volume.stepInterval);
+		assertNull(volume.controlType);
+	}
 }

@@ -18,18 +18,6 @@ package org.digitalmediaserver.cast;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.MessageLite;
-import org.digitalmediaserver.cast.Application;
-import org.digitalmediaserver.cast.ChromeCastException;
-import org.digitalmediaserver.cast.JacksonHelper;
-import org.digitalmediaserver.cast.Message;
-import org.digitalmediaserver.cast.Namespace;
-import org.digitalmediaserver.cast.Response;
-import org.digitalmediaserver.cast.StandardMessage;
-import org.digitalmediaserver.cast.StandardRequest;
-import org.digitalmediaserver.cast.StandardResponse;
-import org.digitalmediaserver.cast.Status;
-import org.digitalmediaserver.cast.Volume;
-import org.digitalmediaserver.cast.X509TrustAllManager;
 import org.digitalmediaserver.cast.CastChannel.CastMessage;
 import org.digitalmediaserver.cast.CastChannel.DeviceAuthMessage;
 import org.digitalmediaserver.cast.CastChannel.CastMessage.PayloadType;
@@ -52,188 +40,209 @@ import java.util.Collections;
 import java.util.List;
 
 final class MockedChromeCast {
-    final Logger logger = LoggerFactory.getLogger(MockedChromeCast.class);
 
-    final ServerSocket socket;
-    final ClientThread clientThread;
-    List<Application> runningApplications = new ArrayList<Application>();
-    CustomHandler customHandler;
+	final Logger logger = LoggerFactory.getLogger(MockedChromeCast.class);
 
-    interface CustomHandler {
-        Response handle(JsonNode json);
-    }
+	final ServerSocket socket;
+	final ClientThread clientThread;
+	List<Application> runningApplications = new ArrayList<Application>();
+	CustomHandler customHandler;
 
-    MockedChromeCast() throws IOException, GeneralSecurityException {
-        SSLContext sc = SSLContext.getInstance("SSL");
-        KeyStore keyStore = KeyStore.getInstance("JKS");
-        keyStore.load(getClass().getResourceAsStream("/keystore.jks"), "changeit".toCharArray());
+	interface CustomHandler {
 
-        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-        keyManagerFactory.init(keyStore, "changeit".toCharArray());
+		Response handle(JsonNode json);
+	}
 
-        sc.init(keyManagerFactory.getKeyManagers(), new TrustManager[] {new X509TrustAllManager()}, new SecureRandom());
-        socket = sc.getServerSocketFactory().createServerSocket(8009);
+	MockedChromeCast() throws IOException, GeneralSecurityException {
+		SSLContext sc = SSLContext.getInstance("SSL");
+		KeyStore keyStore = KeyStore.getInstance("JKS");
+		keyStore.load(getClass().getResourceAsStream("/keystore.jks"), "changeit".toCharArray());
 
-        clientThread = new ClientThread();
-        clientThread.start();
-    }
+		KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+		keyManagerFactory.init(keyStore, "changeit".toCharArray());
 
-    class ClientThread extends Thread {
-        volatile boolean stop;
-        Socket clientSocket;
-        ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
+		sc.init(keyManagerFactory.getKeyManagers(), new TrustManager[] { new X509TrustAllManager() }, new SecureRandom());
+		socket = sc.getServerSocketFactory().createServerSocket(8009);
 
-        @Override
-        public void run() {
-            try {
-                clientSocket = socket.accept();
-                while (!stop) {
-                    handle(read(clientSocket));
-                }
-            } catch (IOException ioex) {
-                logger.warn("Error while handling: {}", ioex.toString());
-            } finally {
-                if (clientSocket != null) {
-                    try {
-                        clientSocket.close();
-                    } catch (IOException ioex) {
-                        ioex.printStackTrace();
-                    }
-                }
-            }
-        }
+		clientThread = new ClientThread();
+		clientThread.start();
+	}
 
-        void handle(CastMessage message) throws IOException {
-            logger.info("Received message: ");
-            logger.info("   sourceId: " + message.getSourceId());
-            logger.info("   destinationId: " + message.getDestinationId());
-            logger.info("   namespace: " + message.getNamespace());
-            logger.info("   payloadType: " + message.getPayloadType());
-            if (message.getPayloadType() == PayloadType.STRING) {
-                logger.info("   payload: " + message.getPayloadUtf8());
-            }
+	class ClientThread extends Thread {
 
-            if (message.getPayloadType() == PayloadType.BINARY) {
-                MessageLite response = handleBinary(DeviceAuthMessage.parseFrom(message.getPayloadBinary()));
-                logger.info("Sending response message: ");
-                logger.info("   sourceId: " + message.getDestinationId());
-                logger.info("   destinationId: " + message.getSourceId());
-                logger.info("   namespace: " + message.getNamespace());
-                logger.info("   payloadType: " + PayloadType.BINARY);
-                write(clientSocket,
-                        CastMessage.newBuilder()
-                                .setProtocolVersion(message.getProtocolVersion())
-                                .setSourceId(message.getDestinationId())
-                                .setDestinationId(message.getSourceId())
-                                .setNamespace(message.getNamespace())
-                                .setPayloadType(PayloadType.BINARY)
-                                .setPayloadBinary(response.toByteString())
-                                .build());
-            } else {
-                JsonNode json = jsonMapper.readTree(message.getPayloadUtf8());
-                Response response = null;
-                if (json.has("type")) {
-                    StandardMessage standardMessage = jsonMapper.readValue(message.getPayloadUtf8(),
-                            StandardMessage.class);
-                    response = handleJSON(standardMessage);
-                } else {
-                    response = handleCustom(json);
-                }
+		volatile boolean stop;
+		Socket clientSocket;
+		ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 
-                if (response != null) {
-                    if (json.has("requestId")) {
-                        response.setRequestId(json.get("requestId").asLong());
-                    }
+		@Override
+		public void run() {
+			try {
+				clientSocket = socket.accept();
+				while (!stop) {
+					handle(read(clientSocket));
+				}
+			} catch (IOException ioex) {
+				logger.warn("Error while handling: {}", ioex.toString());
+			} finally {
+				if (clientSocket != null) {
+					try {
+						clientSocket.close();
+					} catch (IOException ioex) {
+						ioex.printStackTrace();
+					}
+				}
+			}
+		}
 
-                    logger.info("Sending response message: ");
-                    logger.info("   sourceId: " + message.getDestinationId());
-                    logger.info("   destinationId: " + message.getSourceId());
-                    logger.info("   namespace: " + message.getNamespace());
-                    logger.info("   payloadType: " + CastMessage.PayloadType.STRING);
-                    logger.info("   payload: " + jsonMapper.writeValueAsString(response));
-                    write(clientSocket,
-                            CastMessage.newBuilder()
-                                    .setProtocolVersion(message.getProtocolVersion())
-                                    .setSourceId(message.getDestinationId())
-                                    .setDestinationId(message.getSourceId())
-                                    .setNamespace(message.getNamespace())
-                                    .setPayloadType(CastMessage.PayloadType.STRING)
-                                    .setPayloadUtf8(jsonMapper.writeValueAsString(response))
-                                    .build());
-                }
-            }
-        }
+		void handle(CastMessage message) throws IOException {
+			logger.info("Received message: ");
+			logger.info("   sourceId: " + message.getSourceId());
+			logger.info("   destinationId: " + message.getDestinationId());
+			logger.info("   namespace: " + message.getNamespace());
+			logger.info("   payloadType: " + message.getPayloadType());
+			if (message.getPayloadType() == PayloadType.STRING) {
+				logger.info("   payload: " + message.getPayloadUtf8());
+			}
 
-        MessageLite handleBinary(DeviceAuthMessage message) throws IOException {
-            return message;
-        }
+			if (message.getPayloadType() == PayloadType.BINARY) {
+				MessageLite response = handleBinary(DeviceAuthMessage.parseFrom(message.getPayloadBinary()));
+				logger.info("Sending response message: ");
+				logger.info("   sourceId: " + message.getDestinationId());
+				logger.info("   destinationId: " + message.getSourceId());
+				logger.info("   namespace: " + message.getNamespace());
+				logger.info("   payloadType: " + PayloadType.BINARY);
+				write(clientSocket,
+					CastMessage.newBuilder()
+						.setProtocolVersion(message.getProtocolVersion())
+						.setSourceId(message.getDestinationId())
+						.setDestinationId(message.getSourceId())
+						.setNamespace(message.getNamespace())
+						.setPayloadType(PayloadType.BINARY)
+						.setPayloadBinary(response.toByteString())
+						.build()
+					);
+			} else {
+				JsonNode json = jsonMapper.readTree(message.getPayloadUtf8());
+				Response response = null;
+				if (json.has("type")) {
+					StandardMessage standardMessage = jsonMapper.readValue(message.getPayloadUtf8(), StandardMessage.class);
+					response = handleJSON(standardMessage);
+				} else {
+					response = handleCustom(json);
+				}
 
-        Response handleJSON(Message message) {
-            if (message instanceof StandardMessage.Ping) {
-                return new StandardResponse.Pong();
-            } else if (message instanceof StandardRequest.Status) {
-                return new StandardResponse.Status(status());
-            } else if (message instanceof StandardRequest.Launch) {
-                StandardRequest.Launch launch = (StandardRequest.Launch) message;
-                runningApplications.add(new Application(launch.appId, "iconUrl", launch.appId, "SESSION_ID", "",
-                        false, false, "", Collections.<Namespace>emptyList()));
-                StandardResponse response = new StandardResponse.Status(status());
-                response.setRequestId(launch.getRequestId());
-                return response;
-            }
-            return null;
-        }
+				if (response != null) {
+					if (json.has("requestId")) {
+						response.setRequestId(json.get("requestId").asLong());
+					}
 
-        Status status() {
-            return new Status(new Volume(1f, false, Volume.DEFAULT_INCREMENT,
-                        Volume.DEFAULT_INCREMENT.doubleValue(), Volume.DEFAULT_CONTROL_TYPE),
-                    runningApplications, false, true);
-        }
+					logger.info("Sending response message: ");
+					logger.info("   sourceId: " + message.getDestinationId());
+					logger.info("   destinationId: " + message.getSourceId());
+					logger.info("   namespace: " + message.getNamespace());
+					logger.info("   payloadType: " + CastMessage.PayloadType.STRING);
+					logger.info("   payload: " + jsonMapper.writeValueAsString(response));
+					write(clientSocket,
+						CastMessage.newBuilder()
+							.setProtocolVersion(message.getProtocolVersion())
+							.setSourceId(message.getDestinationId())
+							.setDestinationId(message.getSourceId())
+							.setNamespace(message.getNamespace())
+							.setPayloadType(CastMessage.PayloadType.STRING)
+							.setPayloadUtf8(jsonMapper.writeValueAsString(response))
+							.build());
+				}
+			}
+		}
 
-        Response handleCustom(JsonNode json) {
-            if (customHandler == null) {
-                logger.info("No custom handler set");
-                return null;
-            } else {
-                return customHandler.handle(json);
-            }
-        }
+		MessageLite handleBinary(DeviceAuthMessage message) throws IOException {
+			return message;
+		}
 
-        CastMessage read(Socket mySocket) throws IOException {
-            InputStream is = mySocket.getInputStream();
-            byte[] buf = new byte[4];
+		Response handleJSON(Message message) {
+			if (message instanceof StandardMessage.Ping) {
+				return new StandardResponse.Pong();
+			} else if (message instanceof StandardRequest.Status) {
+				return new StandardResponse.Status(status());
+			} else if (message instanceof StandardRequest.Launch) {
+				StandardRequest.Launch launch = (StandardRequest.Launch) message;
+				runningApplications.add(new Application(
+					launch.appId,
+					"iconUrl",
+					launch.appId,
+					"SESSION_ID",
+					"",
+					false,
+					false,
+					"",
+					Collections.<Namespace> emptyList()
+				));
+				StandardResponse response = new StandardResponse.Status(status());
+				response.setRequestId(launch.getRequestId());
+				return response;
+			}
+			return null;
+		}
 
-            int read = 0;
-            while (read < buf.length) {
-                int nextByte = is.read();
-                if (nextByte == -1) {
-                    throw new ChromeCastException("Remote socket was closed");
-                }
-                buf[read++] = (byte) nextByte;
-            }
+		Status status() {
+			return new Status(
+				new Volume(
+					1f,
+					false,
+					Volume.DEFAULT_INCREMENT,
+					Volume.DEFAULT_INCREMENT.doubleValue(),
+					Volume.DEFAULT_CONTROL_TYPE
+				),
+				runningApplications,
+				false,
+				true
+			);
+		}
 
-            int size = fromArray(buf);
-            buf = new byte[size];
-            read = 0;
-            while (read < size) {
-                int nowRead = is.read(buf, read, buf.length - read);
-                if (nowRead == -1) {
-                    throw new ChromeCastException("Remote socket was closed");
-                }
-                read += nowRead;
-            }
+		Response handleCustom(JsonNode json) {
+			if (customHandler == null) {
+				logger.info("No custom handler set");
+				return null;
+			} else {
+				return customHandler.handle(json);
+			}
+		}
 
-            return CastMessage.parseFrom(buf);
-        }
+		CastMessage read(Socket mySocket) throws IOException {
+			InputStream is = mySocket.getInputStream();
+			byte[] buf = new byte[4];
 
-        void write(Socket mySocket, CastMessage message) throws IOException {
-            mySocket.getOutputStream().write(toArray(message.getSerializedSize()));
-            message.writeTo(mySocket.getOutputStream());
-        }
-    }
+			int read = 0;
+			while (read < buf.length) {
+				int nextByte = is.read();
+				if (nextByte == -1) {
+					throw new ChromeCastException("Remote socket was closed");
+				}
+				buf[read++] = (byte) nextByte;
+			}
 
-    void close() throws IOException {
-        clientThread.stop = true;
-        this.socket.close();
-    }
+			int size = fromArray(buf);
+			buf = new byte[size];
+			read = 0;
+			while (read < size) {
+				int nowRead = is.read(buf, read, buf.length - read);
+				if (nowRead == -1) {
+					throw new ChromeCastException("Remote socket was closed");
+				}
+				read += nowRead;
+			}
+
+			return CastMessage.parseFrom(buf);
+		}
+
+		void write(Socket mySocket, CastMessage message) throws IOException {
+			mySocket.getOutputStream().write(toArray(message.getSerializedSize()));
+			message.writeTo(mySocket.getOutputStream());
+		}
+	}
+
+	void close() throws IOException {
+		clientThread.stop = true;
+		this.socket.close();
+	}
 }

@@ -22,11 +22,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * Utility class for creating pre-configured instances of JSON mapper.
  */
 final class JacksonHelper {
-    private JacksonHelper() {}
 
-    static ObjectMapper createJSONMapper() {
-        ObjectMapper jsonMapper = new ObjectMapper();
-        jsonMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return jsonMapper;
-    }
+	private JacksonHelper() {
+	}
+
+	static ObjectMapper createJSONMapper() {
+		ObjectMapper jsonMapper = new ObjectMapper();
+		jsonMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		return jsonMapper;
+	}
 }

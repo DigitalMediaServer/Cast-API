@@ -16,17 +16,18 @@
 package org.digitalmediaserver.cast;
 
 /**
- * The listener interface for receiving spontaneous events. The class that is interested in processing spontaneous
- * events implements this interface, and object create with that class is registered with <code>ChromeCast</code>
- * instance using the <code>registerListener</code> method. When spontaneous event occurs, that object's
- * <code>spontaneousEventReceived</code> is invoked.
+ * The listener interface for receiving spontaneous events. The class that is
+ * interested in processing spontaneous events implements this interface, and
+ * object create with that class is registered with <code>ChromeCast</code>
+ * instance using the <code>registerListener</code> method. When spontaneous
+ * event occurs, that object's <code>spontaneousEventReceived</code> is invoked.
  *
  * @see ChromeCastSpontaneousEvent
- * @see <a href="https://developers.google.com/cast/docs/reference/messages#MediaMess">
- *     https://developers.google.com/cast/docs/reference/messages#MediaMess</a>
+ * @see <a href=
+ *      "https://developers.google.com/cast/docs/reference/messages#MediaMess">
+ *      https://developers.google.com/cast/docs/reference/messages#MediaMess</a>
  */
 public interface ChromeCastSpontaneousEventListener {
 
-    void spontaneousEventReceived(ChromeCastSpontaneousEvent event);
-
+	void spontaneousEventReceived(ChromeCastSpontaneousEvent event);
 }

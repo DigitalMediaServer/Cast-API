@@ -18,16 +18,6 @@ package org.digitalmediaserver.cast;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.digitalmediaserver.cast.AppEvent;
-import org.digitalmediaserver.cast.ChromeCastSpontaneousEvent;
-import org.digitalmediaserver.cast.ChromeCastSpontaneousEventListener;
-import org.digitalmediaserver.cast.EventListenerHolder;
-import org.digitalmediaserver.cast.JacksonHelper;
-import org.digitalmediaserver.cast.Media;
-import org.digitalmediaserver.cast.MediaStatus;
-import org.digitalmediaserver.cast.StandardResponse;
-import org.digitalmediaserver.cast.Status;
-import org.digitalmediaserver.cast.Volume;
 import org.digitalmediaserver.cast.ChromeCastSpontaneousEvent.SpontaneousEventType;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,197 +29,201 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 public class EventListenerHolderTest {
-    private final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
-    private List<ChromeCastSpontaneousEvent> emittedEvents;
-    private EventListenerHolder underTest;
 
-    private static class CustomAppEvent {
-        @JsonProperty
-        public String responseType;
-        @JsonProperty
-        public long requestId;
-        @JsonProperty
-        public String event;
+	private final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
+	private List<ChromeCastSpontaneousEvent> emittedEvents;
+	private EventListenerHolder underTest;
 
-        @SuppressWarnings("unused")
-        CustomAppEvent() {
-        }
+	private static class CustomAppEvent {
 
-        CustomAppEvent(String responseType, long requestId, String event) {
-            this.responseType = responseType;
-            this.requestId = requestId;
-            this.event = event;
-        }
+		@JsonProperty
+		public String responseType;
+		@JsonProperty
+		public long requestId;
+		@JsonProperty
+		public String event;
 
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + ((event == null) ? 0 : event.hashCode());
-            result = prime * result + (int) (requestId ^ (requestId >>> 32));
-            result = prime * result
-                    + ((responseType == null) ? 0 : responseType.hashCode());
-            return result;
-        }
+		@SuppressWarnings("unused")
+		CustomAppEvent() {
+		}
 
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            CustomAppEvent other = (CustomAppEvent) obj;
-            if (event == null) {
-                if (other.event != null) {
-                    return false;
-                }
-            } else if (!event.equals(other.event)) {
-                return false;
-            }
-            if (requestId != other.requestId) {
-                return false;
-            }
-            if (responseType == null) {
-                if (other.responseType != null) {
-                    return false;
-                }
-            } else if (!responseType.equals(other.responseType)) {
-                return false;
-            }
-            return true;
-        }
-    }
+		CustomAppEvent(String responseType, long requestId, String event) {
+			this.responseType = responseType;
+			this.requestId = requestId;
+			this.event = event;
+		}
 
-    @Before
-    public void init() throws Exception {
-        this.emittedEvents = new ArrayList<ChromeCastSpontaneousEvent>();
-        this.underTest = new EventListenerHolder();
-        this.underTest.registerListener(new ChromeCastSpontaneousEventListener() {
-            @Override
-            public void spontaneousEventReceived(ChromeCastSpontaneousEvent event) {
-                emittedEvents.add(event);
-            }
-        });
-    }
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((event == null) ? 0 : event.hashCode());
+			result = prime * result + (int) (requestId ^ (requestId >>> 32));
+			result = prime * result + ((responseType == null) ? 0 : responseType.hashCode());
+			return result;
+		}
 
-    @Test
-    public void itHandlesMediaStatusEvent() throws Exception {
-        final String json = FixtureHelper.fixtureAsString("/mediaStatus-chromecast-audio.json")
-                .replaceFirst("\"type\"", "\"responseType\"");
-        this.underTest.deliverEvent(jsonMapper.readTree(json));
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (getClass() != obj.getClass()) {
+				return false;
+			}
+			CustomAppEvent other = (CustomAppEvent) obj;
+			if (event == null) {
+				if (other.event != null) {
+					return false;
+				}
+			} else if (!event.equals(other.event)) {
+				return false;
+			}
+			if (requestId != other.requestId) {
+				return false;
+			}
+			if (responseType == null) {
+				if (other.responseType != null) {
+					return false;
+				}
+			} else if (!responseType.equals(other.responseType)) {
+				return false;
+			}
+			return true;
+		}
+	}
 
-        ChromeCastSpontaneousEvent event = emittedEvents.get(0);
+	@Before
+	public void init() throws Exception {
+		this.emittedEvents = new ArrayList<ChromeCastSpontaneousEvent>();
+		this.underTest = new EventListenerHolder();
+		this.underTest.registerListener(new ChromeCastSpontaneousEventListener() {
 
-        assertEquals(SpontaneousEventType.MEDIA_STATUS, event.getType());
-        // Is it roughly what we passed in?  More throughly tested in MediaStatusTest.
-        assertEquals(15, event.getData(MediaStatus.class).supportedMediaCommands);
+			@Override
+			public void spontaneousEventReceived(ChromeCastSpontaneousEvent event) {
+				emittedEvents.add(event);
+			}
+		});
+	}
 
-        assertEquals(1, emittedEvents.size());
-    }
+	@Test
+	public void itHandlesMediaStatusEvent() throws Exception {
+		final String json = FixtureHelper.fixtureAsString(
+			"/mediaStatus-chromecast-audio.json").replaceFirst("\"type\"",
+			"\"responseType\""
+		);
+		this.underTest.deliverEvent(jsonMapper.readTree(json));
 
-    @Test
-    public void itHandlesStatusEvent() throws Exception {
-        Volume volume = new Volume(123f, false, 2f, Volume.DEFAULT_INCREMENT.doubleValue(),
-                Volume.DEFAULT_CONTROL_TYPE);
-        StandardResponse.Status status = new StandardResponse.Status(new Status(volume, null, false, false));
-        this.underTest.deliverEvent(jsonMapper.valueToTree(status));
+		ChromeCastSpontaneousEvent event = emittedEvents.get(0);
 
-        ChromeCastSpontaneousEvent event = emittedEvents.get(0);
+		assertEquals(SpontaneousEventType.MEDIA_STATUS, event.getType());
+		// Is it roughly what we passed in? More throughly tested in
+		// MediaStatusTest.
+		assertEquals(15, event.getData(MediaStatus.class).supportedMediaCommands);
 
-        assertEquals(SpontaneousEventType.STATUS, event.getType());
-        // Not trying to test everything, just that is basically what we passed in.
-        assertEquals(volume, event.getData(Status.class).volume);
+		assertEquals(1, emittedEvents.size());
+	}
 
-        assertEquals(1, emittedEvents.size());
-    }
+	@Test
+	public void itHandlesStatusEvent() throws Exception {
+		Volume volume = new Volume(123f, false, 2f, Volume.DEFAULT_INCREMENT.doubleValue(), Volume.DEFAULT_CONTROL_TYPE);
+		StandardResponse.Status status = new StandardResponse.Status(new Status(volume, null, false, false));
+		this.underTest.deliverEvent(jsonMapper.valueToTree(status));
 
-    @Test
-    public void itHandlesPlainAppEvent() throws Exception {
-        final String namespace = "urn:x-cast:com.example.app";
-        final String message = "Sample message";
-        AppEvent appevent = new AppEvent(namespace, message);
-        this.underTest.deliverAppEvent(appevent);
+		ChromeCastSpontaneousEvent event = emittedEvents.get(0);
 
-        ChromeCastSpontaneousEvent event = emittedEvents.get(0);
+		assertEquals(SpontaneousEventType.STATUS, event.getType());
+		// Not trying to test everything, just that is basically what we passed
+		// in.
+		assertEquals(volume, event.getData(Status.class).volume);
 
-        assertEquals(SpontaneousEventType.APPEVENT, event.getType());
-        assertEquals(namespace, event.getData(AppEvent.class).namespace);
-        assertEquals(message, event.getData(AppEvent.class).message);
+		assertEquals(1, emittedEvents.size());
+	}
 
-        assertEquals(1, emittedEvents.size());
-    }
+	@Test
+	public void itHandlesPlainAppEvent() throws Exception {
+		final String namespace = "urn:x-cast:com.example.app";
+		final String message = "Sample message";
+		AppEvent appevent = new AppEvent(namespace, message);
+		this.underTest.deliverAppEvent(appevent);
 
-    @Test
-    public void itHandlesJsonAppEvent() throws Exception {
-        final String namespace = "urn:x-cast:com.example.app";
-        CustomAppEvent customAppEvent = new CustomAppEvent("MYEVENT", 3, "Sample message");
-        final String message = jsonMapper.writeValueAsString(customAppEvent);
-        AppEvent appevent = new AppEvent(namespace, message);
-        this.underTest.deliverAppEvent(appevent);
+		ChromeCastSpontaneousEvent event = emittedEvents.get(0);
 
-        ChromeCastSpontaneousEvent event = emittedEvents.get(0);
+		assertEquals(SpontaneousEventType.APPEVENT, event.getType());
+		assertEquals(namespace, event.getData(AppEvent.class).namespace);
+		assertEquals(message, event.getData(AppEvent.class).message);
 
-        assertEquals(SpontaneousEventType.APPEVENT, event.getType());
-        assertEquals(namespace, event.getData(AppEvent.class).namespace);
+		assertEquals(1, emittedEvents.size());
+	}
 
-        // Check whether we received the same object
-        CustomAppEvent responseEvent = jsonMapper.readValue(
-                event.getData(AppEvent.class).message, CustomAppEvent.class);
-        assertEquals(customAppEvent, responseEvent);
+	@Test
+	public void itHandlesJsonAppEvent() throws Exception {
+		final String namespace = "urn:x-cast:com.example.app";
+		CustomAppEvent customAppEvent = new CustomAppEvent("MYEVENT", 3, "Sample message");
+		final String message = jsonMapper.writeValueAsString(customAppEvent);
+		AppEvent appevent = new AppEvent(namespace, message);
+		this.underTest.deliverAppEvent(appevent);
 
-        assertEquals(1, emittedEvents.size());
-    }
+		ChromeCastSpontaneousEvent event = emittedEvents.get(0);
 
-    @Test
-    public void itHandlesCloseBySenderEvent() throws Exception {
-        StandardResponse.Close ev = new StandardResponse.Close();
-        this.underTest.deliverEvent(jsonMapper.valueToTree(ev));
+		assertEquals(SpontaneousEventType.APPEVENT, event.getType());
+		assertEquals(namespace, event.getData(AppEvent.class).namespace);
 
-        ChromeCastSpontaneousEvent event = emittedEvents.get(0);
+		// Check whether we received the same object
+		CustomAppEvent responseEvent = jsonMapper.readValue(event.getData(AppEvent.class).message, CustomAppEvent.class);
+		assertEquals(customAppEvent, responseEvent);
 
-        assertEquals(SpontaneousEventType.CLOSE, event.getType());
+		assertEquals(1, emittedEvents.size());
+	}
 
-        assertEquals(1, emittedEvents.size());
-    }
+	@Test
+	public void itHandlesCloseBySenderEvent() throws Exception {
+		StandardResponse.Close ev = new StandardResponse.Close();
+		this.underTest.deliverEvent(jsonMapper.valueToTree(ev));
 
-    @Test
-    public void itHandlesTimeTickEvent() throws Exception {
-        final String jsonMSG = FixtureHelper.fixtureAsString("/timetick.json")
-                .replaceFirst("\"type\"", "\"responseType\"");
+		ChromeCastSpontaneousEvent event = emittedEvents.get(0);
 
-        JsonNode jsonNode = jsonMapper.readTree(jsonMSG);
-        underTest.deliverEvent(jsonNode);
+		assertEquals(SpontaneousEventType.CLOSE, event.getType());
 
-        assertEquals(1, emittedEvents.size());
-        ChromeCastSpontaneousEvent event = emittedEvents.get(0);
+		assertEquals(1, emittedEvents.size());
+	}
 
-        assertEquals(SpontaneousEventType.UNKNOWN, event.getType());
-        assertEquals(jsonMapper.writeValueAsString(jsonNode),
-                jsonMapper.writeValueAsString(event.getData(JsonNode.class)));
-    }
+	@Test
+	public void itHandlesTimeTickEvent() throws Exception {
+		final String jsonMSG = FixtureHelper.fixtureAsString("/timetick.json").replaceFirst("\"type\"", "\"responseType\"");
 
-    @Test
-    public void itHandlesSingleMediaStatusEvent() throws IOException {
-        final String jsonMSG = FixtureHelper.fixtureAsString("/mediaStatus-single.json")
-                .replaceFirst("\"type\"", "\"responseType\"");
+		JsonNode jsonNode = jsonMapper.readTree(jsonMSG);
+		underTest.deliverEvent(jsonNode);
 
-        JsonNode jsonNode = jsonMapper.readTree(jsonMSG);
-        underTest.deliverEvent(jsonNode);
+		assertEquals(1, emittedEvents.size());
+		ChromeCastSpontaneousEvent event = emittedEvents.get(0);
 
-        assertEquals(1, emittedEvents.size());
-        ChromeCastSpontaneousEvent event = emittedEvents.get(0);
+		assertEquals(SpontaneousEventType.UNKNOWN, event.getType());
+		assertEquals(jsonMapper.writeValueAsString(jsonNode), jsonMapper.writeValueAsString(event.getData(JsonNode.class)));
+	}
 
-        assertEquals(SpontaneousEventType.MEDIA_STATUS, event.getType());
-        MediaStatus mediaStatus = event.getData(MediaStatus.class);
-        assertNotNull(mediaStatus);
-        assertEquals(0, mediaStatus.mediaSessionId);
-        assertNotNull(mediaStatus.media);
-        assertEquals(Media.StreamType.NONE, mediaStatus.media.streamType);
-        assertEquals(MediaStatus.PlayerState.IDLE, mediaStatus.playerState);
-    }
+	@Test
+	public void itHandlesSingleMediaStatusEvent() throws IOException {
+		final String jsonMSG = FixtureHelper.fixtureAsString(
+			"/mediaStatus-single.json").replaceFirst("\"type\"",
+			"\"responseType\""
+		);
+
+		JsonNode jsonNode = jsonMapper.readTree(jsonMSG);
+		underTest.deliverEvent(jsonNode);
+
+		assertEquals(1, emittedEvents.size());
+		ChromeCastSpontaneousEvent event = emittedEvents.get(0);
+
+		assertEquals(SpontaneousEventType.MEDIA_STATUS, event.getType());
+		MediaStatus mediaStatus = event.getData(MediaStatus.class);
+		assertNotNull(mediaStatus);
+		assertEquals(0, mediaStatus.mediaSessionId);
+		assertNotNull(mediaStatus.media);
+		assertEquals(Media.StreamType.NONE, mediaStatus.media.streamType);
+		assertEquals(MediaStatus.PlayerState.IDLE, mediaStatus.playerState);
+	}
 }

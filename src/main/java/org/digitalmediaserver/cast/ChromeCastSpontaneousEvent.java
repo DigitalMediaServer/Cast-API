@@ -18,81 +18,87 @@ package org.digitalmediaserver.cast;
 import com.fasterxml.jackson.databind.JsonNode;
 
 /**
- * <p>Identifies that a broadcast message was received from "receiver application". This message was not triggered
- * by a sender request.</p>
+ * <p>
+ * Identifies that a broadcast message was received from "receiver application".
+ * This message was not triggered by a sender request.
+ * </p>
  *
- * @see <a href="https://developers.google.com/cast/docs/reference/messages#MediaMess">
- *     https://developers.google.com/cast/docs/reference/messages#MediaMess</a>
+ * @see <a href=
+ *      "https://developers.google.com/cast/docs/reference/messages#MediaMess">
+ *      https://developers.google.com/cast/docs/reference/messages#MediaMess</a>
  */
 public class ChromeCastSpontaneousEvent {
 
-    /**
-     * Type of a spontaneous events. Some events are expected and can contain some useful known data. For the rest
-     * there is <code>UNKNOWN</code> type of spontaneous event with generic data.
-     */
-    public enum SpontaneousEventType {
+	/**
+	 * Type of a spontaneous events. Some events are expected and can contain
+	 * some useful known data. For the rest there is <code>UNKNOWN</code> type
+	 * of spontaneous event with generic data.
+	 */
+	public enum SpontaneousEventType {
 
-        /**
-         * Data type will be {@link MediaStatus}.
-         */
-        MEDIA_STATUS(MediaStatus.class),
+		/**
+		 * Data type will be {@link MediaStatus}.
+		 */
+		MEDIA_STATUS(MediaStatus.class),
 
-        /**
-         * Data type will be {@link Status}.
-         */
-        STATUS(Status.class),
+		/**
+		 * Data type will be {@link Status}.
+		 */
+		STATUS(Status.class),
 
-        /**
-         * Data type will be {@link AppEvent}.
-         */
-        APPEVENT(AppEvent.class),
+		/**
+		 * Data type will be {@link AppEvent}.
+		 */
+		APPEVENT(AppEvent.class),
 
-        /**
-         * Special event usually received when session is stopped.
-         */
-        CLOSE(Object.class),
+		/**
+		 * Special event usually received when session is stopped.
+		 */
+		CLOSE(Object.class),
 
-        /**
-         * Data type will be {@link com.fasterxml.jackson.databind.JsonNode}.
-         */
-        UNKNOWN(JsonNode.class);
+		/**
+		 * Data type will be {@link com.fasterxml.jackson.databind.JsonNode}.
+		 */
+		UNKNOWN(JsonNode.class);
 
-        private final Class<?> dataClass;
+		private final Class<?> dataClass;
 
-        SpontaneousEventType(Class<?> dataClass) {
-            this.dataClass = dataClass;
-        }
+		SpontaneousEventType(Class<?> dataClass) {
+			this.dataClass = dataClass;
+		}
 
-        public Class<?> getDataClass() {
-            return this.dataClass;
-        }
-    }
+		public Class<?> getDataClass() {
+			return this.dataClass;
+		}
+	}
 
-    private final SpontaneousEventType type;
-    private final Object data;
+	private final SpontaneousEventType type;
+	private final Object data;
 
-    public ChromeCastSpontaneousEvent(final SpontaneousEventType type, final Object data) {
-        if (!type.getDataClass().isAssignableFrom(data.getClass())) {
-            throw new IllegalArgumentException("Data type " + data.getClass() + " does not match type for event "
-                    + type.getDataClass());
-        }
-        this.type = type;
-        this.data = data;
-    }
+	public ChromeCastSpontaneousEvent(final SpontaneousEventType type, final Object data) {
+		if (!type.getDataClass().isAssignableFrom(data.getClass())) {
+			throw new IllegalArgumentException(
+				"Data type " + data.getClass() + " does not match type for event " + type.getDataClass()
+			);
+		}
+		this.type = type;
+		this.data = data;
+	}
 
-    public final SpontaneousEventType getType() {
-        return this.type;
-    }
+	public final SpontaneousEventType getType() {
+		return this.type;
+	}
 
-    public final Object getData() {
-        return this.data;
-    }
+	public final Object getData() {
+		return this.data;
+	}
 
-    public final <T> T getData(Class<T> cls) {
-        if (!cls.isAssignableFrom(this.type.getDataClass())) {
-            throw new IllegalArgumentException("Requested type " + cls + " does not match type for event "
-                    + this.type.getDataClass());
-        }
-        return cls.cast(this.data);
-    }
+	public final <T> T getData(Class<T> cls) {
+		if (!cls.isAssignableFrom(this.type.getDataClass())) {
+			throw new IllegalArgumentException(
+				"Requested type " + cls + " does not match type for event " + this.type.getDataClass()
+			);
+		}
+		return cls.cast(this.data);
+	}
 }

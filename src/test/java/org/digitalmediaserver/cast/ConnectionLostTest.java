@@ -15,7 +15,6 @@
  */
 package org.digitalmediaserver.cast;
 
-import org.digitalmediaserver.cast.ChromeCast;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,38 +27,39 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class ConnectionLostTest {
-    MockedChromeCast chromeCastStub;
-    ChromeCast cast = new ChromeCast("localhost");
 
-    @Before
-    public void initMockedCast() throws Exception {
-        chromeCastStub = new MockedChromeCast();
-        cast.connect();
-        chromeCastStub.close();
-        // ensure that chrome cast disconnected
-        int retry = 0;
-        while (cast.isConnected() && retry++ < 25) {
-            Thread.sleep(50);
-        }
-        assertTrue("ChromeCast wasn't properly disconnected", retry < 25);
-    }
+	MockedChromeCast chromeCastStub;
+	ChromeCast cast = new ChromeCast("localhost");
 
-    @Test(expected = ConnectException.class)
-    public void testDisconnect() throws Exception {
-        assertNull(cast.getStatus());
-    }
+	@Before
+	public void initMockedCast() throws Exception {
+		chromeCastStub = new MockedChromeCast();
+		cast.connect();
+		chromeCastStub.close();
+		// ensure that chrome cast disconnected
+		int retry = 0;
+		while (cast.isConnected() && retry++ < 25) {
+			Thread.sleep(50);
+		}
+		assertTrue("ChromeCast wasn't properly disconnected", retry < 25);
+	}
 
-    @Test
-    public void testReconnect() throws Exception {
-        chromeCastStub = new MockedChromeCast();
-        assertNotNull(cast.getStatus());
-    }
+	@Test(expected = ConnectException.class)
+	public void testDisconnect() throws Exception {
+		assertNull(cast.getStatus());
+	}
 
-    @After
-    public void shutdown() throws IOException {
-        if (cast.isConnected()) {
-            cast.disconnect();
-        }
-        chromeCastStub.close();
-    }
+	@Test
+	public void testReconnect() throws Exception {
+		chromeCastStub = new MockedChromeCast();
+		assertNotNull(cast.getStatus());
+	}
+
+	@After
+	public void shutdown() throws IOException {
+		if (cast.isConnected()) {
+			cast.disconnect();
+		}
+		chromeCastStub.close();
+	}
 }

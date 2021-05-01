@@ -20,8 +20,7 @@ package org.digitalmediaserver.cast;
  */
 public interface ChromeCastsListener {
 
-    void newChromeCastDiscovered(ChromeCast chromeCast);
+	void newChromeCastDiscovered(ChromeCast chromeCast);
 
-    void chromeCastRemoved(ChromeCast chromeCast);
-
+	void chromeCastRemoved(ChromeCast chromeCast);
 }
