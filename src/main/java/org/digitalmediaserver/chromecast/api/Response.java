@@ -18,11 +18,14 @@ package org.digitalmediaserver.chromecast.api;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Implementation must be a response object, which can be serialized to JSON with Jackson library.
+ * Implementation must be a response object, which can be serialized to JSON
+ * with Jackson library.
  */
 public interface Response {
-    @JsonProperty
-    Long getRequestId();
-    @JsonProperty
-    void setRequestId(Long requestId);
+
+	@JsonProperty
+	Long getRequestId();
+
+	@JsonProperty
+	void setRequestId(Long requestId);
 }

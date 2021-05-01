@@ -22,22 +22,21 @@ import java.io.InputStreamReader;
 
 final class FixtureHelper {
 
-    private FixtureHelper() {
-    }
+	private FixtureHelper() {
+	}
 
-    static String fixtureAsString(final String res) throws IOException {
-        final InputStream is = FixtureHelper.class.getResourceAsStream(res);
-        try {
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            final StringBuilder sb = new StringBuilder();
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line).append("\n");
-            }
-            return sb.toString();
-        } finally {
-            is.close();
-        }
-    }
-
+	static String fixtureAsString(final String res) throws IOException {
+		final InputStream is = FixtureHelper.class.getResourceAsStream(res);
+		try {
+			final BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+			final StringBuilder sb = new StringBuilder();
+			String line = null;
+			while ((line = reader.readLine()) != null) {
+				sb.append(line).append("\n");
+			}
+			return sb.toString();
+		} finally {
+			is.close();
+		}
+	}
 }

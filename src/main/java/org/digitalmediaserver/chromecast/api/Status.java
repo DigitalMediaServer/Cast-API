@@ -26,37 +26,43 @@ import java.util.List;
  * Current ChromeCast device status.
  */
 public class Status {
-    public final Volume volume;
-    public final List<Application> applications;
-    public final boolean activeInput;
-    public final boolean standBy;
 
-    Status(@JsonProperty("volume") Volume volume,
-           @JsonProperty("applications") List<Application> applications,
-           @JsonProperty("isActiveInput") boolean activeInput,
-           @JsonProperty("isStandBy") boolean standBy) {
-        this.volume = volume;
-        this.applications = applications == null ? Collections.<Application>emptyList() : applications;
-        this.activeInput = activeInput;
-        this.standBy = standBy;
-    }
+	public final Volume volume;
+	public final List<Application> applications;
+	public final boolean activeInput;
+	public final boolean standBy;
 
-    @JsonIgnore
-    public final Application getRunningApp() {
-        return applications.isEmpty() ? null : applications.get(0);
-    }
+	public Status(
+		@JsonProperty("volume") Volume volume,
+		@JsonProperty("applications") List<Application> applications,
+		@JsonProperty("isActiveInput") boolean activeInput,
+		@JsonProperty("isStandBy") boolean standBy
+	) {
+		this.volume = volume;
+		this.applications = applications == null ? Collections.<Application>emptyList() : applications;
+		this.activeInput = activeInput;
+		this.standBy = standBy;
+	}
 
-    public final boolean isAppRunning(String appId) {
-        return getRunningApp() != null && getRunningApp().id.equals(appId);
-    }
+	@JsonIgnore
+	public final Application getRunningApp() {
+		return applications.isEmpty() ? null : applications.get(0);
+	}
 
-    @Override
-    public final String toString() {
-        final String applicationsString = this.applications == null
-                ? "<null>"
-                : Arrays.toString(this.applications.toArray());
+	public final boolean isAppRunning(String appId) {
+		return getRunningApp() != null && getRunningApp().id.equals(appId);
+	}
 
-        return String.format("Media{volume: %s, applications: %s, activeInput: %b, standBy; %b}",
-                this.volume, applicationsString, this.activeInput, this.standBy);
-    }
+	@Override
+	public final String toString() {
+		final String applicationsString = applications == null ? "<null>" : Arrays.toString(applications.toArray());
+
+		return String.format(
+			"Media{volume: %s, applications: %s, activeInput: %b, standBy; %b}",
+			volume,
+			applicationsString,
+			activeInput,
+			standBy
+		);
+	}
 }

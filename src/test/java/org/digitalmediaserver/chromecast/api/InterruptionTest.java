@@ -16,10 +16,6 @@
 package org.digitalmediaserver.chromecast.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.digitalmediaserver.chromecast.api.ChromeCast;
-import org.digitalmediaserver.chromecast.api.ChromeCastException;
-import org.digitalmediaserver.chromecast.api.Request;
-import org.digitalmediaserver.chromecast.api.Response;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
@@ -39,104 +35,110 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class InterruptionTest {
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
-    MockedChromeCast chromeCastStub;
-    ChromeCast cast = new ChromeCast("localhost");
-    CyclicBarrier barrier = new CyclicBarrier(2);
+	@SuppressWarnings("deprecation")
+	@Rule
+	public ExpectedException thrown = ExpectedException.none();
 
-    static class Custom implements Request, Response {
-        Long requestId;
-        @Override
-        public Long getRequestId() {
-            return requestId;
-        }
+	MockedChromeCast chromeCastStub;
+	ChromeCast cast = new ChromeCast("localhost");
+	CyclicBarrier barrier = new CyclicBarrier(2);
 
-        @Override
-        public void setRequestId(Long requestId) {
-            this.requestId = requestId;
-        }
-    }
+	static class Custom implements Request, Response {
 
-    @Before
-    public void initMockedCast() throws Exception {
-        chromeCastStub = new MockedChromeCast();
-        cast.connect();
-        cast.launchApp("abcd");
-    }
+		Long requestId;
 
-    @Test
-    public void testInterrupt() throws IOException, ExecutionException, InterruptedException, BrokenBarrierException {
-        chromeCastStub.customHandler = new MockedChromeCast.CustomHandler() {
-            @Override
-            public Response handle(JsonNode json) {
-                try {
-                    Thread.sleep(10 * 1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                return new Custom();
-            }
-        };
+		@Override
+		public Long getRequestId() {
+			return requestId;
+		}
 
+		@Override
+		public void setRequestId(Long requestId) {
+			this.requestId = requestId;
+		}
+	}
 
-        final AtomicReference<IOException> exception = new AtomicReference<IOException>();
-        Thread t = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    barrier.await();
-                    cast.send("", new Custom());
-                } catch (IOException e) {
-                    exception.set(e);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (BrokenBarrierException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    barrier.await();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (BrokenBarrierException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-        t.start();
-        barrier.await();
-        t.interrupt();
-        barrier.await();
-        assertNotNull(exception.get());
-        assertTrue(exception.get() instanceof ChromeCastException);
-        assertTrue(exception.get().getCause() instanceof InterruptedException);
-        assertEquals("Interrupted while waiting for response", exception.get().getMessage());
-    }
+	@Before
+	public void initMockedCast() throws Exception {
+		chromeCastStub = new MockedChromeCast();
+		cast.connect();
+		cast.launchApp("abcd");
+	}
 
-    @Test
-    public void testTimeOut() throws IOException {
-        chromeCastStub.customHandler = new MockedChromeCast.CustomHandler() {
-            @Override
-            public Response handle(JsonNode json) {
-                try {
-                    Thread.sleep(10 * 1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                return new Custom();
-            }
-        };
-        cast.setRequestTimeout(100L);
-        thrown.expect(ChromeCastException.class);
-        thrown.expectCause(CoreMatchers.isA(TimeoutException.class));
-        thrown.expectMessage("Waiting for response timed out");
-        cast.send("", new Custom(), Custom.class);
-    }
+	@Test
+	public void testInterrupt() throws IOException, ExecutionException, InterruptedException, BrokenBarrierException {
+		chromeCastStub.customHandler = new MockedChromeCast.CustomHandler() {
 
-    @After
-    public void destroy() throws IOException {
-        cast.disconnect();
-        chromeCastStub.close();
-    }
+			@Override
+			public Response handle(JsonNode json) {
+				try {
+					Thread.sleep(10 * 1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				return new Custom();
+			}
+		};
+
+		final AtomicReference<IOException> exception = new AtomicReference<IOException>();
+		Thread t = new Thread() {
+
+			@Override
+			public void run() {
+				try {
+					barrier.await();
+					cast.send("", new Custom());
+				} catch (IOException e) {
+					exception.set(e);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (BrokenBarrierException e) {
+					e.printStackTrace();
+				}
+				try {
+					barrier.await();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (BrokenBarrierException e) {
+					e.printStackTrace();
+				}
+			}
+		};
+		t.start();
+		barrier.await();
+		t.interrupt();
+		barrier.await();
+		assertNotNull(exception.get());
+		assertTrue(exception.get() instanceof ChromeCastException);
+		assertTrue(exception.get().getCause() instanceof InterruptedException);
+		assertEquals("Interrupted while waiting for response", exception.get().getMessage());
+	}
+
+	@Test
+	public void testTimeOut() throws IOException {
+		chromeCastStub.customHandler = new MockedChromeCast.CustomHandler() {
+
+			@Override
+			public Response handle(JsonNode json) {
+				try {
+					Thread.sleep(10 * 1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				return new Custom();
+			}
+		};
+		cast.setRequestTimeout(100L);
+		thrown.expect(ChromeCastException.class);
+		thrown.expectCause(CoreMatchers.isA(TimeoutException.class));
+		thrown.expectMessage("Waiting for response timed out");
+		cast.send("", new Custom(), Custom.class);
+	}
+
+	@After
+	public void destroy() throws IOException {
+		cast.disconnect();
+		chromeCastStub.close();
+	}
 }

@@ -25,44 +25,54 @@ import java.util.List;
  * Application descriptor.
  */
 public class Application {
-    public final String id;
-    public final String iconUrl;
-    public final String name;
-    public final String sessionId;
-    public final String statusText;
-    public final String transportId;
-    public final boolean isIdleScreen;
-    public final boolean launchedFromCloud;
-    public final List<Namespace> namespaces;
 
-    public Application(@JsonProperty("appId") String id,
-                       @JsonProperty("iconUrl") String iconUrl,
-                       @JsonProperty("displayName") String name,
-                       @JsonProperty("sessionId") String sessionId,
-                       @JsonProperty("statusText") String statusText,
-                       @JsonProperty("isIdleScreen") boolean isIdleScreen,
-                       @JsonProperty("launchedFromCloud") boolean launchedFromCloud,
-                       @JsonProperty("transportId") String transportId,
-                       @JsonProperty("namespaces") List<Namespace> namespaces) {
-        this.id = id;
-        this.iconUrl = iconUrl;
-        this.name = name;
-        this.sessionId = sessionId;
-        this.statusText = statusText;
-        this.transportId = transportId;
-        this.namespaces = namespaces == null ? Collections.<Namespace>emptyList() : namespaces;
-        this.isIdleScreen = isIdleScreen;
-        this.launchedFromCloud = launchedFromCloud;
-    }
+	public final String id;
+	public final String iconUrl;
+	public final String name;
+	public final String sessionId;
+	public final String statusText;
+	public final String transportId;
+	public final boolean isIdleScreen;
+	public final boolean launchedFromCloud;
+	public final List<Namespace> namespaces;
 
-    @Override
-    public final String toString() {
-        final String namespacesString = this.namespaces == null ? "<null>" : Arrays.toString(this.namespaces.toArray());
+	public Application(
+		@JsonProperty("appId") String id,
+		@JsonProperty("iconUrl") String iconUrl,
+		@JsonProperty("displayName") String name,
+		@JsonProperty("sessionId") String sessionId,
+		@JsonProperty("statusText") String statusText,
+		@JsonProperty("isIdleScreen") boolean isIdleScreen,
+		@JsonProperty("launchedFromCloud") boolean launchedFromCloud,
+		@JsonProperty("transportId") String transportId,
+		@JsonProperty("namespaces") List<Namespace> namespaces
+	) {
+		this.id = id;
+		this.iconUrl = iconUrl;
+		this.name = name;
+		this.sessionId = sessionId;
+		this.statusText = statusText;
+		this.transportId = transportId;
+		this.namespaces = namespaces == null ? Collections.<Namespace>emptyList() : namespaces;
+		this.isIdleScreen = isIdleScreen;
+		this.launchedFromCloud = launchedFromCloud;
+	}
 
-        return String.format("Application{id: %s, name: %s, sessionId: %s, statusText: %s, transportId: %s,"
-                        + " isIdleScreen: %b, launchedFromCloud: %b, namespaces: %s}",
-            this.id, this.name, this.sessionId, this.statusText, this.transportId,
-                this.isIdleScreen, this.launchedFromCloud, namespacesString);
-    }
+	@Override
+	public final String toString() {
+		final String namespacesString = this.namespaces == null ? "<null>" : Arrays.toString(this.namespaces.toArray());
 
+		return String.format(
+			"Application{id: %s, name: %s, sessionId: %s, statusText: %s, transportId: %s," +
+			" isIdleScreen: %b, launchedFromCloud: %b, namespaces: %s}",
+			this.id,
+			this.name,
+			this.sessionId,
+			this.statusText,
+			this.transportId,
+			this.isIdleScreen,
+			this.launchedFromCloud,
+			namespacesString
+		);
+	}
 }
