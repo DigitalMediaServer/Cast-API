@@ -22,16 +22,18 @@ import static org.digitalmediaserver.chromecast.api.Util.getMediaTitle;
 import static org.junit.Assert.assertEquals;
 
 public class UtilTest {
-    @Test
-    public void testMediaTitle() throws IOException {
-        assertEquals("stream", getMediaTitle("http://xxx.yyy.com:8054/stream"));
-        assertEquals("stream", getMediaTitle("http://xxx.yyy.com/stream"));
-        assertEquals("stream", getMediaTitle("http://zzz.aaa.com:8054/stream.mp3"));
-        assertEquals("stream", getMediaTitle("http://zzz.aaa.com/stream.mp3"));
-        assertEquals("stream.abc", getMediaTitle("http://zzz.aaa.com/stream.abc.mp3"));
-        assertEquals("http://zzz.aaa.com/", getMediaTitle("http://zzz.aaa.com/"));
-        assertEquals("http://zzz.aaa.com", getMediaTitle("http://zzz.aaa.com"));
-        assertEquals("BigBuckBunny",
-                getMediaTitle("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"));
-    }
+
+	@Test
+	public void testMediaTitle() throws IOException {
+		assertEquals("stream", getMediaTitle("http://xxx.yyy.com:8054/stream"));
+		assertEquals("stream", getMediaTitle("http://xxx.yyy.com/stream"));
+		assertEquals("stream", getMediaTitle("http://zzz.aaa.com:8054/stream.mp3"));
+		assertEquals("stream", getMediaTitle("http://zzz.aaa.com/stream.mp3"));
+		assertEquals("stream.abc", getMediaTitle("http://zzz.aaa.com/stream.abc.mp3"));
+		assertEquals("http://zzz.aaa.com/", getMediaTitle("http://zzz.aaa.com/"));
+		assertEquals("http://zzz.aaa.com", getMediaTitle("http://zzz.aaa.com"));
+		assertEquals("BigBuckBunny", getMediaTitle(
+			"http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")
+		);
+	}
 }

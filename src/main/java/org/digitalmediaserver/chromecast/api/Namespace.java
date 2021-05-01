@@ -21,15 +21,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Namespace of the ChromeCast application.
  */
 public class Namespace {
-    public final String name;
 
-    public Namespace(@JsonProperty("name") String name) {
-        this.name = name;
-    }
+	public final String name;
 
-    @Override
-    public final String toString() {
-        return String.format("Namespace{%s}", this.name);
-    }
+	public Namespace(@JsonProperty("name") String name) {
+		this.name = name;
+	}
 
+	@Override
+	public final String toString() {
+		return String.format("Namespace{%s}", this.name);
+	}
 }

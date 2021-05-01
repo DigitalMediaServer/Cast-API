@@ -15,16 +15,6 @@
  */
 package org.digitalmediaserver.chromecast.api;
 
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
 import static org.digitalmediaserver.chromecast.api.Util.fromArray;
 import static org.digitalmediaserver.chromecast.api.Util.toArray;
 import java.io.Closeable;
@@ -42,519 +32,527 @@ import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 /**
- * Internal class for low-level communication with ChromeCast device.
- * Should never be used directly, use {@link org.digitalmediaserver.chromecast.api.ChromeCast} methods instead
+ * Internal class for low-level communication with ChromeCast device. Should
+ * never be used directly, use {@link ChromeCast} methods instead
  */
 class Channel implements Closeable {
-    private static final Logger LOG = LoggerFactory.getLogger(Channel.class);
-    /**
-     * Period for sending ping requests (in ms)
-     */
-    private static final long PING_PERIOD = 30 * 1000;
-    /**
-     * Default value of much time to wait until request is processed
-     */
-    private static final long DEFAULT_REQUEST_TIMEOUT = 30 * 1000;
 
-    private final static String DEFAULT_RECEIVER_ID = "receiver-0";
+	private static final Logger LOG = LoggerFactory.getLogger(Channel.class);
+	/**
+	 * Period for sending ping requests (in ms)
+	 */
+	private static final long PING_PERIOD = 30 * 1000;
+	/**
+	 * Default value of much time to wait until request is processed
+	 */
+	private static final long DEFAULT_REQUEST_TIMEOUT = 30 * 1000;
 
-    private final EventListenerHolder eventListener;
+	private static final String DEFAULT_RECEIVER_ID = "receiver-0";
 
-    private static final JsonSubTypes.Type[] STANDARD_RESPONSE_TYPES =
-            StandardResponse.class.getAnnotation(JsonSubTypes.class).value();
+	private final EventListenerHolder eventListener;
 
-    private static void warn(String message, Exception ex) {
-        LOG.warn("{}, caused by {}", message, ex.toString());
-    }
+	private static final JsonSubTypes.Type[] STANDARD_RESPONSE_TYPES = StandardResponse.class.getAnnotation(JsonSubTypes.class).value();
 
-    /**
-     * Single socket instance for transfers
-     */
-    private Socket socket;
-    /**
-     * Address of ChromeCast
-     */
-    private final InetSocketAddress address;
-    /**
-     * Name of sender used in this channel
-     */
-    private final String name;
-    /**
-     * Timer for PING requests
-     */
-    private Timer pingTimer;
-    /**
-     * Thread for processing incoming requests
-     */
-    private ReadThread reader;
-    /**
-     * Counter for producing request numbers
-     */
-    private AtomicLong requestCounter = new AtomicLong(1);
-    /**
-     * Processors of requests by their identifiers
-     */
-    private final Map<Long, ResultProcessor<? extends Response>> requests = new ConcurrentHashMap<Long, ResultProcessor<? extends Response>>();
-    /**
-     * Single mapper object for marshalling JSON
-     */
-    private final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
-    /**
-     * Destination ids of sessions opened within this channel
-     */
-    private Set<String> sessions = new HashSet<String>();
-    /**
-     * Indicates that this channel was closed (explicitly, by remote host or for some connectivity issue)
-     */
-    private volatile boolean closed = true;
-    private final Object closedSync = new Object();
-    /**
-     * How much time to wait until request is processed
-     */
-    private volatile long requestTimeout = DEFAULT_REQUEST_TIMEOUT;
+	private static void warn(String message, Exception ex) {
+		LOG.warn("{}, caused by {}", message, ex.toString());
+	}
 
-    private class PingThread extends TimerTask {
-        @Override
-        public void run() {
-            try {
-                write("urn:x-cast:com.google.cast.tp.heartbeat", StandardMessage.ping(), DEFAULT_RECEIVER_ID);
-            } catch (IOException ioex) {
-                warn("Error while sending 'PING'", ioex);
-            }
-        }
-    }
+	/**
+	 * Single socket instance for transfers
+	 */
+	private Socket socket;
+	/**
+	 * Address of ChromeCast
+	 */
+	private final InetSocketAddress address;
+	/**
+	 * Name of sender used in this channel
+	 */
+	private final String name;
+	/**
+	 * Timer for PING requests
+	 */
+	private Timer pingTimer;
+	/**
+	 * Thread for processing incoming requests
+	 */
+	private ReadThread reader;
+	/**
+	 * Counter for producing request numbers
+	 */
+	private AtomicLong requestCounter = new AtomicLong(1);
+	/**
+	 * Processors of requests by their identifiers
+	 */
+	private final Map<Long, ResultProcessor<? extends Response>> requests =
+		new ConcurrentHashMap<Long, ResultProcessor<? extends Response>>();
+	/**
+	 * Single mapper object for marshalling JSON
+	 */
+	private final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
+	/**
+	 * Destination ids of sessions opened within this channel
+	 */
+	private Set<String> sessions = new HashSet<String>();
+	/**
+	 * Indicates that this channel was closed (explicitly, by remote host or for
+	 * some connectivity issue)
+	 */
+	private volatile boolean closed = true;
+	private final Object closedSync = new Object();
+	/**
+	 * How much time to wait until request is processed
+	 */
+	private volatile long requestTimeout = DEFAULT_REQUEST_TIMEOUT;
 
-    private class ReadThread extends Thread {
-        volatile boolean stop;
+	private class PingThread extends TimerTask {
 
-        @Override
-        public void run() {
-            while (!stop) {
-                JsonNode parsed = null;
-                String jsonMSG = null;
-                CastChannel.CastMessage message = null;
+		@Override
+		public void run() {
+			try {
+				write("urn:x-cast:com.google.cast.tp.heartbeat", StandardMessage.ping(), DEFAULT_RECEIVER_ID);
+			} catch (IOException ioex) {
+				warn("Error while sending 'PING'", ioex);
+			}
+		}
+	}
 
-                try {
-                    message = read();
-                    if (message.getPayloadType() == CastChannel.CastMessage.PayloadType.STRING) {
-                        LOG.debug(" <-- {}",  message.getPayloadUtf8());
-                        jsonMSG = message.getPayloadUtf8().replaceFirst("\"type\"", "\"responseType\"");
-                        if (jsonMSG == null || jsonMSG.isEmpty()) {
-                            LOG.warn(" <-- Received empty message. Ignore.");
-                            continue;
-                        }
+	private class ReadThread extends Thread {
 
-                        // Determine whether the message belongs to cast protocol or is a custom
-                        // message from the receiver app
-                        parsed = jsonMapper.readTree(jsonMSG);
-                    } else {
-                        LOG.warn("Received unexpected {} message", message.getPayloadType());
-                    }
-                } catch (InvalidProtocolBufferException ipbe) {
-                    warn("Error while processing protobuf", ipbe);
-                } catch (JsonProcessingException jpe) {
-                    warn("Error while processing json", jpe);
-                } catch (IOException ioex) {
-                    if (stop) {
-                        LOG.debug("Got IOException while reading due to stream being closed (stop=true)", ioex);
-                        continue;
-                    }
-                    warn("Error while reading", ioex);
-                    String temp;
-                    if (message != null &&  message.getPayloadUtf8() != null) {
-                        temp = message.getPayloadUtf8();
-                    } else {
-                        temp = " null payload in message ";
-                    }
-                    LOG.warn(" <-- {}", temp);
-                    try {
-                        close();
-                    } catch (IOException e) {
-                        warn("Error while closing channel", ioex);
-                    }
-                } catch (Exception e) {
-                    warn("Unknown error while reading", e);
-                    continue;
-                }
+		volatile boolean stop;
 
-                try {
-                    if (message == null) {
-                        continue;
-                    }
+		@Override
+		public void run() {
+			while (!stop) {
+				JsonNode parsed = null;
+				String jsonMSG = null;
+				CastChannel.CastMessage message = null;
 
-                    if (isAppEvent(parsed)) {
-                        // This handles when parsed == null.
-                        AppEvent event = new AppEvent(message.getNamespace(), message.getPayloadUtf8());
-                        notifyListenersAppEvent(event);
-                    } else {
-                        if (parsed.has("requestId")) {
-                            Long requestId = parsed.get("requestId").asLong();
-                            final ResultProcessor<? extends Response> rp = requests.remove(requestId);
-                            if (rp != null) {
-                                rp.put(jsonMSG);
-                            } else {
-                                notifyListenersOfSpontaneousEvent(parsed);
-                            }
-                        } else if (parsed.has("responseType") && parsed.get("responseType").asText().equals("MEDIA_STATUS")) {
-                            notifyListenersOfSpontaneousEvent(parsed);
-                        } else if (parsed.has("responseType") && parsed.get("responseType").asText().equals("PING")) {
-                            write("urn:x-cast:com.google.cast.tp.heartbeat", StandardMessage.pong(), DEFAULT_RECEIVER_ID);
-                        } else if (parsed.has("responseType") && parsed.get("responseType").asText().equals("CLOSE")) {
-                            notifyListenersOfSpontaneousEvent(parsed);
-                        }
-                    }
-                } catch (Exception e) {
-                    warn("Error while handling", e);
-                }
-            }
-        }
+				try {
+					message = read();
+					if (message.getPayloadType() == CastChannel.CastMessage.PayloadType.STRING) {
+						LOG.debug(" <-- {}", message.getPayloadUtf8());
+						jsonMSG = message.getPayloadUtf8().replaceFirst("\"type\"", "\"responseType\"");
+						if (jsonMSG == null || jsonMSG.isEmpty()) {
+							LOG.warn(" <-- Received empty message. Ignore.");
+							continue;
+						}
 
-        private boolean isAppEvent(JsonNode parsed) {
-            if (parsed != null && parsed.has("responseType")) {
-                String type = parsed.get("responseType").asText();
-                for (JsonSubTypes.Type t : STANDARD_RESPONSE_TYPES) {
-                    if (t.name().equals(type)) {
-                        return false;
-                    }
-                }
-            }
-            return parsed == null || !parsed.has("requestId");
-        }
-    }
+						// Determine whether the message belongs to cast
+						// protocol or is a custom
+						// message from the receiver app
+						parsed = jsonMapper.readTree(jsonMSG);
+					} else {
+						LOG.warn("Received unexpected {} message", message.getPayloadType());
+					}
+				} catch (InvalidProtocolBufferException ipbe) {
+					warn("Error while processing protobuf", ipbe);
+				} catch (JsonProcessingException jpe) {
+					warn("Error while processing json", jpe);
+				} catch (IOException ioex) {
+					if (stop) {
+						LOG.debug("Got IOException while reading due to stream being closed (stop=true)", ioex);
+						continue;
+					}
+					warn("Error while reading", ioex);
+					String temp;
+					if (message != null && message.getPayloadUtf8() != null) {
+						temp = message.getPayloadUtf8();
+					} else {
+						temp = " null payload in message ";
+					}
+					LOG.warn(" <-- {}", temp);
+					try {
+						close();
+					} catch (IOException e) {
+						warn("Error while closing channel", ioex);
+					}
+				} catch (Exception e) {
+					warn("Unknown error while reading", e);
+					continue;
+				}
 
-    private class ResultProcessor<T extends Response> {
-        final Class<T> responseClass;
-        T result;
+				try {
+					if (message == null) {
+						continue;
+					}
 
-        private ResultProcessor(Class<T> responseClass) {
-            if (responseClass == null) {
-                throw new NullPointerException();
-            }
-            this.responseClass = responseClass;
-        }
+					if (parsed == null || isAppEvent(parsed)) {
+						AppEvent event = new AppEvent(message.getNamespace(), message.getPayloadUtf8());
+						notifyListenersAppEvent(event);
+					} else {
+						if (parsed.has("requestId")) {
+							Long requestId = parsed.get("requestId").asLong();
+							final ResultProcessor<? extends Response> rp = requests.remove(requestId);
+							if (rp != null) {
+								rp.put(jsonMSG);
+							} else {
+								notifyListenersOfSpontaneousEvent(parsed);
+							}
+						} else if (parsed.has("responseType") && parsed.get("responseType").asText().equals("MEDIA_STATUS")) {
+							notifyListenersOfSpontaneousEvent(parsed);
+						} else if (parsed.has("responseType") && parsed.get("responseType").asText().equals("PING")) {
+							write("urn:x-cast:com.google.cast.tp.heartbeat", StandardMessage.pong(), DEFAULT_RECEIVER_ID);
+						} else if (parsed.has("responseType") && parsed.get("responseType").asText().equals("CLOSE")) {
+							notifyListenersOfSpontaneousEvent(parsed);
+						}
+					}
+				} catch (Exception e) {
+					warn("Error while handling", e);
+				}
+			}
+		}
 
-        public void put(String jsonMSG) throws IOException {
-            synchronized (this) {
-                this.result = jsonMapper.readValue(jsonMSG, responseClass);
-                this.notify();
-            }
-        }
+		private boolean isAppEvent(JsonNode parsed) {
+			if (parsed != null && parsed.has("responseType")) {
+				String type = parsed.get("responseType").asText();
+				for (JsonSubTypes.Type t : STANDARD_RESPONSE_TYPES) {
+					if (t.name().equals(type)) {
+						return false;
+					}
+				}
+			}
+			return parsed == null || !parsed.has("requestId");
+		}
+	}
 
-        public T get() throws InterruptedException, TimeoutException {
-            synchronized (this) {
-                if (result != null) {
-                    return result;
-                }
-                this.wait(requestTimeout);
-                if (result == null) {
-                    throw new TimeoutException();
-                }
-                return result;
-            }
-        }
-    }
+	private class ResultProcessor<T extends Response> {
 
-    Channel(String host, EventListenerHolder eventListener) {
-        this(host, 8009, eventListener);
-    }
+		final Class<T> responseClass;
+		T result;
 
-    Channel(String host, int port, EventListenerHolder eventListener) {
-        this.address = new InetSocketAddress(host, port);
-        this.name = "sender-" + new RandomString(10).nextString();
-        this.eventListener = eventListener;
-    }
+		private ResultProcessor(Class<T> responseClass) {
+			if (responseClass == null) {
+				throw new NullPointerException();
+			}
+			this.responseClass = responseClass;
+		}
 
-    /**
-     * Open the channel.
-     *
-     * <p>This function must be called before any other usage.</p>
-     *
-     * @throws IOException
-     * @throws GeneralSecurityException
-     */
-    public void open() throws IOException, GeneralSecurityException {
-        if (!closed) {
-            throw new ChromeCastException("Channel already opened.");
-        }
-        connect();
-    }
+		public void put(String jsonMSG) throws IOException {
+			synchronized (this) {
+				this.result = jsonMapper.readValue(jsonMSG, responseClass);
+				this.notify();
+			}
+		}
 
-    /**
-     * Establish connection to the ChromeCast device
-     */
-    private void connect() throws IOException, GeneralSecurityException {
-        synchronized (closedSync) {
-            if (socket == null || socket.isClosed()) {
-                SSLContext sc = SSLContext.getInstance("SSL");
-                sc.init(null, new TrustManager[] { new X509TrustAllManager() }, new SecureRandom());
-                socket = sc.getSocketFactory().createSocket();
-                socket.connect(address);
-            }
-            /**
-             * Authenticate
-             */
-            CastChannel.DeviceAuthMessage authMessage = CastChannel.DeviceAuthMessage.newBuilder()
-                    .setChallenge(CastChannel.AuthChallenge.newBuilder().build())
-                    .build();
+		public T get() throws InterruptedException, TimeoutException {
+			synchronized (this) {
+				if (result != null) {
+					return result;
+				}
+				this.wait(requestTimeout);
+				if (result == null) {
+					throw new TimeoutException();
+				}
+				return result;
+			}
+		}
+	}
 
-            CastChannel.CastMessage msg = CastChannel.CastMessage.newBuilder()
-                    .setDestinationId(DEFAULT_RECEIVER_ID)
-                    .setNamespace("urn:x-cast:com.google.cast.tp.deviceauth")
-                    .setPayloadType(CastChannel.CastMessage.PayloadType.BINARY)
-                    .setProtocolVersion(CastChannel.CastMessage.ProtocolVersion.CASTV2_1_0)
-                    .setSourceId(name)
-                    .setPayloadBinary(authMessage.toByteString())
-                    .build();
+	Channel(String host, EventListenerHolder eventListener) {
+		this(host, 8009, eventListener);
+	}
 
-            write(msg);
-            CastChannel.CastMessage response = read();
-            CastChannel.DeviceAuthMessage authResponse = CastChannel.DeviceAuthMessage.parseFrom(response.getPayloadBinary());
-            if (authResponse.hasError()) {
-                throw new ChromeCastException("Authentication failed: " + authResponse.getError().getErrorType().toString());
-            }
+	Channel(String host, int port, EventListenerHolder eventListener) {
+		this.address = new InetSocketAddress(host, port);
+		this.name = "sender-" + new RandomString(10).nextString();
+		this.eventListener = eventListener;
+	}
 
-            /**
-             * Send 'PING' message
-             */
-            PingThread pingThread = new PingThread();
-            pingThread.run();
+	/**
+	 * Open the channel.
+	 *
+	 * <p>
+	 * This function must be called before any other usage.
+	 * </p>
+	 *
+	 * @throws IOException
+	 * @throws GeneralSecurityException
+	 */
+	public void open() throws IOException, GeneralSecurityException {
+		if (!closed) {
+			throw new ChromeCastException("Channel already opened.");
+		}
+		connect();
+	}
 
-            /**
-             * Send 'CONNECT' message to start session
-             */
-            write("urn:x-cast:com.google.cast.tp.connection", StandardMessage.connect(), DEFAULT_RECEIVER_ID);
+	/**
+	 * Establish connection to the ChromeCast device.
+	 */
+	private void connect() throws IOException, GeneralSecurityException {
+		synchronized (closedSync) {
+			if (socket == null || socket.isClosed()) {
+				SSLContext sc = SSLContext.getInstance("SSL");
+				sc.init(null, new TrustManager[] {new X509TrustAllManager()}, new SecureRandom());
+				socket = sc.getSocketFactory().createSocket();
+				socket.connect(address);
+			}
+			// Authenticate.
+			CastChannel.DeviceAuthMessage authMessage = CastChannel.DeviceAuthMessage.newBuilder()
+				.setChallenge(CastChannel.AuthChallenge.newBuilder().build()).build();
 
-            /**
-             * Start ping/pong and reader thread
-             */
-            pingTimer = new Timer(name + " PING");
-            pingTimer.schedule(pingThread, 1000, PING_PERIOD);
+			CastChannel.CastMessage msg = CastChannel.CastMessage.newBuilder().setDestinationId(DEFAULT_RECEIVER_ID)
+				.setNamespace("urn:x-cast:com.google.cast.tp.deviceauth").setPayloadType(CastChannel.CastMessage.PayloadType.BINARY)
+				.setProtocolVersion(CastChannel.CastMessage.ProtocolVersion.CASTV2_1_0).setSourceId(name)
+				.setPayloadBinary(authMessage.toByteString()).build();
 
-            reader = new ReadThread();
-            reader.start();
+			write(msg);
+			CastChannel.CastMessage response = read();
+			CastChannel.DeviceAuthMessage authResponse = CastChannel.DeviceAuthMessage.parseFrom(response.getPayloadBinary());
+			if (authResponse.hasError()) {
+				throw new ChromeCastException("Authentication failed: " + authResponse.getError().getErrorType().toString());
+			}
 
-            if (closed) {
-                closed = false;
-                notifyListenerOfConnectionEvent(true);
-            }
-        }
-    }
+			// Send 'PING' message
+			PingThread pingThread = new PingThread();
+			pingThread.run();
 
-    @SuppressWarnings("unchecked")
-    private <T extends StandardResponse> T sendStandard(String namespace, StandardRequest message, String destinationId) throws IOException {
-        return send(namespace, message, destinationId, (Class<T>) StandardResponse.class);
-    }
+			// Send 'CONNECT' message to start session
+			write("urn:x-cast:com.google.cast.tp.connection", StandardMessage.connect(), DEFAULT_RECEIVER_ID);
 
-    private <T extends Response> T send(String namespace, Request message, String destinationId, Class<T> responseClass) throws IOException {
-        /**
-         * Try to reconnect
-         */
-        if (isClosed()) {
-            try {
-                connect();
-            } catch (GeneralSecurityException gse) {
-                throw new ChromeCastException("Unexpected security exception", gse);
-            }
-        }
+			// Start ping/pong and reader thread
+			pingTimer = new Timer(name + " PING");
+			pingTimer.schedule(pingThread, 1000, PING_PERIOD);
 
-        Long requestId = requestCounter.getAndIncrement();
-        message.setRequestId(requestId);
-        if (!requestId.equals(message.getRequestId())) {
-            throw new IllegalStateException("Request Id getter/setter contract violation");
-        }
+			reader = new ReadThread();
+			reader.start();
 
-        if (responseClass == null) {
-            write(namespace, message, destinationId);
-            return null;
-        }
+			if (closed) {
+				closed = false;
+				notifyListenerOfConnectionEvent(true);
+			}
+		}
+	}
 
-        ResultProcessor<T> rp = new ResultProcessor<T>(responseClass);
-        requests.put(requestId, rp);
+	@SuppressWarnings("unchecked")
+	private <T extends StandardResponse> T sendStandard(String namespace, StandardRequest message, String destinationId)
+		throws IOException {
+		return send(namespace, message, destinationId, (Class<T>) StandardResponse.class);
+	}
 
-        write(namespace, message, destinationId);
-        try {
-            T response = rp.get();
-            if (response instanceof StandardResponse.Invalid) {
-                StandardResponse.Invalid invalid = (StandardResponse.Invalid) response;
-                throw new ChromeCastException("Invalid request: " + invalid.reason);
-            } else if (response instanceof StandardResponse.LoadFailed) {
-                throw new ChromeCastException("Unable to load media");
-            } else if (response instanceof StandardResponse.LaunchError) {
-                StandardResponse.LaunchError launchError = (StandardResponse.LaunchError) response;
-                throw new ChromeCastException("Application launch error: " + launchError.reason);
-            }
-            return response;
-        } catch (InterruptedException e) {
-            throw new ChromeCastException("Interrupted while waiting for response", e);
-        } catch (TimeoutException e) {
-            throw new ChromeCastException("Waiting for response timed out", e);
-        } finally {
-            requests.remove(requestId);
-        }
-    }
+	private <T extends Response> T send(String namespace, Request message, String destinationId, Class<T> responseClass)
+		throws IOException {
+		// Try to reconnect
+		if (isClosed()) {
+			try {
+				connect();
+			} catch (GeneralSecurityException gse) {
+				throw new ChromeCastException("Unexpected security exception", gse);
+			}
+		}
 
-    private void write(String namespace, Message message, String destinationId) throws IOException {
-        write(namespace, jsonMapper.writeValueAsString(message), destinationId);
-    }
+		Long requestId = requestCounter.getAndIncrement();
+		message.setRequestId(requestId);
+		if (!requestId.equals(message.getRequestId())) {
+			throw new IllegalStateException("Request Id getter/setter contract violation");
+		}
 
-    private void write(String namespace, String message, String destinationId) throws IOException {
-        LOG.debug(" --> {}", message);
-        CastChannel.CastMessage msg = CastChannel.CastMessage.newBuilder()
-                .setProtocolVersion(CastChannel.CastMessage.ProtocolVersion.CASTV2_1_0)
-                .setSourceId(name)
-                .setDestinationId(destinationId)
-                .setNamespace(namespace)
-                .setPayloadType(CastChannel.CastMessage.PayloadType.STRING)
-                .setPayloadUtf8(message)
-                .build();
-        write(msg);
-    }
+		if (responseClass == null) {
+			write(namespace, message, destinationId);
+			return null;
+		}
 
-    private void write(CastChannel.CastMessage message) throws IOException {
-        socket.getOutputStream().write(toArray(message.getSerializedSize()));
-        message.writeTo(socket.getOutputStream());
-    }
+		ResultProcessor<T> rp = new ResultProcessor<T>(responseClass);
+		requests.put(requestId, rp);
 
-    private CastChannel.CastMessage read() throws IOException {
-        InputStream is = socket.getInputStream();
-        byte[] buf = new byte[4];
+		write(namespace, message, destinationId);
+		try {
+			T response = rp.get();
+			if (response instanceof StandardResponse.Invalid) {
+				StandardResponse.Invalid invalid = (StandardResponse.Invalid) response;
+				throw new ChromeCastException("Invalid request: " + invalid.reason);
+			} else if (response instanceof StandardResponse.LoadFailed) {
+				throw new ChromeCastException("Unable to load media");
+			} else if (response instanceof StandardResponse.LaunchError) {
+				StandardResponse.LaunchError launchError = (StandardResponse.LaunchError) response;
+				throw new ChromeCastException("Application launch error: " + launchError.reason);
+			}
+			return response;
+		} catch (InterruptedException e) {
+			throw new ChromeCastException("Interrupted while waiting for response", e);
+		} catch (TimeoutException e) {
+			throw new ChromeCastException("Waiting for response timed out", e);
+		} finally {
+			requests.remove(requestId);
+		}
+	}
 
-        int read = 0;
-        while (read < buf.length) {
-            int nextByte = is.read();
-            if (nextByte == -1) {
-                throw new ChromeCastException("Remote socket closed");
-            }
-            buf[read++] = (byte) nextByte;
-        }
+	private void write(String namespace, Message message, String destinationId) throws IOException {
+		write(namespace, jsonMapper.writeValueAsString(message), destinationId);
+	}
 
-        int size = fromArray(buf);
-        buf = new byte[size];
-        read = 0;
-        while (read < size) {
-            int nowRead = is.read(buf, read, buf.length - read);
-            if (nowRead == -1) {
-                throw new ChromeCastException("Remote socket closed");
-            }
-            read += nowRead;
-        }
+	private void write(String namespace, String message, String destinationId) throws IOException {
+		LOG.debug(" --> {}", message);
+		CastChannel.CastMessage msg = CastChannel.CastMessage.newBuilder()
+			.setProtocolVersion(CastChannel.CastMessage.ProtocolVersion.CASTV2_1_0).setSourceId(name).setDestinationId(destinationId)
+			.setNamespace(namespace).setPayloadType(CastChannel.CastMessage.PayloadType.STRING).setPayloadUtf8(message).build();
+		write(msg);
+	}
 
-        return CastChannel.CastMessage.parseFrom(buf);
-    }
+	private void write(CastChannel.CastMessage message) throws IOException {
+		socket.getOutputStream().write(toArray(message.getSerializedSize()));
+		message.writeTo(socket.getOutputStream());
+	}
 
-    private void notifyListenerOfConnectionEvent(final boolean connected) {
-        if (this.eventListener != null) {
-            this.eventListener.deliverConnectionEvent(connected);
-        }
-    }
+	private CastChannel.CastMessage read() throws IOException {
+		InputStream is = socket.getInputStream();
+		byte[] buf = new byte[4];
 
-    private void notifyListenersOfSpontaneousEvent(JsonNode json) throws IOException {
-        if (this.eventListener != null) {
-            this.eventListener.deliverEvent(json);
-        }
-    }
+		int read = 0;
+		while (read < buf.length) {
+			int nextByte = is.read();
+			if (nextByte == -1) {
+				throw new ChromeCastException("Remote socket closed");
+			}
+			buf[read++] = (byte) nextByte;
+		}
 
-    private void notifyListenersAppEvent(AppEvent event) throws IOException {
-        if (this.eventListener != null) {
-            this.eventListener.deliverAppEvent(event);
-        }
-    }
+		int size = fromArray(buf);
+		buf = new byte[size];
+		read = 0;
+		while (read < size) {
+			int nowRead = is.read(buf, read, buf.length - read);
+			if (nowRead == -1) {
+				throw new ChromeCastException("Remote socket closed");
+			}
+			read += nowRead;
+		}
 
-    public Status getStatus() throws IOException {
-        StandardResponse.Status status = sendStandard("urn:x-cast:com.google.cast.receiver", StandardRequest.status(), DEFAULT_RECEIVER_ID);
-        return status == null ? null : status.status;
-    }
+		return CastChannel.CastMessage.parseFrom(buf);
+	}
 
-    public boolean isAppAvailable(String appId) throws IOException {
-        StandardResponse.AppAvailability availability = sendStandard("urn:x-cast:com.google.cast.receiver", StandardRequest.appAvailability(appId), DEFAULT_RECEIVER_ID);
-        return availability != null && "APP_AVAILABLE".equals(availability.availability.get(appId));
-    }
+	private void notifyListenerOfConnectionEvent(final boolean connected) {
+		if (this.eventListener != null) {
+			this.eventListener.deliverConnectionEvent(connected);
+		}
+	}
 
-    public Status launch(String appId) throws IOException {
-        StandardResponse.Status status = sendStandard("urn:x-cast:com.google.cast.receiver", StandardRequest.launch(appId), DEFAULT_RECEIVER_ID);
-        return status == null ? null : status.status;
-    }
+	private void notifyListenersOfSpontaneousEvent(JsonNode json) throws IOException {
+		if (this.eventListener != null) {
+			this.eventListener.deliverEvent(json);
+		}
+	}
 
-    public Status stop(String sessionId) throws IOException {
-        StandardResponse.Status status = sendStandard("urn:x-cast:com.google.cast.receiver", StandardRequest.stop(sessionId), DEFAULT_RECEIVER_ID);
-        return status == null ? null : status.status;
-    }
+	private void notifyListenersAppEvent(AppEvent event) throws IOException {
+		if (this.eventListener != null) {
+			this.eventListener.deliverAppEvent(event);
+		}
+	}
 
-    private void startSession(String destinationId) throws IOException {
-        if (!sessions.contains(destinationId)) {
-            write("urn:x-cast:com.google.cast.tp.connection", StandardMessage.connect(), destinationId);
-            sessions.add(destinationId);
-        }
-    }
+	public Status getStatus() throws IOException {
+		StandardResponse.Status status = sendStandard("urn:x-cast:com.google.cast.receiver", StandardRequest.status(), DEFAULT_RECEIVER_ID);
+		return status == null ? null : status.status;
+	}
 
-    public MediaStatus load(String destinationId, String sessionId, Media media, boolean autoplay, double currentTime, Map<String, String> customData) throws IOException {
-        startSession(destinationId);
-        StandardResponse.MediaStatus status = sendStandard("urn:x-cast:com.google.cast.media", StandardRequest.load(sessionId, media, autoplay, currentTime, customData), destinationId);
-        return status == null || status.statuses.length == 0 ? null : status.statuses[0];
-    }
+	public boolean isAppAvailable(String appId) throws IOException {
+		StandardResponse.AppAvailability availability = sendStandard("urn:x-cast:com.google.cast.receiver",
+			StandardRequest.appAvailability(appId), DEFAULT_RECEIVER_ID);
+		return availability != null && "APP_AVAILABLE".equals(availability.availability.get(appId));
+	}
 
-    public MediaStatus play(String destinationId, String sessionId, long mediaSessionId) throws IOException {
-        startSession(destinationId);
-        StandardResponse.MediaStatus status = sendStandard("urn:x-cast:com.google.cast.media", StandardRequest.play(sessionId, mediaSessionId), destinationId);
-        return status == null || status.statuses.length == 0 ? null : status.statuses[0];
-    }
+	public Status launch(String appId) throws IOException {
+		StandardResponse.Status status = sendStandard("urn:x-cast:com.google.cast.receiver", StandardRequest.launch(appId),
+			DEFAULT_RECEIVER_ID);
+		return status == null ? null : status.status;
+	}
 
-    public MediaStatus pause(String destinationId, String sessionId, long mediaSessionId) throws IOException {
-        startSession(destinationId);
-        StandardResponse.MediaStatus status = sendStandard("urn:x-cast:com.google.cast.media", StandardRequest.pause(sessionId, mediaSessionId), destinationId);
-        return status == null || status.statuses.length == 0 ? null : status.statuses[0];
-    }
+	public Status stop(String sessionId) throws IOException {
+		StandardResponse.Status status = sendStandard("urn:x-cast:com.google.cast.receiver", StandardRequest.stop(sessionId),
+			DEFAULT_RECEIVER_ID);
+		return status == null ? null : status.status;
+	}
 
-    public MediaStatus seek(String destinationId, String sessionId, long mediaSessionId, double currentTime) throws IOException {
-        startSession(destinationId);
-        StandardResponse.MediaStatus status = sendStandard("urn:x-cast:com.google.cast.media", StandardRequest.seek(sessionId, mediaSessionId, currentTime), destinationId);
-        return status == null || status.statuses.length == 0 ? null : status.statuses[0];
-    }
+	private void startSession(String destinationId) throws IOException {
+		if (!sessions.contains(destinationId)) {
+			write("urn:x-cast:com.google.cast.tp.connection", StandardMessage.connect(), destinationId);
+			sessions.add(destinationId);
+		}
+	}
 
-    public Status setVolume(Volume volume) throws IOException {
-        StandardResponse.Status status = sendStandard("urn:x-cast:com.google.cast.receiver", StandardRequest.setVolume(volume), DEFAULT_RECEIVER_ID);
-        return status == null ? null : status.status;
-    }
+	public MediaStatus load(String destinationId, String sessionId, Media media, boolean autoplay, double currentTime,
+		Map<String, String> customData) throws IOException {
+		startSession(destinationId);
+		StandardResponse.MediaStatus status = sendStandard("urn:x-cast:com.google.cast.media",
+			StandardRequest.load(sessionId, media, autoplay, currentTime, customData), destinationId);
+		return status == null || status.statuses.length == 0 ? null : status.statuses[0];
+	}
 
-    public MediaStatus getMediaStatus(String destinationId) throws IOException {
-        startSession(destinationId);
-        StandardResponse.MediaStatus status = sendStandard("urn:x-cast:com.google.cast.media", StandardRequest.status(), destinationId);
-        return status == null || status.statuses.length == 0 ? null : status.statuses[0];
-    }
+	public MediaStatus play(String destinationId, String sessionId, long mediaSessionId) throws IOException {
+		startSession(destinationId);
+		StandardResponse.MediaStatus status = sendStandard("urn:x-cast:com.google.cast.media",
+			StandardRequest.play(sessionId, mediaSessionId), destinationId);
+		return status == null || status.statuses.length == 0 ? null : status.statuses[0];
+	}
 
-    public <T extends Response> T sendGenericRequest(String destinationId, String namespace, Request request, Class<T> responseClass) throws IOException {
-        startSession(destinationId);
-        return send(namespace, request, destinationId, responseClass);
-    }
+	public MediaStatus pause(String destinationId, String sessionId, long mediaSessionId) throws IOException {
+		startSession(destinationId);
+		StandardResponse.MediaStatus status = sendStandard("urn:x-cast:com.google.cast.media",
+			StandardRequest.pause(sessionId, mediaSessionId), destinationId);
+		return status == null || status.statuses.length == 0 ? null : status.statuses[0];
+	}
 
-    @Override
-    public void close() throws IOException {
-        synchronized (closedSync) {
-            if (closed) {
-                throw new ChromeCastException("Channel already closed.");
-            } else {
-                closed = true;
-                notifyListenerOfConnectionEvent(false);
-                if (pingTimer != null) {
-                    pingTimer.cancel();
-                }
-                if (reader != null) {
-                    reader.stop = true;
-                }
-                if (socket != null) {
-                    socket.close();
-                }
-            }
-        }
-    }
+	public MediaStatus seek(String destinationId, String sessionId, long mediaSessionId, double currentTime) throws IOException {
+		startSession(destinationId);
+		StandardResponse.MediaStatus status = sendStandard("urn:x-cast:com.google.cast.media",
+			StandardRequest.seek(sessionId, mediaSessionId, currentTime), destinationId);
+		return status == null || status.statuses.length == 0 ? null : status.statuses[0];
+	}
 
-    public boolean isClosed() {
-        return closed;
-    }
+	public Status setVolume(Volume volume) throws IOException {
+		StandardResponse.Status status = sendStandard("urn:x-cast:com.google.cast.receiver", StandardRequest.setVolume(volume),
+			DEFAULT_RECEIVER_ID);
+		return status == null ? null : status.status;
+	}
 
-    public void setRequestTimeout(long requestTimeout) {
-        this.requestTimeout = requestTimeout;
-    }
+	public MediaStatus getMediaStatus(String destinationId) throws IOException {
+		startSession(destinationId);
+		StandardResponse.MediaStatus status = sendStandard("urn:x-cast:com.google.cast.media", StandardRequest.status(), destinationId);
+		return status == null || status.statuses.length == 0 ? null : status.statuses[0];
+	}
+
+	public <T extends Response> T sendGenericRequest(String destinationId, String namespace, Request request, Class<T> responseClass)
+		throws IOException {
+		startSession(destinationId);
+		return send(namespace, request, destinationId, responseClass);
+	}
+
+	@Override
+	public void close() throws IOException {
+		synchronized (closedSync) {
+			if (closed) {
+				throw new ChromeCastException("Channel already closed.");
+			} else {
+				closed = true;
+				notifyListenerOfConnectionEvent(false);
+				if (pingTimer != null) {
+					pingTimer.cancel();
+				}
+				if (reader != null) {
+					reader.stop = true;
+				}
+				if (socket != null) {
+					socket.close();
+				}
+			}
+		}
+	}
+
+	public boolean isClosed() {
+		return closed;
+	}
+
+	public void setRequestTimeout(long requestTimeout) {
+		this.requestTimeout = requestTimeout;
+	}
 }

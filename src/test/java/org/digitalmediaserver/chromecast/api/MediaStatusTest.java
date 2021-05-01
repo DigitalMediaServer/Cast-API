@@ -16,12 +16,6 @@
 package org.digitalmediaserver.chromecast.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.digitalmediaserver.chromecast.api.Item;
-import org.digitalmediaserver.chromecast.api.JacksonHelper;
-import org.digitalmediaserver.chromecast.api.Media;
-import org.digitalmediaserver.chromecast.api.MediaStatus;
-import org.digitalmediaserver.chromecast.api.StandardResponse;
-import org.digitalmediaserver.chromecast.api.Volume;
 import org.digitalmediaserver.chromecast.api.MediaStatus.PlayerState;
 import org.digitalmediaserver.chromecast.api.MediaStatus.RepeatMode;
 import org.junit.Test;
@@ -35,134 +29,126 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 public class MediaStatusTest {
-    final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 
-    @Test
-    public void testDeserializationWithIdleReason() throws Exception {
-        final StandardResponse.MediaStatus response =
-                (StandardResponse.MediaStatus) jsonMapper.readValue(getClass()
-                        .getResourceAsStream("/mediaStatus-with-idleReason.json"), StandardResponse.class);
-        assertEquals(1, response.statuses.length);
-        MediaStatus mediaStatus = response.statuses[0];
-        assertEquals(MediaStatus.IdleReason.ERROR, mediaStatus.idleReason);
-    }
+	final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 
-    @Test
-    public void testDeserializationWithoutIdleReason() throws Exception {
-        final StandardResponse.MediaStatus response =
-                (StandardResponse.MediaStatus) jsonMapper.readValue(getClass()
-                        .getResourceAsStream("/mediaStatus-without-idleReason.json"), StandardResponse.class);
-        assertEquals(1, response.statuses.length);
-        MediaStatus mediaStatus = response.statuses[0];
-        assertNull(mediaStatus.idleReason);
-    }
+	@Test
+	public void testDeserializationWithIdleReason() throws Exception {
+		final StandardResponse.MediaStatus response = (StandardResponse.MediaStatus) jsonMapper
+			.readValue(getClass().getResourceAsStream("/mediaStatus-with-idleReason.json"), StandardResponse.class);
+		assertEquals(1, response.statuses.length);
+		MediaStatus mediaStatus = response.statuses[0];
+		assertEquals(MediaStatus.IdleReason.ERROR, mediaStatus.idleReason);
+	}
 
-    @Test
-    public void testDeserializationWithChromeCastAudioFixture() throws Exception {
-        final String jsonMSG = FixtureHelper.fixtureAsString("/mediaStatus-chromecast-audio.json")
-                .replaceFirst("\"type\"", "\"responseType\"");
-        final StandardResponse.MediaStatus response =
-                (StandardResponse.MediaStatus) jsonMapper.readValue(jsonMSG, StandardResponse.class);
-        assertEquals(1, response.statuses.length);
-        final MediaStatus mediaStatus = response.statuses[0];
-        assertEquals((Integer) 1, mediaStatus.currentItemId);
-        assertEquals(0f, mediaStatus.currentTime, 0f);
+	@Test
+	public void testDeserializationWithoutIdleReason() throws Exception {
+		final StandardResponse.MediaStatus response = (StandardResponse.MediaStatus) jsonMapper
+			.readValue(getClass().getResourceAsStream("/mediaStatus-without-idleReason.json"), StandardResponse.class);
+		assertEquals(1, response.statuses.length);
+		MediaStatus mediaStatus = response.statuses[0];
+		assertNull(mediaStatus.idleReason);
+	}
 
-        final Media media = new Media("http://192.168.1.6:8192/audio-123-mp3", "audio/mpeg",
-                389.355102d, Media.StreamType.BUFFERED);
+	@Test
+	public void testDeserializationWithChromeCastAudioFixture() throws Exception {
+		final String jsonMSG = FixtureHelper.fixtureAsString("/mediaStatus-chromecast-audio.json").replaceFirst("\"type\"",
+			"\"responseType\"");
+		final StandardResponse.MediaStatus response = (StandardResponse.MediaStatus) jsonMapper.readValue(jsonMSG, StandardResponse.class);
+		assertEquals(1, response.statuses.length);
+		final MediaStatus mediaStatus = response.statuses[0];
+		assertEquals((Integer) 1, mediaStatus.currentItemId);
+		assertEquals(0f, mediaStatus.currentTime, 0f);
 
-        final Map<String, String> payload = new HashMap<String, String>();
-        payload.put("thumb", null);
-        payload.put("title", "Example Track Title");
-        final Map<String, Object> customData = new HashMap<String, Object>();
-        customData.put("payload", payload);
-        assertEquals(Collections.singletonList(new Item(true, customData, 1, media)), mediaStatus.items);
+		final Media media = new Media("http://192.168.1.6:8192/audio-123-mp3", "audio/mpeg", 389.355102d, Media.StreamType.BUFFERED);
 
-        assertEquals(media, mediaStatus.media);
-        assertEquals(Media.MetadataType.GENERIC, media.getMetadataType());
-        assertEquals(1, mediaStatus.mediaSessionId);
-        assertEquals(1, mediaStatus.playbackRate);
-        assertEquals(PlayerState.BUFFERING, mediaStatus.playerState);
-        assertEquals(RepeatMode.REPEAT_OFF, mediaStatus.repeatMode);
-        assertEquals(15, mediaStatus.supportedMediaCommands);
-        assertEquals(new Volume(1f, false, Volume.DEFAULT_INCREMENT,
-                Volume.DEFAULT_INCREMENT.doubleValue(), Volume.DEFAULT_CONTROL_TYPE), mediaStatus.volume);
-    }
+		final Map<String, String> payload = new HashMap<String, String>();
+		payload.put("thumb", null);
+		payload.put("title", "Example Track Title");
+		final Map<String, Object> customData = new HashMap<String, Object>();
+		customData.put("payload", payload);
+		assertEquals(Collections.singletonList(new Item(true, customData, 1, media)), mediaStatus.items);
 
-    @Test
-    public void testDeserializationPandora() throws IOException {
-        final StandardResponse.MediaStatus response =
-                (StandardResponse.MediaStatus) jsonMapper.readValue(getClass()
-                        .getResourceAsStream("/mediaStatus-pandora.json"), StandardResponse.class);
+		assertEquals(media, mediaStatus.media);
+		assertEquals(Media.MetadataType.GENERIC, media.getMetadataType());
+		assertEquals(1, mediaStatus.mediaSessionId);
+		assertEquals(1, mediaStatus.playbackRate);
+		assertEquals(PlayerState.BUFFERING, mediaStatus.playerState);
+		assertEquals(RepeatMode.REPEAT_OFF, mediaStatus.repeatMode);
+		assertEquals(15, mediaStatus.supportedMediaCommands);
+		assertEquals(new Volume(1f, false, Volume.DEFAULT_INCREMENT, Volume.DEFAULT_INCREMENT.doubleValue(), Volume.DEFAULT_CONTROL_TYPE),
+			mediaStatus.volume);
+	}
 
-        assertEquals(1, response.statuses.length);
-        final MediaStatus mediaStatus = response.statuses[0];
-        assertNull(mediaStatus.currentItemId);
-        assertEquals(16d, mediaStatus.currentTime, 0.1);
-        assertEquals(7, mediaStatus.mediaSessionId);
-        assertEquals(1, mediaStatus.playbackRate);
-        assertEquals(PlayerState.PLAYING, mediaStatus.playerState);
-        assertNull(mediaStatus.customData);
-        assertNull(mediaStatus.items);
-        assertNull(mediaStatus.preloadedItemId);
+	@Test
+	public void testDeserializationPandora() throws IOException {
+		final StandardResponse.MediaStatus response = (StandardResponse.MediaStatus) jsonMapper
+			.readValue(getClass().getResourceAsStream("/mediaStatus-pandora.json"), StandardResponse.class);
 
-        assertEquals(new Volume(0.6999999f, false, 0.05f, null, null), mediaStatus.volume);
+		assertEquals(1, response.statuses.length);
+		final MediaStatus mediaStatus = response.statuses[0];
+		assertNull(mediaStatus.currentItemId);
+		assertEquals(16d, mediaStatus.currentTime, 0.1);
+		assertEquals(7, mediaStatus.mediaSessionId);
+		assertEquals(1, mediaStatus.playbackRate);
+		assertEquals(PlayerState.PLAYING, mediaStatus.playerState);
+		assertNull(mediaStatus.customData);
+		assertNull(mediaStatus.items);
+		assertNull(mediaStatus.preloadedItemId);
 
-        assertNotNull(mediaStatus.media);
-        Media media = mediaStatus.media;
-        assertEquals(7, media.metadata.size());
-        assertEquals(Media.MetadataType.MUSIC_TRACK, media.getMetadataType());
-        assertEquals("http://audioURL", media.url);
-        assertEquals(246d, media.duration, 0.1);
-        assertEquals(Media.StreamType.BUFFERED, media.streamType);
-        assertEquals("BUFFERED", media.contentType);
-        assertNull(media.textTrackStyle);
-        assertNull(media.tracks);
-        assertEquals(1, media.customData.size());
-        assertNotNull(media.customData.get("status"));
-        Map<String, Object> status = (Map<String, Object>) media.customData.get("status");
+		assertEquals(new Volume(0.6999999f, false, 0.05f, null, null), mediaStatus.volume);
 
-        assertEquals(8, status.size());
-        assertEquals(2, status.get("state"));
-    }
+		assertNotNull(mediaStatus.media);
+		Media media = mediaStatus.media;
+		assertEquals(7, media.metadata.size());
+		assertEquals(Media.MetadataType.MUSIC_TRACK, media.getMetadataType());
+		assertEquals("http://audioURL", media.url);
+		assertEquals(246d, media.duration, 0.1);
+		assertEquals(Media.StreamType.BUFFERED, media.streamType);
+		assertEquals("BUFFERED", media.contentType);
+		assertNull(media.textTrackStyle);
+		assertNull(media.tracks);
+		assertEquals(1, media.customData.size());
+		assertNotNull(media.customData.get("status"));
+		Map<?, ?> status = (Map<?, ?>) media.customData.get("status");
 
-    @Test
-    public void testDeserializationNoMetadataType() throws IOException {
-        final StandardResponse.MediaStatus response =
-                (StandardResponse.MediaStatus) jsonMapper.readValue(getClass()
-                        .getResourceAsStream("/mediaStatus-no-metadataType.json"), StandardResponse.class);
+		assertEquals(8, status.size());
+		assertEquals(2, status.get("state"));
+	}
 
-        final MediaStatus mediaStatus = response.statuses[0];
-        Media media = mediaStatus.media;
-        assertEquals(Media.MetadataType.GENERIC, media.getMetadataType());
-    }
+	@Test
+	public void testDeserializationNoMetadataType() throws IOException {
+		final StandardResponse.MediaStatus response = (StandardResponse.MediaStatus) jsonMapper
+			.readValue(getClass().getResourceAsStream("/mediaStatus-no-metadataType.json"), StandardResponse.class);
 
-    @Test
-    public void testDeserializationUnknownMetadataType() throws IOException {
-        final StandardResponse.MediaStatus response =
-                (StandardResponse.MediaStatus) jsonMapper.readValue(getClass()
-                        .getResourceAsStream("/mediaStatus-unknown-metadataType.json"), StandardResponse.class);
+		final MediaStatus mediaStatus = response.statuses[0];
+		Media media = mediaStatus.media;
+		assertEquals(Media.MetadataType.GENERIC, media.getMetadataType());
+	}
 
-        final MediaStatus mediaStatus = response.statuses[0];
-        Media media = mediaStatus.media;
-        assertEquals(Media.MetadataType.GENERIC, media.getMetadataType());
-    }
+	@Test
+	public void testDeserializationUnknownMetadataType() throws IOException {
+		final StandardResponse.MediaStatus response = (StandardResponse.MediaStatus) jsonMapper
+			.readValue(getClass().getResourceAsStream("/mediaStatus-unknown-metadataType.json"), StandardResponse.class);
 
-    @Test
-    public void testDeserializationWithVideoInfo() throws IOException {
-        final String jsonMSG = FixtureHelper.fixtureAsString("/mediaStatus-with-videoinfo.json")
-                .replaceFirst("\"type\"", "\"responseType\"");
-        final StandardResponse.MediaStatus response =
-                (StandardResponse.MediaStatus) jsonMapper.readValue(jsonMSG, StandardResponse.class);
-        assertEquals(1, response.statuses.length);
-    }
+		final MediaStatus mediaStatus = response.statuses[0];
+		Media media = mediaStatus.media;
+		assertEquals(Media.MetadataType.GENERIC, media.getMetadataType());
+	}
 
-    @Test
-    public void testDeserializationAudioWithExtraStatus() throws IOException {
-        final String jsonMSG = FixtureHelper.fixtureAsString("/mediaStatus-audio-with-extraStatus.json")
-                .replaceFirst("\"type\"", "\"responseType\"");
-        final StandardResponse.MediaStatus response =
-                (StandardResponse.MediaStatus) jsonMapper.readValue(jsonMSG, StandardResponse.class);
-        assertEquals(1, response.statuses.length);
-    }
+	@Test
+	public void testDeserializationWithVideoInfo() throws IOException {
+		final String jsonMSG = FixtureHelper.fixtureAsString("/mediaStatus-with-videoinfo.json").replaceFirst("\"type\"",
+			"\"responseType\"");
+		final StandardResponse.MediaStatus response = (StandardResponse.MediaStatus) jsonMapper.readValue(jsonMSG, StandardResponse.class);
+		assertEquals(1, response.statuses.length);
+	}
+
+	@Test
+	public void testDeserializationAudioWithExtraStatus() throws IOException {
+		final String jsonMSG = FixtureHelper.fixtureAsString("/mediaStatus-audio-with-extraStatus.json").replaceFirst("\"type\"",
+			"\"responseType\"");
+		final StandardResponse.MediaStatus response = (StandardResponse.MediaStatus) jsonMapper.readValue(jsonMSG, StandardResponse.class);
+		assertEquals(1, response.statuses.length);
+	}
 }

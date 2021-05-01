@@ -28,106 +28,104 @@ import org.digitalmediaserver.chromecast.api.ChromeCastSpontaneousEvent.Spontane
  */
 class EventListenerHolder implements ChromeCastSpontaneousEventListener, ChromeCastConnectionEventListener {
 
-    private final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
-    private final Set<ChromeCastSpontaneousEventListener> eventListeners =
-            new CopyOnWriteArraySet<ChromeCastSpontaneousEventListener>();
-    private final Set<ChromeCastConnectionEventListener> eventListenersConnection =
-            new CopyOnWriteArraySet<ChromeCastConnectionEventListener>();
+	private final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
+	private final Set<ChromeCastSpontaneousEventListener> eventListeners = new CopyOnWriteArraySet<ChromeCastSpontaneousEventListener>();
+	private final Set<ChromeCastConnectionEventListener> eventListenersConnection = new CopyOnWriteArraySet<ChromeCastConnectionEventListener>();
 
-    EventListenerHolder() {}
+	EventListenerHolder() {
+	}
 
-    public void registerListener(ChromeCastSpontaneousEventListener listener) {
-        if (listener != null) {
-            this.eventListeners.add(listener);
-        }
-    }
+	public void registerListener(ChromeCastSpontaneousEventListener listener) {
+		if (listener != null) {
+			this.eventListeners.add(listener);
+		}
+	}
 
-    public void unregisterListener(ChromeCastSpontaneousEventListener listener) {
-        if (listener != null) {
-            this.eventListeners.remove(listener);
-        }
-    }
+	public void unregisterListener(ChromeCastSpontaneousEventListener listener) {
+		if (listener != null) {
+			this.eventListeners.remove(listener);
+		}
+	}
 
-    public void deliverEvent(JsonNode json) throws IOException {
-        if (json == null || this.eventListeners.isEmpty()) {
-            return;
-        }
+	public void deliverEvent(JsonNode json) throws IOException {
+		if (json == null || this.eventListeners.isEmpty()) {
+			return;
+		}
 
-        StandardResponse resp;
-        if (json.has("responseType")) {
-            try {
-                resp = this.jsonMapper.treeToValue(json, StandardResponse.class);
-            } catch (JsonMappingException jme) {
-                resp = null;
-            }
-        } else {
-            resp = null;
-        }
+		StandardResponse resp;
+		if (json.has("responseType")) {
+			try {
+				resp = this.jsonMapper.treeToValue(json, StandardResponse.class);
+			} catch (JsonMappingException jme) {
+				resp = null;
+			}
+		} else {
+			resp = null;
+		}
 
-        /*
-         * The documentation only mentions MEDIA_STATUS as being a possible spontaneous event.
-         * Though RECEIVER_STATUS has also been observed.
-         * If others are observed, they should be added here.
-         * see: https://developers.google.com/cast/docs/reference/messages#MediaMess
-         */
-        if (resp instanceof StandardResponse.MediaStatus) {
-            StandardResponse.MediaStatus mediaStatusResponse = (StandardResponse.MediaStatus) resp;
-            // it may be a single media status event
-            if (mediaStatusResponse.statuses == null) {
-                if (json.has("media")) {
-                    try {
-                        MediaStatus ms = jsonMapper.treeToValue(json, MediaStatus.class);
-                        spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.MEDIA_STATUS, ms));
-                    } catch (JsonMappingException jme) {
-                        // ignored
-                    }
-                }
-            } else {
-                for (final MediaStatus ms : mediaStatusResponse.statuses) {
-                    spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.MEDIA_STATUS, ms));
-                }
-            }
-        } else if (resp instanceof StandardResponse.Status) {
-            spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.STATUS,
-                    ((StandardResponse.Status) resp).status));
-        } else if (resp instanceof StandardResponse.Close) {
-            spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.CLOSE, new Object()));
-        } else {
-            spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.UNKNOWN, json));
-        }
-    }
+		/*
+		 * The documentation only mentions MEDIA_STATUS as being a possible
+		 * spontaneous event. Though RECEIVER_STATUS has also been observed. If
+		 * others are observed, they should be added here. see:
+		 * https://developers.google.com/cast/docs/reference/messages#MediaMess
+		 */
+		if (resp instanceof StandardResponse.MediaStatus) {
+			StandardResponse.MediaStatus mediaStatusResponse = (StandardResponse.MediaStatus) resp;
+			// it may be a single media status event
+			if (mediaStatusResponse.statuses == null) {
+				if (json.has("media")) {
+					try {
+						MediaStatus ms = jsonMapper.treeToValue(json, MediaStatus.class);
+						spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.MEDIA_STATUS, ms));
+					} catch (JsonMappingException jme) {
+						// ignored
+					}
+				}
+			} else {
+				for (final MediaStatus ms : mediaStatusResponse.statuses) {
+					spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.MEDIA_STATUS, ms));
+				}
+			}
+		} else if (resp instanceof StandardResponse.Status) {
+			spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.STATUS, ((StandardResponse.Status) resp).status));
+		} else if (resp instanceof StandardResponse.Close) {
+			spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.CLOSE, new Object()));
+		} else {
+			spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.UNKNOWN, json));
+		}
+	}
 
-    public void deliverAppEvent(AppEvent event) throws IOException {
-        spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.APPEVENT, event));
-    }
+	public void deliverAppEvent(AppEvent event) throws IOException {
+		spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.APPEVENT, event));
+	}
 
-    @Override
-    public void spontaneousEventReceived(ChromeCastSpontaneousEvent event) {
-        for (ChromeCastSpontaneousEventListener listener : this.eventListeners) {
-            listener.spontaneousEventReceived(event);
-        }
-    }
+	@Override
+	public void spontaneousEventReceived(ChromeCastSpontaneousEvent event) {
+		for (ChromeCastSpontaneousEventListener listener : this.eventListeners) {
+			listener.spontaneousEventReceived(event);
+		}
+	}
 
-    public void registerConnectionListener(ChromeCastConnectionEventListener listener) {
-        if (listener != null) {
-            this.eventListenersConnection.add(listener);
-        }
-    }
+	public void registerConnectionListener(ChromeCastConnectionEventListener listener) {
+		if (listener != null) {
+			this.eventListenersConnection.add(listener);
+		}
+	}
 
-    public void unregisterConnectionListener(ChromeCastConnectionEventListener listener) {
-        if (listener != null) {
-            this.eventListenersConnection.remove(listener);
-        }
-    }
+	public void unregisterConnectionListener(ChromeCastConnectionEventListener listener) {
+		if (listener != null) {
+			this.eventListenersConnection.remove(listener);
+		}
+	}
 
-    public void deliverConnectionEvent(boolean connected) {
-        connectionEventReceived(new ChromeCastConnectionEvent(connected));
-    }
+	public void deliverConnectionEvent(boolean connected) {
+		connectionEventReceived(new ChromeCastConnectionEvent(connected));
+	}
 
-    @Override
-    public void connectionEventReceived(ChromeCastConnectionEvent event) {
-        for (ChromeCastConnectionEventListener listener : this.eventListenersConnection) {
-            listener.connectionEventReceived(event);
-        }
-    }
+	@Override
+	public void connectionEventReceived(ChromeCastConnectionEvent event) {
+		for (ChromeCastConnectionEventListener listener : this.eventListenersConnection) {
+			listener.connectionEventReceived(event);
+		}
+	}
 }
