@@ -16,15 +16,17 @@
 package org.digitalmediaserver.chromecast.api;
 
 /**
- * The listener interface for receiving connection open/close events. The class that is interested in processing
- * connection events implements this interface, and object create with that class is registered
- * with <code>ChromeCast</code> instance using the <code>registerConnectionListener</code> method.
- * When connection event occurs, that object's <code>connectionEventReceived</code> is invoked.
+ * The listener interface for receiving connection open/close events. The class
+ * that is interested in processing connection events implements this interface,
+ * and object create with that class is registered with <code>ChromeCast</code>
+ * instance using the <code>registerConnectionListener</code> method. When
+ * connection event occurs, that object's <code>connectionEventReceived</code>
+ * is invoked.
  *
  * @see ChromeCastConnectionEvent
  */
 public interface ChromeCastConnectionEventListener {
 
-    void connectionEventReceived(ChromeCastConnectionEvent event);
+	void connectionEventReceived(ChromeCastConnectionEvent event);
 
 }

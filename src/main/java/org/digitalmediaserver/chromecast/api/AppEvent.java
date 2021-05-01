@@ -21,18 +21,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * A custom event sent by a receiver app.
  */
 public class AppEvent {
-    @JsonProperty
-    public final String namespace;
-    @JsonProperty
-    public final String message;
 
-    AppEvent(String namespace, String message) {
-        this.namespace = namespace;
-        this.message = message;
-    }
+	@JsonProperty
+	public final String namespace;
+	@JsonProperty
+	public final String message;
 
-    @Override
-    public final String toString() {
-        return String.format("AppEvent{namespace: %s, message: %s}", this.namespace, this.message);
-    }
+	AppEvent(String namespace, String message) {
+		this.namespace = namespace;
+		this.message = message;
+	}
+
+	@Override
+	public final String toString() {
+		return String.format("AppEvent{namespace: %s, message: %s}", this.namespace, this.message);
+	}
 }

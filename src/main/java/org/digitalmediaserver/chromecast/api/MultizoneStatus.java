@@ -18,15 +18,16 @@ package org.digitalmediaserver.chromecast.api;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Status received in case there a multiple ChomeCast devices in several "zones" (multi-zone setup).
+ * Status received in case there a multiple ChomeCast devices in several "zones"
+ * (multi-zone setup).
  */
 public class MultizoneStatus {
-    public final Device[] devices;
-    public final boolean isMultichannel;
 
-    public MultizoneStatus(@JsonProperty("devices") Device[] devices,
-                           @JsonProperty("isMultichannel") boolean isMultichannel) {
-        this.devices = devices;
-        this.isMultichannel = isMultichannel;
-    }
+	public final Device[] devices;
+	public final boolean isMultichannel;
+
+	public MultizoneStatus(@JsonProperty("devices") Device[] devices, @JsonProperty("isMultichannel") boolean isMultichannel) {
+		this.devices = devices;
+		this.isMultichannel = isMultichannel;
+	}
 }

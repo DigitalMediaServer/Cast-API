@@ -16,8 +16,6 @@
 package org.digitalmediaserver.chromecast.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.digitalmediaserver.chromecast.api.JacksonHelper;
-import org.digitalmediaserver.chromecast.api.StandardResponse;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -27,19 +25,21 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 public class MultizoneStatusTest {
-    final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 
-    @Test
-    public void testStandard() throws IOException {
-        final String jsonMSG = FixtureHelper.fixtureAsString("/multizoneStatus.json")
-                .replaceFirst("\"type\"", "\"responseType\"");
-        final StandardResponse.MultizoneStatus response =
-                (StandardResponse.MultizoneStatus) jsonMapper.readValue(jsonMSG, StandardResponse.class);
-        assertNotNull(response.status);
-        assertEquals(1, response.status.devices.length);
-        assertFalse(response.status.isMultichannel);
-        assertEquals("Living Room speaker", response.status.devices[0].name);
-        assertEquals(196612, response.status.devices[0].capabilities);
-        assertNotNull(response.status.devices[0].volume);
-    }
+	final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
+
+	@Test
+	public void testStandard() throws IOException {
+		final String jsonMSG = FixtureHelper.fixtureAsString("/multizoneStatus.json").replaceFirst("\"type\"", "\"responseType\"");
+		final StandardResponse.MultizoneStatus response = (StandardResponse.MultizoneStatus) jsonMapper.readValue(
+			jsonMSG,
+			StandardResponse.class
+		);
+		assertNotNull(response.status);
+		assertEquals(1, response.status.devices.length);
+		assertFalse(response.status.isMultichannel);
+		assertEquals("Living Room speaker", response.status.devices[0].name);
+		assertEquals(196612, response.status.devices[0].capabilities);
+		assertNotNull(response.status.devices[0].volume);
+	}
 }
