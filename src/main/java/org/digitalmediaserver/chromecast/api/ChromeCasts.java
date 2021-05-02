@@ -36,7 +36,7 @@ public final class ChromeCasts {
 
 	private JmDNS mDNS;
 
-	private final List<ChromeCastsListener> listeners = new ArrayList<ChromeCastsListener>();
+	private final List<ChromeCastsListener> listeners = new ArrayList<>();
 	private final List<ChromeCast> chromeCasts = Collections.synchronizedList(new ArrayList<ChromeCast>());
 
 	private ChromeCasts() {
@@ -48,14 +48,13 @@ public final class ChromeCasts {
 	 * @return a copy of the currently seen chromecast devices.
 	 */
 	public static List<ChromeCast> get() {
-		return new ArrayList<ChromeCast>(INSTANCE.chromeCasts);
+		return new ArrayList<>(INSTANCE.chromeCasts);
 	}
 
 	/**
-	 * Hidden service listener to receive callbacks. Is hidden to avoid messing
-	 * with it.
+	 * Service listener to receive mDNS service updates.
 	 */
-	private class MyServiceListener implements ServiceListener {
+	public class MyServiceListener implements ServiceListener {
 
 		@Override
 		public void serviceAdded(ServiceEvent se) {

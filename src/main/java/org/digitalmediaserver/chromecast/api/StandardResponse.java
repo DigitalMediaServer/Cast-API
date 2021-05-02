@@ -41,9 +41,9 @@ import java.util.Map;
 	@JsonSubTypes.Type(name = "DEVICE_UPDATED", value = StandardResponse.DeviceUpdated.class),
 	@JsonSubTypes.Type(name = "DEVICE_REMOVED", value = StandardResponse.DeviceRemoved.class)
 })
-abstract class StandardResponse implements Response {
+public abstract class StandardResponse implements Response {
 
-	Long requestId;
+	protected Long requestId;
 
 	@Override
 	public final Long getRequestId() {
@@ -58,35 +58,35 @@ abstract class StandardResponse implements Response {
 	/**
 	 * Request to send 'Pong' message in reply.
 	 */
-	static class Ping extends StandardResponse {
+	public static class Ping extends StandardResponse {
 	}
 
 	/**
 	 * Response in reply to 'Ping' message.
 	 */
-	static class Pong extends StandardResponse {
+	public static class Pong extends StandardResponse {
 	}
 
 	/**
 	 * Request to 'Close' connection.
 	 */
-	static class Close extends StandardResponse {
+	public static class Close extends StandardResponse {
 	}
 
 	/**
 	 * Identifies that loading of media has failed.
 	 */
-	static class LoadFailed extends StandardResponse {
+	public static class LoadFailed extends StandardResponse {
 	}
 
 	/**
 	 * Request was invalid for some <code>reason</code>.
 	 */
-	static class Invalid extends StandardResponse {
+	public static class Invalid extends StandardResponse {
 
-		final String reason;
+		protected final String reason;
 
-		Invalid(@JsonProperty("reason") String reason) {
+		public Invalid(@JsonProperty("reason") String reason) {
 			this.reason = reason;
 		}
 	}
@@ -94,11 +94,11 @@ abstract class StandardResponse implements Response {
 	/**
 	 * Application cannot be launched for some <code>reason</code>.
 	 */
-	static class LaunchError extends StandardResponse {
+	public static class LaunchError extends StandardResponse {
 
-		final String reason;
+		protected final String reason;
 
-		LaunchError(@JsonProperty("reason") String reason) {
+		public LaunchError(@JsonProperty("reason") String reason) {
 			this.reason = reason;
 		}
 	}
@@ -106,12 +106,12 @@ abstract class StandardResponse implements Response {
 	/**
 	 * Response to "Status" request.
 	 */
-	static class Status extends StandardResponse {
+	public static class Status extends StandardResponse {
 
 		@JsonProperty
-		final org.digitalmediaserver.chromecast.api.Status status;
+		protected final org.digitalmediaserver.chromecast.api.Status status;
 
-		Status(@JsonProperty("status") org.digitalmediaserver.chromecast.api.Status status) {
+		public Status(@JsonProperty("status") org.digitalmediaserver.chromecast.api.Status status) {
 			this.status = status;
 		}
 	}
@@ -119,11 +119,11 @@ abstract class StandardResponse implements Response {
 	/**
 	 * Response to "MediaStatus" request.
 	 */
-	static class MediaStatus extends StandardResponse {
+	public static class MediaStatus extends StandardResponse {
 
-		final org.digitalmediaserver.chromecast.api.MediaStatus[] statuses;
+		protected final org.digitalmediaserver.chromecast.api.MediaStatus[] statuses;
 
-		MediaStatus(@JsonProperty("status") org.digitalmediaserver.chromecast.api.MediaStatus... statuses) {
+		public MediaStatus(@JsonProperty("status") org.digitalmediaserver.chromecast.api.MediaStatus... statuses) {
 			this.statuses = statuses;
 		}
 	}
@@ -131,22 +131,22 @@ abstract class StandardResponse implements Response {
 	/**
 	 * Response to "AppAvailability" request.
 	 */
-	static class AppAvailability extends StandardResponse {
+	public static class AppAvailability extends StandardResponse {
 
 		@JsonProperty
-		Map<String, String> availability;
+		protected Map<String, String> availability;
 	}
 
 	/**
 	 * Multi-Zone status for the case when there are multiple ChromeCast devices
 	 * in different zones (rooms).
 	 */
-	static class MultizoneStatus extends StandardResponse {
+	public static class MultizoneStatus extends StandardResponse {
 
 		@JsonProperty
-		final org.digitalmediaserver.chromecast.api.MultizoneStatus status;
+		protected final org.digitalmediaserver.chromecast.api.MultizoneStatus status;
 
-		MultizoneStatus(@JsonProperty("status") org.digitalmediaserver.chromecast.api.MultizoneStatus status) {
+		public MultizoneStatus(@JsonProperty("status") org.digitalmediaserver.chromecast.api.MultizoneStatus status) {
 			this.status = status;
 		}
 	}
@@ -154,11 +154,11 @@ abstract class StandardResponse implements Response {
 	/**
 	 * Received when power is cycled on ChromeCast Audio device in a group.
 	 */
-	static class DeviceAdded extends StandardResponse {
+	public static class DeviceAdded extends StandardResponse {
 
-		final Device device;
+		protected final Device device;
 
-		DeviceAdded(@JsonProperty("device") Device device) {
+		public DeviceAdded(@JsonProperty("device") Device device) {
 			this.device = device;
 		}
 	}
@@ -166,11 +166,11 @@ abstract class StandardResponse implements Response {
 	/**
 	 * Received when volume is changed in ChromeCast Audio group.
 	 */
-	static class DeviceUpdated extends StandardResponse {
+	public static class DeviceUpdated extends StandardResponse {
 
-		final Device device;
+		protected final Device device;
 
-		DeviceUpdated(@JsonProperty("device") Device device) {
+		public DeviceUpdated(@JsonProperty("device") Device device) {
 			this.device = device;
 		}
 	}
@@ -178,11 +178,11 @@ abstract class StandardResponse implements Response {
 	/**
 	 * Received when power is cycled on ChromeCast Audio device in a group.
 	 */
-	static class DeviceRemoved extends StandardResponse {
+	public static class DeviceRemoved extends StandardResponse {
 
-		final String deviceId;
+		protected final String deviceId;
 
-		DeviceRemoved(@JsonProperty("deviceId") String deviceId) {
+		public DeviceRemoved(@JsonProperty("deviceId") String deviceId) {
 			this.deviceId = deviceId;
 		}
 	}

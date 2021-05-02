@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
-import static org.digitalmediaserver.chromecast.api.Util.fromArray;
-import static org.digitalmediaserver.chromecast.api.Util.toArray;
+import static org.digitalmediaserver.chromecast.api.Util.intFromB32Bytes;
+import static org.digitalmediaserver.chromecast.api.Util.intToB32Bytes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
@@ -39,21 +39,21 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-final class MockedChromeCast {
+public class MockedChromeCast {
 
-	final Logger logger = LoggerFactory.getLogger(MockedChromeCast.class);
+	private final Logger logger = LoggerFactory.getLogger(MockedChromeCast.class);
 
-	final ServerSocket socket;
-	final ClientThread clientThread;
-	List<Application> runningApplications = new ArrayList<Application>();
-	CustomHandler customHandler;
+	public final ServerSocket socket;
+	public final ClientThread clientThread;
+	public List<Application> runningApplications = new ArrayList<Application>();
+	public CustomHandler customHandler;
 
-	interface CustomHandler {
+	public interface CustomHandler {
 
 		Response handle(JsonNode json);
 	}
 
-	MockedChromeCast() throws IOException, GeneralSecurityException {
+	public MockedChromeCast() throws IOException, GeneralSecurityException {
 		SSLContext sc = SSLContext.getInstance("SSL");
 		KeyStore keyStore = KeyStore.getInstance("JKS");
 		keyStore.load(getClass().getResourceAsStream("/keystore.jks"), "changeit".toCharArray());
@@ -68,11 +68,11 @@ final class MockedChromeCast {
 		clientThread.start();
 	}
 
-	class ClientThread extends Thread {
+	public class ClientThread extends Thread {
 
-		volatile boolean stop;
-		Socket clientSocket;
-		ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
+		public volatile boolean stop;
+		public Socket clientSocket;
+		public ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 
 		@Override
 		public void run() {
@@ -94,7 +94,7 @@ final class MockedChromeCast {
 			}
 		}
 
-		void handle(CastMessage message) throws IOException {
+		public void handle(CastMessage message) throws IOException {
 			logger.info("Received message: ");
 			logger.info("   sourceId: " + message.getSourceId());
 			logger.info("   destinationId: " + message.getDestinationId());
@@ -155,11 +155,11 @@ final class MockedChromeCast {
 			}
 		}
 
-		MessageLite handleBinary(DeviceAuthMessage message) throws IOException {
+		public MessageLite handleBinary(DeviceAuthMessage message) throws IOException {
 			return message;
 		}
 
-		Response handleJSON(Message message) {
+		public Response handleJSON(Message message) {
 			if (message instanceof StandardMessage.Ping) {
 				return new StandardResponse.Pong();
 			} else if (message instanceof StandardRequest.Status) {
@@ -184,7 +184,7 @@ final class MockedChromeCast {
 			return null;
 		}
 
-		Status status() {
+		public Status status() {
 			return new Status(
 				new Volume(
 					1f,
@@ -199,7 +199,7 @@ final class MockedChromeCast {
 			);
 		}
 
-		Response handleCustom(JsonNode json) {
+		public Response handleCustom(JsonNode json) {
 			if (customHandler == null) {
 				logger.info("No custom handler set");
 				return null;
@@ -208,7 +208,7 @@ final class MockedChromeCast {
 			}
 		}
 
-		CastMessage read(Socket mySocket) throws IOException {
+		public CastMessage read(Socket mySocket) throws IOException {
 			InputStream is = mySocket.getInputStream();
 			byte[] buf = new byte[4];
 
@@ -221,7 +221,7 @@ final class MockedChromeCast {
 				buf[read++] = (byte) nextByte;
 			}
 
-			int size = fromArray(buf);
+			int size = intFromB32Bytes(buf);
 			buf = new byte[size];
 			read = 0;
 			while (read < size) {
@@ -235,13 +235,13 @@ final class MockedChromeCast {
 			return CastMessage.parseFrom(buf);
 		}
 
-		void write(Socket mySocket, CastMessage message) throws IOException {
-			mySocket.getOutputStream().write(toArray(message.getSerializedSize()));
+		public void write(Socket mySocket, CastMessage message) throws IOException {
+			mySocket.getOutputStream().write(intToB32Bytes(message.getSerializedSize()));
 			message.writeTo(mySocket.getOutputStream());
 		}
 	}
 
-	void close() throws IOException {
+	public void close() throws IOException {
 		clientThread.stop = true;
 		this.socket.close();
 	}

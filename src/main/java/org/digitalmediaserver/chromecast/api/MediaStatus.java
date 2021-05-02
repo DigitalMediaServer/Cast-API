@@ -88,7 +88,7 @@ public class MediaStatus {
 	public final RepeatMode repeatMode;
 	public final IdleReason idleReason;
 
-	MediaStatus(
+	public MediaStatus(
 		@JsonProperty("activeTrackIds") List<Integer> activeTrackIds,
 		@JsonProperty("mediaSessionId") long mediaSessionId,
 		@JsonProperty("playbackRate") int playbackRate,
