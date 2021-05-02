@@ -15,8 +15,8 @@
  */
 package org.digitalmediaserver.chromecast.api;
 
-import static org.digitalmediaserver.chromecast.api.Util.fromArray;
-import static org.digitalmediaserver.chromecast.api.Util.toArray;
+import static org.digitalmediaserver.chromecast.api.Util.intFromBytes;
+import static org.digitalmediaserver.chromecast.api.Util.intToBytes;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,6 +28,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -50,7 +51,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
  * Internal class for low-level communication with ChromeCast device. Should
  * never be used directly, use {@link ChromeCast} methods instead
  */
-class Channel implements Closeable {
+public class Channel implements Closeable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Channel.class);
 
@@ -103,7 +104,7 @@ class Channel implements Closeable {
 	/**
 	 * Counter for producing request numbers
 	 */
-	private AtomicLong requestCounter = new AtomicLong(1);
+	protected final AtomicLong requestCounter = new AtomicLong(new Random().nextInt(65536) + 1L);
 
 	/**
 	 * Processors of requests by their identifiers
@@ -132,7 +133,7 @@ class Channel implements Closeable {
 	 */
 	private volatile long requestTimeout = DEFAULT_REQUEST_TIMEOUT;
 
-	private class PingThread extends TimerTask {
+	protected class PingThread extends TimerTask {
 
 		@Override
 		public void run() {
@@ -144,7 +145,7 @@ class Channel implements Closeable {
 		}
 	}
 
-	private class ReadThread extends Thread {
+	protected class ReadThread extends Thread {
 
 		volatile boolean stop;
 
@@ -245,8 +246,8 @@ class Channel implements Closeable {
 
 	private class ResultProcessor<T extends Response> {
 
-		final Class<T> responseClass;
-		T result;
+		protected final Class<T> responseClass;
+		protected T result;
 
 		private ResultProcessor(Class<T> responseClass) {
 			if (responseClass == null) {
@@ -276,11 +277,11 @@ class Channel implements Closeable {
 		}
 	}
 
-	Channel(String host, EventListenerHolder eventListener) {
+	protected Channel(String host, EventListenerHolder eventListener) {
 		this(host, 8009, eventListener);
 	}
 
-	Channel(String host, int port, EventListenerHolder eventListener) {
+	protected Channel(String host, int port, EventListenerHolder eventListener) {
 		this.address = new InetSocketAddress(host, port);
 		this.name = "sender-" + new RandomString(10).nextString();
 		this.eventListener = eventListener;
@@ -439,7 +440,7 @@ class Channel implements Closeable {
 	}
 
 	private void write(CastMessage message) throws IOException {
-		socket.getOutputStream().write(toArray(message.getSerializedSize()));
+		socket.getOutputStream().write(intToBytes(message.getSerializedSize()));
 		message.writeTo(socket.getOutputStream());
 	}
 
@@ -456,7 +457,7 @@ class Channel implements Closeable {
 			buf[read++] = (byte) nextByte;
 		}
 
-		int size = fromArray(buf);
+		int size = intFromBytes(buf);
 		buf = new byte[size];
 		read = 0;
 		while (read < size) {

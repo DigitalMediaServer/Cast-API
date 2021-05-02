@@ -31,18 +31,18 @@ final class Util {
 	/**
 	 * Converts specified byte array in Big Endian to int.
 	 */
-	static int fromArray(byte[] payload) {
+	public static int intFromBytes(byte[] payload) {
 		return payload[0] << 24 | (payload[1] & 0xFF) << 16 | (payload[2] & 0xFF) << 8 | (payload[3] & 0xFF);
 	}
 
 	/**
 	 * Converts specified int to byte array in Big Endian.
 	 */
-	static byte[] toArray(int value) {
+	public static byte[] intToBytes(int value) {
 		return new byte[] {(byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value};
 	}
 
-	static String getContentType(String url) {
+	public static String getContentType(String url) {
 		HttpURLConnection connection = null;
 		try {
 			connection = (HttpURLConnection) new URL(url).openConnection();
@@ -57,7 +57,7 @@ final class Util {
 		return null;
 	}
 
-	static String getMediaTitle(String url) {
+	public static String getMediaTitle(String url) {
 		try {
 			URL urlObj = new URL(url);
 			String mediaTitle;
