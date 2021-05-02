@@ -23,6 +23,8 @@ import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.GeneralSecurityException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.Map;
@@ -34,10 +36,12 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
+import org.digitalmediaserver.chromecast.api.CastChannel.CastMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -96,7 +100,7 @@ class Channel implements Closeable {
 	 * Processors of requests by their identifiers
 	 */
 	private final Map<Long, ResultProcessor<? extends Response>> requests =
-		new ConcurrentHashMap<Long, ResultProcessor<? extends Response>>();
+		new ConcurrentHashMap<>();
 	/**
 	 * Single mapper object for marshalling JSON
 	 */
@@ -104,7 +108,7 @@ class Channel implements Closeable {
 	/**
 	 * Destination ids of sessions opened within this channel
 	 */
-	private Set<String> sessions = new HashSet<String>();
+	private Set<String> sessions = new HashSet<>();
 	/**
 	 * Indicates that this channel was closed (explicitly, by remote host or for
 	 * some connectivity issue)
@@ -137,11 +141,11 @@ class Channel implements Closeable {
 			while (!stop) {
 				JsonNode parsed = null;
 				String jsonMSG = null;
-				CastChannel.CastMessage message = null;
+				CastMessage message = null;
 
 				try {
 					message = read();
-					if (message.getPayloadType() == CastChannel.CastMessage.PayloadType.STRING) {
+					if (message.getPayloadType() == CastMessage.PayloadType.STRING) {
 						LOG.debug(" <-- {}", message.getPayloadUtf8());
 						jsonMSG = message.getPayloadUtf8().replaceFirst("\"type\"", "\"responseType\"");
 						if (jsonMSG == null || jsonMSG.isEmpty()) {
@@ -239,7 +243,7 @@ class Channel implements Closeable {
 			this.responseClass = responseClass;
 		}
 
-		public void put(String jsonMSG) throws IOException {
+		public void put(String jsonMSG) throws JsonMappingException, JsonProcessingException {
 			synchronized (this) {
 				this.result = jsonMapper.readValue(jsonMSG, responseClass);
 				this.notify();
@@ -278,9 +282,10 @@ class Channel implements Closeable {
 	 * </p>
 	 *
 	 * @throws IOException
-	 * @throws GeneralSecurityException
+	 * @throws KeyManagementException
+	 * @throws NoSuchAlgorithmException
 	 */
-	public void open() throws IOException, GeneralSecurityException {
+	public void open() throws IOException, KeyManagementException, NoSuchAlgorithmException {
 		if (!closed) {
 			throw new ChromeCastException("Channel already opened.");
 		}
@@ -289,8 +294,12 @@ class Channel implements Closeable {
 
 	/**
 	 * Establish connection to the ChromeCast device.
+	 *
+	 * @throws IOException
+	 * @throws KeyManagementException
+	 * @throws NoSuchAlgorithmException
 	 */
-	private void connect() throws IOException, GeneralSecurityException {
+	private void connect() throws IOException, KeyManagementException, NoSuchAlgorithmException {
 		synchronized (closedSync) {
 			if (socket == null || socket.isClosed()) {
 				SSLContext sc = SSLContext.getInstance("SSL");
@@ -302,13 +311,13 @@ class Channel implements Closeable {
 			CastChannel.DeviceAuthMessage authMessage = CastChannel.DeviceAuthMessage.newBuilder()
 				.setChallenge(CastChannel.AuthChallenge.newBuilder().build()).build();
 
-			CastChannel.CastMessage msg = CastChannel.CastMessage.newBuilder().setDestinationId(DEFAULT_RECEIVER_ID)
-				.setNamespace("urn:x-cast:com.google.cast.tp.deviceauth").setPayloadType(CastChannel.CastMessage.PayloadType.BINARY)
-				.setProtocolVersion(CastChannel.CastMessage.ProtocolVersion.CASTV2_1_0).setSourceId(name)
+			CastMessage msg = CastMessage.newBuilder().setDestinationId(DEFAULT_RECEIVER_ID)
+				.setNamespace("urn:x-cast:com.google.cast.tp.deviceauth").setPayloadType(CastMessage.PayloadType.BINARY)
+				.setProtocolVersion(CastMessage.ProtocolVersion.CASTV2_1_0).setSourceId(name)
 				.setPayloadBinary(authMessage.toByteString()).build();
 
 			write(msg);
-			CastChannel.CastMessage response = read();
+			CastMessage response = read();
 			CastChannel.DeviceAuthMessage authResponse = CastChannel.DeviceAuthMessage.parseFrom(response.getPayloadBinary());
 			if (authResponse.hasError()) {
 				throw new ChromeCastException("Authentication failed: " + authResponse.getError().getErrorType().toString());
@@ -363,7 +372,7 @@ class Channel implements Closeable {
 			return null;
 		}
 
-		ResultProcessor<T> rp = new ResultProcessor<T>(responseClass);
+		ResultProcessor<T> rp = new ResultProcessor<>(responseClass);
 		requests.put(requestId, rp);
 
 		write(namespace, message, destinationId);
@@ -394,18 +403,18 @@ class Channel implements Closeable {
 
 	private void write(String namespace, String message, String destinationId) throws IOException {
 		LOG.debug(" --> {}", message);
-		CastChannel.CastMessage msg = CastChannel.CastMessage.newBuilder()
-			.setProtocolVersion(CastChannel.CastMessage.ProtocolVersion.CASTV2_1_0).setSourceId(name).setDestinationId(destinationId)
-			.setNamespace(namespace).setPayloadType(CastChannel.CastMessage.PayloadType.STRING).setPayloadUtf8(message).build();
+		CastMessage msg = CastMessage.newBuilder()
+			.setProtocolVersion(CastMessage.ProtocolVersion.CASTV2_1_0).setSourceId(name).setDestinationId(destinationId)
+			.setNamespace(namespace).setPayloadType(CastMessage.PayloadType.STRING).setPayloadUtf8(message).build();
 		write(msg);
 	}
 
-	private void write(CastChannel.CastMessage message) throws IOException {
+	private void write(CastMessage message) throws IOException {
 		socket.getOutputStream().write(toArray(message.getSerializedSize()));
 		message.writeTo(socket.getOutputStream());
 	}
 
-	private CastChannel.CastMessage read() throws IOException {
+	private CastMessage read() throws IOException {
 		InputStream is = socket.getInputStream();
 		byte[] buf = new byte[4];
 
@@ -429,7 +438,7 @@ class Channel implements Closeable {
 			read += nowRead;
 		}
 
-		return CastChannel.CastMessage.parseFrom(buf);
+		return CastMessage.parseFrom(buf);
 	}
 
 	private void notifyListenerOfConnectionEvent(final boolean connected) {
@@ -438,13 +447,13 @@ class Channel implements Closeable {
 		}
 	}
 
-	private void notifyListenersOfSpontaneousEvent(JsonNode json) throws IOException {
+	private void notifyListenersOfSpontaneousEvent(JsonNode json) throws JsonProcessingException {
 		if (this.eventListener != null) {
 			this.eventListener.deliverEvent(json);
 		}
 	}
 
-	private void notifyListenersAppEvent(AppEvent event) throws IOException {
+	private void notifyListenersAppEvent(AppEvent event) {
 		if (this.eventListener != null) {
 			this.eventListener.deliverAppEvent(event);
 		}

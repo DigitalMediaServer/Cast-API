@@ -19,6 +19,8 @@ import static org.digitalmediaserver.chromecast.api.Util.getContentType;
 import static org.digitalmediaserver.chromecast.api.Util.getMediaTitle;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import javax.jmdns.JmDNS;
@@ -151,7 +153,7 @@ public class ChromeCast {
 			try {
 				connect();
 			} catch (GeneralSecurityException e) {
-				throw new IOException(e);
+				throw new IOException("Security error: " + e.getMessage(), e);
 			}
 		}
 
@@ -162,7 +164,7 @@ public class ChromeCast {
 		return runningApp.transportId == null ? runningApp.sessionId : runningApp.transportId;
 	}
 
-	public final synchronized void connect() throws IOException, GeneralSecurityException {
+	public final synchronized void connect() throws IOException, KeyManagementException, NoSuchAlgorithmException {
 		if (channel == null || channel.isClosed()) {
 			channel = new Channel(this.address, this.port, this.eventListenerHolder);
 			channel.open();
@@ -489,7 +491,7 @@ public class ChromeCast {
 		if (runningApp == null) {
 			throw new ChromeCastException("No application is running in ChromeCast");
 		}
-		Map<String, Object> metadata = new HashMap<String, Object>(2);
+		Map<String, Object> metadata = new HashMap<>(2);
 		metadata.put("title", mediaTitle);
 		metadata.put("thumb", thumb);
 		return channel().load(

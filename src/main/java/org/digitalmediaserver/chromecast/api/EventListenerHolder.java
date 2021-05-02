@@ -15,10 +15,10 @@
  */
 package org.digitalmediaserver.chromecast.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import org.digitalmediaserver.chromecast.api.ChromeCastSpontaneousEvent.SpontaneousEventType;
@@ -29,8 +29,8 @@ import org.digitalmediaserver.chromecast.api.ChromeCastSpontaneousEvent.Spontane
 class EventListenerHolder implements ChromeCastSpontaneousEventListener, ChromeCastConnectionEventListener {
 
 	private final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
-	private final Set<ChromeCastSpontaneousEventListener> eventListeners = new CopyOnWriteArraySet<ChromeCastSpontaneousEventListener>();
-	private final Set<ChromeCastConnectionEventListener> eventListenersConnection = new CopyOnWriteArraySet<ChromeCastConnectionEventListener>();
+	private final Set<ChromeCastSpontaneousEventListener> eventListeners = new CopyOnWriteArraySet<>();
+	private final Set<ChromeCastConnectionEventListener> eventListenersConnection = new CopyOnWriteArraySet<>();
 
 	EventListenerHolder() {
 	}
@@ -47,7 +47,7 @@ class EventListenerHolder implements ChromeCastSpontaneousEventListener, ChromeC
 		}
 	}
 
-	public void deliverEvent(JsonNode json) throws IOException {
+	public void deliverEvent(JsonNode json) throws JsonProcessingException {
 		if (json == null || this.eventListeners.isEmpty()) {
 			return;
 		}
@@ -95,7 +95,7 @@ class EventListenerHolder implements ChromeCastSpontaneousEventListener, ChromeC
 		}
 	}
 
-	public void deliverAppEvent(AppEvent event) throws IOException {
+	public void deliverAppEvent(AppEvent event) {
 		spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.APPEVENT, event));
 	}
 

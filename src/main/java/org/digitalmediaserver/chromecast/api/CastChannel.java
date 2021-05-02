@@ -300,8 +300,7 @@ final class CastChannel {
 
 		private final ByteString unknownFields;
 
-		private CastMessage(CodedInputStream input, ExtensionRegistryLite extensionRegistry)
-			throws InvalidProtocolBufferException {
+		private CastMessage(CodedInputStream input, ExtensionRegistryLite extensionRegistry) throws InvalidProtocolBufferException {
 			initFields();
 			ByteString.Output unknownFieldsOutput = ByteString.newOutput();
 			CodedOutputStream unknownFieldsCodedOutput = CodedOutputStream.newInstance(unknownFieldsOutput);
@@ -395,8 +394,10 @@ final class CastChannel {
 		public static Parser<CastMessage> PARSER = new AbstractParser<CastMessage>() {
 
 			@Override
-			public CastMessage parsePartialFrom(CodedInputStream input,
-				ExtensionRegistryLite extensionRegistry) throws InvalidProtocolBufferException {
+			public CastMessage parsePartialFrom(
+				CodedInputStream input,
+				ExtensionRegistryLite extensionRegistry
+			) throws InvalidProtocolBufferException {
 				return new CastMessage(input, extensionRegistry);
 			}
 		};
@@ -949,53 +950,58 @@ final class CastChannel {
 			return super.writeReplace();
 		}
 
-		public static CastChannel.CastMessage parseFrom(ByteString data)
-			throws InvalidProtocolBufferException {
+		public static CastChannel.CastMessage parseFrom(ByteString data) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data);
 		}
 
-		public static CastChannel.CastMessage parseFrom(ByteString data,
-			ExtensionRegistryLite extensionRegistry) throws InvalidProtocolBufferException {
+		public static CastChannel.CastMessage parseFrom(
+			ByteString data,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data, extensionRegistry);
 		}
 
-		public static CastChannel.CastMessage parseFrom(byte[] data)
-			throws InvalidProtocolBufferException {
+		public static CastChannel.CastMessage parseFrom(byte[] data) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data);
 		}
 
-		public static CastChannel.CastMessage parseFrom(byte[] data,
-			ExtensionRegistryLite extensionRegistry) throws InvalidProtocolBufferException {
+		public static CastChannel.CastMessage parseFrom(
+			byte[] data,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data, extensionRegistry);
 		}
 
-		public static CastChannel.CastMessage parseFrom(InputStream input)
-			throws IOException {
+		public static CastChannel.CastMessage parseFrom(InputStream input) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input);
 		}
 
-		public static CastChannel.CastMessage parseFrom(InputStream input,
-			ExtensionRegistryLite extensionRegistry) throws IOException {
+		public static CastChannel.CastMessage parseFrom(
+			InputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input, extensionRegistry);
 		}
 
-		public static CastChannel.CastMessage parseDelimitedFrom(InputStream input)
-			throws IOException {
+		public static CastChannel.CastMessage parseDelimitedFrom(InputStream input) throws InvalidProtocolBufferException {
 			return PARSER.parseDelimitedFrom(input);
 		}
 
-		public static CastChannel.CastMessage parseDelimitedFrom(InputStream input,
-			ExtensionRegistryLite extensionRegistry) throws IOException {
+		public static CastChannel.CastMessage parseDelimitedFrom(
+			InputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseDelimitedFrom(input, extensionRegistry);
 		}
 
-		public static CastChannel.CastMessage parseFrom(CodedInputStream input)
-			throws IOException {
+		public static CastChannel.CastMessage parseFrom(CodedInputStream input) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input);
 		}
 
-		public static CastChannel.CastMessage parseFrom(CodedInputStream input,
-			ExtensionRegistryLite extensionRegistry) throws IOException {
+		public static CastChannel.CastMessage parseFrom(
+			CodedInputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input, extensionRegistry);
 		}
 
@@ -1180,8 +1186,10 @@ final class CastChannel {
 			}
 
 			@Override
-			public Builder mergeFrom(CodedInputStream input,
-				ExtensionRegistryLite extensionRegistry) throws IOException {
+			public Builder mergeFrom(
+				CodedInputStream input,
+				ExtensionRegistryLite extensionRegistry
+			) throws InvalidProtocolBufferException {
 				CastChannel.CastMessage parsedMessage = null;
 				try {
 					parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
@@ -1847,8 +1855,10 @@ final class CastChannel {
 
 		private final ByteString unknownFields;
 
-		private AuthChallenge(CodedInputStream input, ExtensionRegistryLite extensionRegistry)
-			throws InvalidProtocolBufferException {
+		private AuthChallenge(
+			CodedInputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			initFields();
 			ByteString.Output unknownFieldsOutput = ByteString.newOutput();
 			CodedOutputStream unknownFieldsCodedOutput = CodedOutputStream.newInstance(unknownFieldsOutput);
@@ -1900,8 +1910,10 @@ final class CastChannel {
 		public static Parser<AuthChallenge> PARSER = new AbstractParser<AuthChallenge>() {
 
 			@Override
-			public AuthChallenge parsePartialFrom(CodedInputStream input,
-				ExtensionRegistryLite extensionRegistry) throws InvalidProtocolBufferException {
+			public AuthChallenge parsePartialFrom(
+				CodedInputStream input,
+				ExtensionRegistryLite extensionRegistry
+			) throws InvalidProtocolBufferException {
 				return new AuthChallenge(input, extensionRegistry);
 			}
 		};
@@ -1982,53 +1994,58 @@ final class CastChannel {
 			return super.writeReplace();
 		}
 
-		public static CastChannel.AuthChallenge parseFrom(ByteString data)
-			throws InvalidProtocolBufferException {
+		public static AuthChallenge parseFrom(ByteString data) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data);
 		}
 
-		public static CastChannel.AuthChallenge parseFrom(ByteString data,
-			ExtensionRegistryLite extensionRegistry) throws InvalidProtocolBufferException {
+		public static AuthChallenge parseFrom(
+			ByteString data,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data, extensionRegistry);
 		}
 
-		public static CastChannel.AuthChallenge parseFrom(byte[] data)
-			throws InvalidProtocolBufferException {
+		public static AuthChallenge parseFrom(byte[] data) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data);
 		}
 
-		public static CastChannel.AuthChallenge parseFrom(byte[] data,
-			ExtensionRegistryLite extensionRegistry) throws InvalidProtocolBufferException {
+		public static AuthChallenge parseFrom(
+			byte[] data,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data, extensionRegistry);
 		}
 
-		public static CastChannel.AuthChallenge parseFrom(InputStream input)
-			throws IOException {
+		public static AuthChallenge parseFrom(InputStream input) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input);
 		}
 
-		public static CastChannel.AuthChallenge parseFrom(InputStream input,
-			ExtensionRegistryLite extensionRegistry) throws IOException {
+		public static AuthChallenge parseFrom(
+			InputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input, extensionRegistry);
 		}
 
-		public static CastChannel.AuthChallenge parseDelimitedFrom(InputStream input)
-			throws IOException {
+		public static AuthChallenge parseDelimitedFrom(InputStream input) throws InvalidProtocolBufferException {
 			return PARSER.parseDelimitedFrom(input);
 		}
 
-		public static CastChannel.AuthChallenge parseDelimitedFrom(InputStream input,
-			ExtensionRegistryLite extensionRegistry) throws IOException {
+		public static AuthChallenge parseDelimitedFrom(
+			InputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseDelimitedFrom(input, extensionRegistry);
 		}
 
-		public static CastChannel.AuthChallenge parseFrom(CodedInputStream input)
-			throws IOException {
+		public static AuthChallenge parseFrom(CodedInputStream input) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input);
 		}
 
-		public static CastChannel.AuthChallenge parseFrom(CodedInputStream input,
-			ExtensionRegistryLite extensionRegistry) throws IOException {
+		public static AuthChallenge parseFrom(
+			CodedInputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input, extensionRegistry);
 		}
 
@@ -2041,7 +2058,7 @@ final class CastChannel {
 			return newBuilder();
 		}
 
-		public static Builder newBuilder(CastChannel.AuthChallenge prototype) {
+		public static Builder newBuilder(AuthChallenge prototype) {
 			return newBuilder().mergeFrom(prototype);
 		}
 
@@ -2059,13 +2076,13 @@ final class CastChannel {
 		 * </pre>
 		 */
 		public static final class Builder extends
-			GeneratedMessageLite.Builder<CastChannel.AuthChallenge, Builder>
+			GeneratedMessageLite.Builder<AuthChallenge, Builder>
 			implements
 			// @@protoc_insertion_point(builder_implements:AuthChallenge)
-			CastChannel.AuthChallengeOrBuilder {
+			AuthChallengeOrBuilder {
 
 			// Construct using
-			// CastChannel.AuthChallenge.newBuilder()
+			// AuthChallenge.newBuilder()
 			private Builder() {
 				maybeForceBuilderInitialization();
 			}
@@ -2091,13 +2108,13 @@ final class CastChannel {
 			}
 
 			@Override
-			public CastChannel.AuthChallenge getDefaultInstanceForType() {
-				return CastChannel.AuthChallenge.getDefaultInstance();
+			public AuthChallenge getDefaultInstanceForType() {
+				return AuthChallenge.getDefaultInstance();
 			}
 
 			@Override
-			public CastChannel.AuthChallenge build() {
-				CastChannel.AuthChallenge result = buildPartial();
+			public AuthChallenge build() {
+				AuthChallenge result = buildPartial();
 				if (!result.isInitialized()) {
 					throw newUninitializedMessageException(result);
 				}
@@ -2105,8 +2122,8 @@ final class CastChannel {
 			}
 
 			@Override
-			public CastChannel.AuthChallenge buildPartial() {
-				CastChannel.AuthChallenge result = new CastChannel.AuthChallenge(
+			public AuthChallenge buildPartial() {
+				AuthChallenge result = new AuthChallenge(
 					this);
 				int from_bitField0_ = bitField0_;
 				int to_bitField0_ = 0;
@@ -2119,8 +2136,8 @@ final class CastChannel {
 			}
 
 			@Override
-			public Builder mergeFrom(CastChannel.AuthChallenge other) {
-				if (other == CastChannel.AuthChallenge.getDefaultInstance())
+			public Builder mergeFrom(AuthChallenge other) {
+				if (other == AuthChallenge.getDefaultInstance())
 					return this;
 				if (other.hasSignatureAlgorithm()) {
 					setSignatureAlgorithm(other.getSignatureAlgorithm());
@@ -2135,13 +2152,15 @@ final class CastChannel {
 			}
 
 			@Override
-			public Builder mergeFrom(CodedInputStream input,
-				ExtensionRegistryLite extensionRegistry) throws IOException {
-				CastChannel.AuthChallenge parsedMessage = null;
+			public Builder mergeFrom(
+				CodedInputStream input,
+				ExtensionRegistryLite extensionRegistry
+			) throws InvalidProtocolBufferException {
+				AuthChallenge parsedMessage = null;
 				try {
 					parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
 				} catch (InvalidProtocolBufferException e) {
-					parsedMessage = (CastChannel.AuthChallenge) e.getUnfinishedMessage();
+					parsedMessage = (AuthChallenge) e.getUnfinishedMessage();
 					throw e;
 				} finally {
 					if (parsedMessage != null) {
@@ -2285,8 +2304,10 @@ final class CastChannel {
 
 		private final ByteString unknownFields;
 
-		private AuthResponse(CodedInputStream input, ExtensionRegistryLite extensionRegistry)
-			throws InvalidProtocolBufferException {
+		private AuthResponse(
+			CodedInputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			initFields();
 			int mutable_bitField0_ = 0;
 			ByteString.Output unknownFieldsOutput = ByteString.newOutput();
@@ -2318,7 +2339,7 @@ final class CastChannel {
 						}
 						case 26: {
 							if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-								intermediateCertificate_ = new ArrayList<ByteString>();
+								intermediateCertificate_ = new ArrayList<>();
 								mutable_bitField0_ |= 0x00000004;
 							}
 							intermediateCertificate_.add(input.readBytes());
@@ -2361,8 +2382,10 @@ final class CastChannel {
 		public static Parser<AuthResponse> PARSER = new AbstractParser<AuthResponse>() {
 
 			@Override
-			public AuthResponse parsePartialFrom(CodedInputStream input,
-				ExtensionRegistryLite extensionRegistry) throws InvalidProtocolBufferException {
+			public AuthResponse parsePartialFrom(
+				CodedInputStream input,
+				ExtensionRegistryLite extensionRegistry
+			) throws InvalidProtocolBufferException {
 				return new AuthResponse(input, extensionRegistry);
 			}
 		};
@@ -2542,53 +2565,58 @@ final class CastChannel {
 			return super.writeReplace();
 		}
 
-		public static CastChannel.AuthResponse parseFrom(ByteString data)
-			throws InvalidProtocolBufferException {
+		public static CastChannel.AuthResponse parseFrom(ByteString data) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data);
 		}
 
-		public static CastChannel.AuthResponse parseFrom(ByteString data,
-			ExtensionRegistryLite extensionRegistry) throws InvalidProtocolBufferException {
+		public static CastChannel.AuthResponse parseFrom(
+			ByteString data,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data, extensionRegistry);
 		}
 
-		public static CastChannel.AuthResponse parseFrom(byte[] data)
-			throws InvalidProtocolBufferException {
+		public static CastChannel.AuthResponse parseFrom(byte[] data) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data);
 		}
 
-		public static CastChannel.AuthResponse parseFrom(byte[] data,
-			ExtensionRegistryLite extensionRegistry) throws InvalidProtocolBufferException {
+		public static CastChannel.AuthResponse parseFrom(
+			byte[] data,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data, extensionRegistry);
 		}
 
-		public static CastChannel.AuthResponse parseFrom(InputStream input)
-			throws IOException {
+		public static CastChannel.AuthResponse parseFrom(InputStream input) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input);
 		}
 
-		public static CastChannel.AuthResponse parseFrom(InputStream input,
-			ExtensionRegistryLite extensionRegistry) throws IOException {
+		public static CastChannel.AuthResponse parseFrom(
+			InputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input, extensionRegistry);
 		}
 
-		public static CastChannel.AuthResponse parseDelimitedFrom(InputStream input)
-			throws IOException {
+		public static CastChannel.AuthResponse parseDelimitedFrom(InputStream input) throws InvalidProtocolBufferException {
 			return PARSER.parseDelimitedFrom(input);
 		}
 
-		public static CastChannel.AuthResponse parseDelimitedFrom(InputStream input,
-			ExtensionRegistryLite extensionRegistry) throws IOException {
+		public static CastChannel.AuthResponse parseDelimitedFrom(
+			InputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseDelimitedFrom(input, extensionRegistry);
 		}
 
-		public static CastChannel.AuthResponse parseFrom(CodedInputStream input)
-			throws IOException {
+		public static CastChannel.AuthResponse parseFrom(CodedInputStream input) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input);
 		}
 
-		public static CastChannel.AuthResponse parseFrom(CodedInputStream input,
-			ExtensionRegistryLite extensionRegistry) throws IOException {
+		public static CastChannel.AuthResponse parseFrom(
+			CodedInputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input, extensionRegistry);
 		}
 
@@ -2734,8 +2762,10 @@ final class CastChannel {
 			}
 
 			@Override
-			public Builder mergeFrom(CodedInputStream input,
-				ExtensionRegistryLite extensionRegistry) throws IOException {
+			public Builder mergeFrom(
+				CodedInputStream input,
+				ExtensionRegistryLite extensionRegistry
+			) throws InvalidProtocolBufferException {
 				CastChannel.AuthResponse parsedMessage = null;
 				try {
 					parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
@@ -2838,7 +2868,7 @@ final class CastChannel {
 
 			private void ensureIntermediateCertificateIsMutable() {
 				if (!((bitField0_ & 0x00000004) == 0x00000004)) {
-					intermediateCertificate_ = new ArrayList<ByteString>(intermediateCertificate_);
+					intermediateCertificate_ = new ArrayList<>(intermediateCertificate_);
 					bitField0_ |= 0x00000004;
 				}
 			}
@@ -3010,8 +3040,10 @@ final class CastChannel {
 
 		private final ByteString unknownFields;
 
-		private AuthError(CodedInputStream input, ExtensionRegistryLite extensionRegistry)
-			throws InvalidProtocolBufferException {
+		private AuthError(
+			CodedInputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			initFields();
 			ByteString.Output unknownFieldsOutput = ByteString.newOutput();
 			CodedOutputStream unknownFieldsCodedOutput = CodedOutputStream.newInstance(unknownFieldsOutput);
@@ -3063,8 +3095,10 @@ final class CastChannel {
 		public static Parser<AuthError> PARSER = new AbstractParser<AuthError>() {
 
 			@Override
-			public AuthError parsePartialFrom(CodedInputStream input,
-				ExtensionRegistryLite extensionRegistry) throws InvalidProtocolBufferException {
+			public AuthError parsePartialFrom(
+				CodedInputStream input,
+				ExtensionRegistryLite extensionRegistry
+			) throws InvalidProtocolBufferException {
 				return new AuthError(input, extensionRegistry);
 			}
 		};
@@ -3228,53 +3262,58 @@ final class CastChannel {
 			return super.writeReplace();
 		}
 
-		public static CastChannel.AuthError parseFrom(ByteString data)
-			throws InvalidProtocolBufferException {
+		public static CastChannel.AuthError parseFrom(ByteString data) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data);
 		}
 
-		public static CastChannel.AuthError parseFrom(ByteString data,
-			ExtensionRegistryLite extensionRegistry) throws InvalidProtocolBufferException {
+		public static CastChannel.AuthError parseFrom(
+			ByteString data,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data, extensionRegistry);
 		}
 
-		public static CastChannel.AuthError parseFrom(byte[] data)
-			throws InvalidProtocolBufferException {
+		public static CastChannel.AuthError parseFrom(byte[] data) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data);
 		}
 
-		public static CastChannel.AuthError parseFrom(byte[] data,
-			ExtensionRegistryLite extensionRegistry) throws InvalidProtocolBufferException {
+		public static CastChannel.AuthError parseFrom(
+			byte[] data,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data, extensionRegistry);
 		}
 
-		public static CastChannel.AuthError parseFrom(InputStream input)
-			throws IOException {
+		public static CastChannel.AuthError parseFrom(InputStream input) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input);
 		}
 
-		public static CastChannel.AuthError parseFrom(InputStream input,
-			ExtensionRegistryLite extensionRegistry) throws IOException {
+		public static CastChannel.AuthError parseFrom(
+			InputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input, extensionRegistry);
 		}
 
-		public static CastChannel.AuthError parseDelimitedFrom(InputStream input)
-			throws IOException {
+		public static CastChannel.AuthError parseDelimitedFrom(InputStream input) throws InvalidProtocolBufferException {
 			return PARSER.parseDelimitedFrom(input);
 		}
 
-		public static CastChannel.AuthError parseDelimitedFrom(InputStream input,
-			ExtensionRegistryLite extensionRegistry) throws IOException {
+		public static CastChannel.AuthError parseDelimitedFrom(
+			InputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseDelimitedFrom(input, extensionRegistry);
 		}
 
-		public static CastChannel.AuthError parseFrom(CodedInputStream input)
-			throws IOException {
+		public static CastChannel.AuthError parseFrom(CodedInputStream input) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input);
 		}
 
-		public static CastChannel.AuthError parseFrom(CodedInputStream input,
-			ExtensionRegistryLite extensionRegistry) throws IOException {
+		public static CastChannel.AuthError parseFrom(
+			CodedInputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input, extensionRegistry);
 		}
 
@@ -3380,8 +3419,10 @@ final class CastChannel {
 			}
 
 			@Override
-			public Builder mergeFrom(CodedInputStream input,
-				ExtensionRegistryLite extensionRegistry) throws IOException {
+			public Builder mergeFrom(
+				CodedInputStream input,
+				ExtensionRegistryLite extensionRegistry
+			) throws InvalidProtocolBufferException {
 				CastChannel.AuthError parsedMessage = null;
 				try {
 					parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
@@ -3470,7 +3511,7 @@ final class CastChannel {
 		 * Request fields
 		 * </pre>
 		 */
-		CastChannel.AuthChallenge getChallenge();
+		AuthChallenge getChallenge();
 
 		/**
 		 * <code>optional .AuthResponse response = 2;</code>
@@ -3532,8 +3573,10 @@ final class CastChannel {
 
 		private final ByteString unknownFields;
 
-		private DeviceAuthMessage(CodedInputStream input, ExtensionRegistryLite extensionRegistry)
-			throws InvalidProtocolBufferException {
+		private DeviceAuthMessage(
+			CodedInputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			initFields();
 			ByteString.Output unknownFieldsOutput = ByteString.newOutput();
 			CodedOutputStream unknownFieldsCodedOutput = CodedOutputStream.newInstance(unknownFieldsOutput);
@@ -3552,11 +3595,11 @@ final class CastChannel {
 							break;
 						}
 						case 10: {
-							CastChannel.AuthChallenge.Builder subBuilder = null;
+							AuthChallenge.Builder subBuilder = null;
 							if (((bitField0_ & 0x00000001) == 0x00000001)) {
 								subBuilder = challenge_.toBuilder();
 							}
-							challenge_ = input.readMessage(CastChannel.AuthChallenge.PARSER,
+							challenge_ = input.readMessage(AuthChallenge.PARSER,
 								extensionRegistry);
 							if (subBuilder != null) {
 								subBuilder.mergeFrom(challenge_);
@@ -3614,8 +3657,10 @@ final class CastChannel {
 		public static Parser<DeviceAuthMessage> PARSER = new AbstractParser<DeviceAuthMessage>() {
 
 			@Override
-			public DeviceAuthMessage parsePartialFrom(CodedInputStream input,
-				ExtensionRegistryLite extensionRegistry) throws InvalidProtocolBufferException {
+			public DeviceAuthMessage parsePartialFrom(
+				CodedInputStream input,
+				ExtensionRegistryLite extensionRegistry
+			) throws InvalidProtocolBufferException {
 				return new DeviceAuthMessage(input, extensionRegistry);
 			}
 		};
@@ -3627,7 +3672,7 @@ final class CastChannel {
 
 		private int bitField0_;
 		public static final int CHALLENGE_FIELD_NUMBER = 1;
-		private CastChannel.AuthChallenge challenge_;
+		private AuthChallenge challenge_;
 
 		/**
 		 * <code>optional .AuthChallenge challenge = 1;</code>
@@ -3649,7 +3694,7 @@ final class CastChannel {
 		 * </pre>
 		 */
 		@Override
-		public CastChannel.AuthChallenge getChallenge() {
+		public AuthChallenge getChallenge() {
 			return challenge_;
 		}
 
@@ -3700,7 +3745,7 @@ final class CastChannel {
 		}
 
 		private void initFields() {
-			challenge_ = CastChannel.AuthChallenge.getDefaultInstance();
+			challenge_ = AuthChallenge.getDefaultInstance();
 			response_ = CastChannel.AuthResponse.getDefaultInstance();
 			error_ = CastChannel.AuthError.getDefaultInstance();
 		}
@@ -3776,54 +3821,58 @@ final class CastChannel {
 			return super.writeReplace();
 		}
 
-		public static CastChannel.DeviceAuthMessage parseFrom(ByteString data)
-			throws InvalidProtocolBufferException {
+		public static DeviceAuthMessage parseFrom(ByteString data) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data);
 		}
 
-		public static CastChannel.DeviceAuthMessage parseFrom(ByteString data,
-			ExtensionRegistryLite extensionRegistry) throws InvalidProtocolBufferException {
+		public static DeviceAuthMessage parseFrom(
+			ByteString data,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data, extensionRegistry);
 		}
 
-		public static CastChannel.DeviceAuthMessage parseFrom(byte[] data)
-			throws InvalidProtocolBufferException {
+		public static DeviceAuthMessage parseFrom(byte[] data) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data);
 		}
 
-		public static CastChannel.DeviceAuthMessage parseFrom(byte[] data,
-			ExtensionRegistryLite extensionRegistry) throws InvalidProtocolBufferException {
+		public static DeviceAuthMessage parseFrom(
+			byte[] data,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(data, extensionRegistry);
 		}
 
-		public static CastChannel.DeviceAuthMessage parseFrom(InputStream input)
-			throws IOException {
+		public static DeviceAuthMessage parseFrom(InputStream input) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input);
 		}
 
-		public static CastChannel.DeviceAuthMessage parseFrom(InputStream input,
-			ExtensionRegistryLite extensionRegistry) throws IOException {
+		public static DeviceAuthMessage parseFrom(
+			InputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input, extensionRegistry);
 		}
 
-		public static CastChannel.DeviceAuthMessage parseDelimitedFrom(InputStream input)
-			throws IOException {
+		public static DeviceAuthMessage parseDelimitedFrom(InputStream input) throws InvalidProtocolBufferException {
 			return PARSER.parseDelimitedFrom(input);
 		}
 
-		public static CastChannel.DeviceAuthMessage parseDelimitedFrom(InputStream input,
-			ExtensionRegistryLite extensionRegistry) throws IOException {
+		public static DeviceAuthMessage parseDelimitedFrom(
+			InputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseDelimitedFrom(input, extensionRegistry);
 		}
 
-		public static CastChannel.DeviceAuthMessage parseFrom(
-			CodedInputStream input) throws IOException {
+		public static DeviceAuthMessage parseFrom(CodedInputStream input) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input);
 		}
 
-		public static CastChannel.DeviceAuthMessage parseFrom(
-			CodedInputStream input, ExtensionRegistryLite extensionRegistry)
-			throws IOException {
+		public static DeviceAuthMessage parseFrom(
+			CodedInputStream input,
+			ExtensionRegistryLite extensionRegistry
+		) throws InvalidProtocolBufferException {
 			return PARSER.parseFrom(input, extensionRegistry);
 		}
 
@@ -3836,7 +3885,7 @@ final class CastChannel {
 			return newBuilder();
 		}
 
-		public static Builder newBuilder(CastChannel.DeviceAuthMessage prototype) {
+		public static Builder newBuilder(DeviceAuthMessage prototype) {
 			return newBuilder().mergeFrom(prototype);
 		}
 
@@ -3850,13 +3899,13 @@ final class CastChannel {
 		 * {@code DeviceAuthMessage}
 		 */
 		public static final class Builder extends
-			GeneratedMessageLite.Builder<CastChannel.DeviceAuthMessage, Builder>
+			GeneratedMessageLite.Builder<DeviceAuthMessage, Builder>
 			implements
 			// @@protoc_insertion_point(builder_implements:DeviceAuthMessage)
-			CastChannel.DeviceAuthMessageOrBuilder {
+			DeviceAuthMessageOrBuilder {
 
 			// Construct using
-			// CastChannel.DeviceAuthMessage.newBuilder()
+			// DeviceAuthMessage.newBuilder()
 			private Builder() {
 				maybeForceBuilderInitialization();
 			}
@@ -3871,7 +3920,7 @@ final class CastChannel {
 			@Override
 			public Builder clear() {
 				super.clear();
-				challenge_ = CastChannel.AuthChallenge.getDefaultInstance();
+				challenge_ = AuthChallenge.getDefaultInstance();
 				bitField0_ = (bitField0_ & ~0x00000001);
 				response_ = CastChannel.AuthResponse.getDefaultInstance();
 				bitField0_ = (bitField0_ & ~0x00000002);
@@ -3886,13 +3935,13 @@ final class CastChannel {
 			}
 
 			@Override
-			public CastChannel.DeviceAuthMessage getDefaultInstanceForType() {
-				return CastChannel.DeviceAuthMessage.getDefaultInstance();
+			public DeviceAuthMessage getDefaultInstanceForType() {
+				return DeviceAuthMessage.getDefaultInstance();
 			}
 
 			@Override
-			public CastChannel.DeviceAuthMessage build() {
-				CastChannel.DeviceAuthMessage result = buildPartial();
+			public DeviceAuthMessage build() {
+				DeviceAuthMessage result = buildPartial();
 				if (!result.isInitialized()) {
 					throw newUninitializedMessageException(result);
 				}
@@ -3900,8 +3949,8 @@ final class CastChannel {
 			}
 
 			@Override
-			public CastChannel.DeviceAuthMessage buildPartial() {
-				CastChannel.DeviceAuthMessage result = new CastChannel.DeviceAuthMessage(
+			public DeviceAuthMessage buildPartial() {
+				DeviceAuthMessage result = new DeviceAuthMessage(
 					this);
 				int from_bitField0_ = bitField0_;
 				int to_bitField0_ = 0;
@@ -3922,8 +3971,8 @@ final class CastChannel {
 			}
 
 			@Override
-			public Builder mergeFrom(CastChannel.DeviceAuthMessage other) {
-				if (other == CastChannel.DeviceAuthMessage.getDefaultInstance())
+			public Builder mergeFrom(DeviceAuthMessage other) {
+				if (other == DeviceAuthMessage.getDefaultInstance())
 					return this;
 				if (other.hasChallenge()) {
 					mergeChallenge(other.getChallenge());
@@ -3956,13 +4005,15 @@ final class CastChannel {
 			}
 
 			@Override
-			public Builder mergeFrom(CodedInputStream input,
-				ExtensionRegistryLite extensionRegistry) throws IOException {
-				CastChannel.DeviceAuthMessage parsedMessage = null;
+			public Builder mergeFrom(
+				CodedInputStream input,
+				ExtensionRegistryLite extensionRegistry
+			) throws InvalidProtocolBufferException {
+				DeviceAuthMessage parsedMessage = null;
 				try {
 					parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
 				} catch (InvalidProtocolBufferException e) {
-					parsedMessage = (CastChannel.DeviceAuthMessage) e.getUnfinishedMessage();
+					parsedMessage = (DeviceAuthMessage) e.getUnfinishedMessage();
 					throw e;
 				} finally {
 					if (parsedMessage != null) {
@@ -3974,7 +4025,7 @@ final class CastChannel {
 
 			private int bitField0_;
 
-			private CastChannel.AuthChallenge challenge_ = CastChannel.AuthChallenge
+			private AuthChallenge challenge_ = AuthChallenge
 				.getDefaultInstance();
 
 			/**
@@ -3997,7 +4048,7 @@ final class CastChannel {
 			 * </pre>
 			 */
 			@Override
-			public CastChannel.AuthChallenge getChallenge() {
+			public AuthChallenge getChallenge() {
 				return challenge_;
 			}
 
@@ -4008,7 +4059,7 @@ final class CastChannel {
 			 * Request fields
 			 * </pre>
 			 */
-			public Builder setChallenge(CastChannel.AuthChallenge value) {
+			public Builder setChallenge(AuthChallenge value) {
 				if (value == null) {
 					throw new NullPointerException();
 				}
@@ -4025,7 +4076,7 @@ final class CastChannel {
 			 * Request fields
 			 * </pre>
 			 */
-			public Builder setChallenge(CastChannel.AuthChallenge.Builder builderForValue) {
+			public Builder setChallenge(AuthChallenge.Builder builderForValue) {
 				challenge_ = builderForValue.build();
 
 				bitField0_ |= 0x00000001;
@@ -4039,10 +4090,10 @@ final class CastChannel {
 			 * Request fields
 			 * </pre>
 			 */
-			public Builder mergeChallenge(CastChannel.AuthChallenge value) {
+			public Builder mergeChallenge(AuthChallenge value) {
 				if (((bitField0_ & 0x00000001) == 0x00000001)
-					&& challenge_ != CastChannel.AuthChallenge.getDefaultInstance()) {
-					challenge_ = CastChannel.AuthChallenge.newBuilder(challenge_).mergeFrom(value)
+					&& challenge_ != AuthChallenge.getDefaultInstance()) {
+					challenge_ = AuthChallenge.newBuilder(challenge_).mergeFrom(value)
 						.buildPartial();
 				} else {
 					challenge_ = value;
@@ -4060,7 +4111,7 @@ final class CastChannel {
 			 * </pre>
 			 */
 			public Builder clearChallenge() {
-				challenge_ = CastChannel.AuthChallenge.getDefaultInstance();
+				challenge_ = AuthChallenge.getDefaultInstance();
 
 				bitField0_ = (bitField0_ & ~0x00000001);
 				return this;
