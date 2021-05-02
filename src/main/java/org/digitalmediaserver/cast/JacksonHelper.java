@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Utility class for creating pre-configured instances of JSON mapper.
  */
-final class JacksonHelper {
+public class JacksonHelper {
 
 	private JacksonHelper() {
 	}

@@ -32,7 +32,7 @@ class EventListenerHolder implements ChromeCastSpontaneousEventListener, ChromeC
 	private final Set<ChromeCastSpontaneousEventListener> eventListeners = new CopyOnWriteArraySet<>();
 	private final Set<ChromeCastConnectionEventListener> eventListenersConnection = new CopyOnWriteArraySet<>();
 
-	EventListenerHolder() {
+	public EventListenerHolder() {
 	}
 
 	public void registerListener(ChromeCastSpontaneousEventListener listener) {

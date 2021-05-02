@@ -15,8 +15,8 @@
  */
 package org.digitalmediaserver.cast;
 
-import static org.digitalmediaserver.cast.Util.fromArray;
-import static org.digitalmediaserver.cast.Util.toArray;
+import static org.digitalmediaserver.cast.Util.intFromB32Bytes;
+import static org.digitalmediaserver.cast.Util.intToB32Bytes;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,6 +28,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -50,89 +51,89 @@ import com.google.protobuf.InvalidProtocolBufferException;
  * Internal class for low-level communication with ChromeCast device. Should
  * never be used directly, use {@link ChromeCast} methods instead
  */
-class Channel implements Closeable {
+public class Channel implements Closeable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Channel.class);
 
 	/**
 	 * Period for sending ping requests (in ms)
 	 */
-	private static final long PING_PERIOD = 30 * 1000;
+	protected static final long PING_PERIOD = 30 * 1000;
 
 	/**
 	 * Default value of much time to wait until request is processed
 	 */
-	private static final long DEFAULT_REQUEST_TIMEOUT = 30 * 1000;
+	protected static final long DEFAULT_REQUEST_TIMEOUT = 30 * 1000;
 
-	private static final String DEFAULT_RECEIVER_ID = "receiver-0";
+	protected static final String DEFAULT_RECEIVER_ID = "receiver-0";
 
-	private final EventListenerHolder eventListener;
+	protected final EventListenerHolder eventListener;
 
-	private static final JsonSubTypes.Type[] STANDARD_RESPONSE_TYPES =
+	protected static final JsonSubTypes.Type[] STANDARD_RESPONSE_TYPES =
 		StandardResponse.class.getAnnotation(JsonSubTypes.class).value();
 
-	private static void warn(String message, Exception ex) {
+	protected static void warn(String message, Exception ex) {
 		LOGGER.warn("{}, caused by {}", message, ex.toString());
 	}
 
 	/**
 	 * Single socket instance for transfers
 	 */
-	private Socket socket;
+	protected Socket socket;
 
 	/**
 	 * Address of ChromeCast
 	 */
-	private final InetSocketAddress address;
+	protected final InetSocketAddress address;
 
 	/**
 	 * Name of sender used in this channel
 	 */
-	private final String name;
+	protected final String name;
 
 	/**
 	 * Timer for PING requests
 	 */
-	private Timer pingTimer;
+	protected Timer pingTimer;
 
 	/**
 	 * Thread for processing incoming requests
 	 */
-	private ReadThread reader;
+	protected ReadThread reader;
 
 	/**
 	 * Counter for producing request numbers
 	 */
-	private AtomicLong requestCounter = new AtomicLong(1);
+	protected final AtomicLong requestCounter = new AtomicLong(new Random().nextInt(65536) + 1L);
 
 	/**
 	 * Processors of requests by their identifiers
 	 */
-	private final Map<Long, ResultProcessor<? extends Response>> requests = new ConcurrentHashMap<>();
+	protected final Map<Long, ResultProcessor<? extends Response>> requests = new ConcurrentHashMap<>();
 
 	/**
 	 * Single mapper object for marshalling JSON
 	 */
-	private final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
+	protected final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 
 	/**
 	 * Destination ids of sessions opened within this channel
 	 */
-	private Set<String> sessions = new HashSet<>();
+	protected Set<String> sessions = new HashSet<>();
 
 	/**
 	 * Indicates that this channel was closed (explicitly, by remote host or for
 	 * some connectivity issue)
 	 */
-	private volatile boolean closed = true;
-	private final Object closedSync = new Object();
+	protected volatile boolean closed = true;
+	protected final Object closedSync = new Object();
 
 	/**
 	 * How much time to wait until request is processed
 	 */
-	private volatile long requestTimeout = DEFAULT_REQUEST_TIMEOUT;
+	protected volatile long requestTimeout = DEFAULT_REQUEST_TIMEOUT;
 
-	private class PingThread extends TimerTask {
+	protected class PingThread extends TimerTask {
 
 		@Override
 		public void run() {
@@ -144,9 +145,9 @@ class Channel implements Closeable {
 		}
 	}
 
-	private class ReadThread extends Thread {
+	protected class ReadThread extends Thread {
 
-		volatile boolean stop;
+		protected volatile boolean stop;
 
 		@Override
 		public void run() {
@@ -230,7 +231,7 @@ class Channel implements Closeable {
 			}
 		}
 
-		private boolean isAppEvent(JsonNode parsed) {
+		protected boolean isAppEvent(JsonNode parsed) {
 			if (parsed != null && parsed.has("responseType")) {
 				String type = parsed.get("responseType").asText();
 				for (JsonSubTypes.Type t : STANDARD_RESPONSE_TYPES) {
@@ -243,12 +244,12 @@ class Channel implements Closeable {
 		}
 	}
 
-	private class ResultProcessor<T extends Response> {
+	protected class ResultProcessor<T extends Response> {
 
-		final Class<T> responseClass;
-		T result;
+		protected final Class<T> responseClass;
+		protected T result;
 
-		private ResultProcessor(Class<T> responseClass) {
+		protected ResultProcessor(Class<T> responseClass) {
 			if (responseClass == null) {
 				throw new NullPointerException();
 			}
@@ -276,11 +277,11 @@ class Channel implements Closeable {
 		}
 	}
 
-	Channel(String host, EventListenerHolder eventListener) {
+	public Channel(String host, EventListenerHolder eventListener) {
 		this(host, 8009, eventListener);
 	}
 
-	Channel(String host, int port, EventListenerHolder eventListener) {
+	public Channel(String host, int port, EventListenerHolder eventListener) {
 		this.address = new InetSocketAddress(host, port);
 		this.name = "sender-" + new RandomString(10).nextString();
 		this.eventListener = eventListener;
@@ -311,7 +312,7 @@ class Channel implements Closeable {
 	 * @throws KeyManagementException
 	 * @throws NoSuchAlgorithmException
 	 */
-	private void connect() throws IOException, KeyManagementException, NoSuchAlgorithmException {
+	protected void connect() throws IOException, KeyManagementException, NoSuchAlgorithmException {
 		synchronized (closedSync) {
 			if (socket == null || socket.isClosed()) {
 				SSLContext sc = SSLContext.getInstance("SSL");
@@ -362,7 +363,7 @@ class Channel implements Closeable {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T extends StandardResponse> T sendStandard(
+	protected <T extends StandardResponse> T sendStandard(
 		String namespace,
 		StandardRequest message,
 		String destinationId
@@ -370,7 +371,7 @@ class Channel implements Closeable {
 		return send(namespace, message, destinationId, (Class<T>) StandardResponse.class);
 	}
 
-	private <T extends Response> T send(
+	protected <T extends Response> T send(
 		String namespace,
 		Request message,
 		String destinationId,
@@ -421,11 +422,11 @@ class Channel implements Closeable {
 		}
 	}
 
-	private void write(String namespace, Message message, String destinationId) throws IOException {
+	protected void write(String namespace, Message message, String destinationId) throws IOException {
 		write(namespace, jsonMapper.writeValueAsString(message), destinationId);
 	}
 
-	private void write(String namespace, String message, String destinationId) throws IOException {
+	protected void write(String namespace, String message, String destinationId) throws IOException {
 		LOGGER.debug(" --> {}", message);
 		CastMessage msg = CastMessage.newBuilder()
 			.setProtocolVersion(CastMessage.ProtocolVersion.CASTV2_1_0)
@@ -438,12 +439,12 @@ class Channel implements Closeable {
 		write(msg);
 	}
 
-	private void write(CastMessage message) throws IOException {
-		socket.getOutputStream().write(toArray(message.getSerializedSize()));
+	protected void write(CastMessage message) throws IOException {
+		socket.getOutputStream().write(intToB32Bytes(message.getSerializedSize()));
 		message.writeTo(socket.getOutputStream());
 	}
 
-	private CastMessage read() throws IOException {
+	protected CastMessage read() throws IOException {
 		InputStream is = socket.getInputStream();
 		byte[] buf = new byte[4];
 
@@ -456,7 +457,7 @@ class Channel implements Closeable {
 			buf[read++] = (byte) nextByte;
 		}
 
-		int size = fromArray(buf);
+		int size = intFromB32Bytes(buf);
 		buf = new byte[size];
 		read = 0;
 		while (read < size) {
@@ -470,19 +471,19 @@ class Channel implements Closeable {
 		return CastMessage.parseFrom(buf);
 	}
 
-	private void notifyListenerOfConnectionEvent(final boolean connected) {
+	protected void notifyListenerOfConnectionEvent(final boolean connected) {
 		if (this.eventListener != null) {
 			this.eventListener.deliverConnectionEvent(connected);
 		}
 	}
 
-	private void notifyListenersOfSpontaneousEvent(JsonNode json) throws JsonProcessingException {
+	protected void notifyListenersOfSpontaneousEvent(JsonNode json) throws JsonProcessingException {
 		if (this.eventListener != null) {
 			this.eventListener.deliverEvent(json);
 		}
 	}
 
-	private void notifyListenersAppEvent(AppEvent event) {
+	protected void notifyListenersAppEvent(AppEvent event) {
 		if (this.eventListener != null) {
 			this.eventListener.deliverAppEvent(event);
 		}
@@ -524,7 +525,7 @@ class Channel implements Closeable {
 		return status == null ? null : status.status;
 	}
 
-	private void startSession(String destinationId) throws IOException {
+	protected void startSession(String destinationId) throws IOException {
 		if (!sessions.contains(destinationId)) {
 			write("urn:x-cast:com.google.cast.tp.connection", StandardMessage.connect(), destinationId);
 			sessions.add(destinationId);

@@ -23,35 +23,35 @@ import java.util.Map;
  * Parent class for transport object representing messages sent TO ChromeCast
  * device.
  */
-abstract class StandardRequest extends StandardMessage implements Request {
+public abstract class StandardRequest extends StandardMessage implements Request {
 
-	Long requestId;
+	protected Long requestId;
 
 	@Override
-	public final void setRequestId(Long requestId) {
+	public void setRequestId(Long requestId) {
 		this.requestId = requestId;
 	}
 
 	@Override
-	public final Long getRequestId() {
+	public Long getRequestId() {
 		return requestId;
 	}
 
 	/**
 	 * Request for current status of ChromeCast device.
 	 */
-	static class Status extends StandardRequest {
+	public static class Status extends StandardRequest {
 	}
 
 	/**
 	 * Request for availability of applications with specified identifiers.
 	 */
-	static class AppAvailability extends StandardRequest {
+	public static class AppAvailability extends StandardRequest {
 
 		@JsonProperty
-		final String[] appId;
+		protected final String[] appId;
 
-		AppAvailability(String... appId) {
+		public AppAvailability(String... appId) {
 			this.appId = appId;
 		}
 	}
@@ -59,12 +59,12 @@ abstract class StandardRequest extends StandardMessage implements Request {
 	/**
 	 * Request to launch application with specified identifiers.
 	 */
-	static class Launch extends StandardRequest {
+	public static class Launch extends StandardRequest {
 
 		@JsonProperty
-		final String appId;
+		protected final String appId;
 
-		Launch(@JsonProperty("appId") String appId) {
+		public Launch(@JsonProperty("appId") String appId) {
 			this.appId = appId;
 		}
 	}
@@ -72,12 +72,12 @@ abstract class StandardRequest extends StandardMessage implements Request {
 	/**
 	 * Request to stop currently running application.
 	 */
-	static class Stop extends StandardRequest {
+	public static class Stop extends StandardRequest {
 
 		@JsonProperty
-		final String sessionId;
+		protected final String sessionId;
 
-		Stop(String sessionId) {
+		public Stop(String sessionId) {
 			this.sessionId = sessionId;
 		}
 	}
@@ -85,18 +85,18 @@ abstract class StandardRequest extends StandardMessage implements Request {
 	/**
 	 * Request to load media.
 	 */
-	static class Load extends StandardRequest {
+	public static class Load extends StandardRequest {
 
 		@JsonProperty
-		final String sessionId;
+		protected final String sessionId;
 		@JsonProperty
-		final Media media;
+		protected final Media media;
 		@JsonProperty
-		final boolean autoplay;
+		protected final boolean autoplay;
 		@JsonProperty
-		final double currentTime;
+		protected final double currentTime;
 		@JsonProperty
-		final Object customData;
+		protected final Object customData;
 
 		public Load(
 			String sessionId,
@@ -121,14 +121,14 @@ abstract class StandardRequest extends StandardMessage implements Request {
 	/**
 	 * Abstract request for an action with currently played media.
 	 */
-	abstract static class MediaRequest extends StandardRequest {
+	public abstract static class MediaRequest extends StandardRequest {
 
 		@JsonProperty
-		final long mediaSessionId;
+		protected final long mediaSessionId;
 		@JsonProperty
-		final String sessionId;
+		protected final String sessionId;
 
-		MediaRequest(long mediaSessionId, String sessionId) {
+		public MediaRequest(long mediaSessionId, String sessionId) {
 			this.mediaSessionId = mediaSessionId;
 			this.sessionId = sessionId;
 		}
@@ -137,9 +137,9 @@ abstract class StandardRequest extends StandardMessage implements Request {
 	/**
 	 * Request to start/resume playback.
 	 */
-	static class Play extends MediaRequest {
+	public static class Play extends MediaRequest {
 
-		Play(long mediaSessionId, String sessionId) {
+		public Play(long mediaSessionId, String sessionId) {
 			super(mediaSessionId, sessionId);
 		}
 	}
@@ -147,9 +147,9 @@ abstract class StandardRequest extends StandardMessage implements Request {
 	/**
 	 * Request to pause playback.
 	 */
-	static class Pause extends MediaRequest {
+	public static class Pause extends MediaRequest {
 
-		Pause(long mediaSessionId, String sessionId) {
+		public Pause(long mediaSessionId, String sessionId) {
 			super(mediaSessionId, sessionId);
 		}
 	}
@@ -157,12 +157,12 @@ abstract class StandardRequest extends StandardMessage implements Request {
 	/**
 	 * Request to change current playback position.
 	 */
-	static class Seek extends MediaRequest {
+	public static class Seek extends MediaRequest {
 
 		@JsonProperty
-		final double currentTime;
+		protected final double currentTime;
 
-		Seek(long mediaSessionId, String sessionId, double currentTime) {
+		public Seek(long mediaSessionId, String sessionId, double currentTime) {
 			super(mediaSessionId, sessionId);
 			this.currentTime = currentTime;
 		}
@@ -171,33 +171,33 @@ abstract class StandardRequest extends StandardMessage implements Request {
 	/**
 	 * Request to change volume.
 	 */
-	static class SetVolume extends StandardRequest {
+	public static class SetVolume extends StandardRequest {
 
 		@JsonProperty
-		final Volume volume;
+		protected final Volume volume;
 
-		SetVolume(Volume volume) {
+		public SetVolume(Volume volume) {
 			this.volume = volume;
 		}
 	}
 
-	static Status status() {
+	public static Status status() {
 		return new Status();
 	}
 
-	static AppAvailability appAvailability(String... appId) {
+	public static AppAvailability appAvailability(String... appId) {
 		return new AppAvailability(appId);
 	}
 
-	static Launch launch(String appId) {
+	public static Launch launch(String appId) {
 		return new Launch(appId);
 	}
 
-	static Stop stop(String sessionId) {
+	public static Stop stop(String sessionId) {
 		return new Stop(sessionId);
 	}
 
-	static Load load(
+	public static Load load(
 		String sessionId,
 		Media media,
 		boolean autoplay,
@@ -207,19 +207,19 @@ abstract class StandardRequest extends StandardMessage implements Request {
 		return new Load(sessionId, media, autoplay, currentTime, customData);
 	}
 
-	static Play play(String sessionId, long mediaSessionId) {
+	public static Play play(String sessionId, long mediaSessionId) {
 		return new Play(mediaSessionId, sessionId);
 	}
 
-	static Pause pause(String sessionId, long mediaSessionId) {
+	public static Pause pause(String sessionId, long mediaSessionId) {
 		return new Pause(mediaSessionId, sessionId);
 	}
 
-	static Seek seek(String sessionId, long mediaSessionId, double currentTime) {
+	public static Seek seek(String sessionId, long mediaSessionId, double currentTime) {
 		return new Seek(mediaSessionId, sessionId, currentTime);
 	}
 
-	static SetVolume setVolume(Volume volume) {
+	public static SetVolume setVolume(Volume volume) {
 		return new SetVolume(volume);
 	}
 }

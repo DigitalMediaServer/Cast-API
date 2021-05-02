@@ -44,7 +44,7 @@ public class InterruptionTest {
 	ChromeCast cast = new ChromeCast("localhost");
 	CyclicBarrier barrier = new CyclicBarrier(2);
 
-	static class Custom implements Request, Response {
+	public static class Custom implements Request, Response {
 
 		Long requestId;
 
