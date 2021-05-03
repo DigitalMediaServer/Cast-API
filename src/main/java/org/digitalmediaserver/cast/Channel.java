@@ -40,6 +40,8 @@ import javax.net.ssl.TrustManager;
 import org.digitalmediaserver.cast.CastChannel.CastMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -54,6 +56,12 @@ import com.google.protobuf.InvalidProtocolBufferException;
 public class Channel implements Closeable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Channel.class);
+
+	/** The logging {@link Marker} used for logging */
+	public static final Marker CAST_API_MARKER = MarkerFactory.getMarker("Cast API");
+
+	/** The logging {@link Marker} used for ping logging */
+	public static final Marker CAST_API_HEARTBEAT_MARKER = MarkerFactory.getMarker("Cast API Heartbeat");
 
 	/**
 	 * Period for sending ping requests (in ms)
@@ -73,7 +81,7 @@ public class Channel implements Closeable {
 		StandardResponse.class.getAnnotation(JsonSubTypes.class).value();
 
 	protected static void warn(String message, Exception ex) {
-		LOGGER.warn("{}, caused by {}", message, ex.toString());
+		LOGGER.warn(CAST_API_MARKER, "{}, caused by {}", message, ex.toString());
 	}
 
 	/**
@@ -132,6 +140,10 @@ public class Channel implements Closeable {
 	 * How much time to wait until request is processed
 	 */
 	protected volatile long requestTimeout = DEFAULT_REQUEST_TIMEOUT;
+
+	static {
+		CAST_API_HEARTBEAT_MARKER.add(CAST_API_MARKER);
+	}
 
 	protected class PingThread extends TimerTask {
 
@@ -427,7 +439,7 @@ public class Channel implements Closeable {
 	}
 
 	protected void write(String namespace, String message, String destinationId) throws IOException {
-		LOGGER.debug(" --> {}", message);
+		LOGGER.debug(CAST_API_MARKER, " --> {}", message);
 		CastMessage msg = CastMessage.newBuilder()
 			.setProtocolVersion(CastMessage.ProtocolVersion.CASTV2_1_0)
 			.setSourceId(name)
