@@ -20,6 +20,7 @@ import static org.digitalmediaserver.chromecast.api.Util.intToBytes;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.security.GeneralSecurityException;
@@ -139,8 +140,9 @@ public class Channel implements Closeable {
 		public void run() {
 			try {
 				write("urn:x-cast:com.google.cast.tp.heartbeat", StandardMessage.ping(), DEFAULT_RECEIVER_ID);
-			} catch (IOException ioex) {
-				warn("Error while sending 'PING'", ioex);
+			} catch (IOException e) {
+				LOGGER.warn("An error occurred while sending ChromeCast 'PING'", e.getMessage());
+				LOGGER.trace("", e);
 			}
 		}
 	}
@@ -173,16 +175,16 @@ public class Channel implements Closeable {
 					} else {
 						LOGGER.warn("Received unexpected {} message", message.getPayloadType());
 					}
-				} catch (InvalidProtocolBufferException ipbe) {
-					warn("Error while processing protobuf", ipbe);
-				} catch (JsonProcessingException jpe) {
-					warn("Error while processing json", jpe);
-				} catch (IOException ioex) {
+				} catch (InvalidProtocolBufferException e) {
+					warn("Error while processing protobuf", e);
+				} catch (JsonProcessingException e) {
+					warn("Error while processing json", e);
+				} catch (IOException e) {
 					if (stop) {
-						LOGGER.debug("Got IOException while reading due to stream being closed (stop=true)", ioex);
+						LOGGER.debug("Got IOException while reading due to stream being closed (stop=true)", e);
 						continue;
 					}
-					warn("Error while reading", ioex);
+					warn("Error while reading", e);
 					String temp;
 					if (message != null && message.getPayloadUtf8() != null) {
 						temp = message.getPayloadUtf8();
@@ -192,8 +194,8 @@ public class Channel implements Closeable {
 					LOGGER.warn(" <-- {}", temp);
 					try {
 						close();
-					} catch (IOException e) {
-						warn("Error while closing channel", ioex);
+					} catch (IOException ex) {
+						warn("Error while closing channel", ex);
 					}
 				} catch (Exception e) {
 					warn("Unknown error while reading", e);
@@ -440,8 +442,9 @@ public class Channel implements Closeable {
 	}
 
 	private void write(CastMessage message) throws IOException {
-		socket.getOutputStream().write(intToBytes(message.getSerializedSize()));
-		message.writeTo(socket.getOutputStream());
+		OutputStream os = socket.getOutputStream();
+		os.write(intToBytes(message.getSerializedSize()));
+		message.writeTo(os);
 	}
 
 	private CastMessage read() throws IOException {
@@ -452,7 +455,7 @@ public class Channel implements Closeable {
 		while (read < buf.length) {
 			int nextByte = is.read();
 			if (nextByte == -1) {
-				throw new ChromeCastException("Remote socket closed");
+				throw new ChromeCastException("Remote socket closed after reading " + read + " of " + buf.length + " bytes");
 			}
 			buf[read++] = (byte) nextByte;
 		}
@@ -463,7 +466,7 @@ public class Channel implements Closeable {
 		while (read < size) {
 			int nowRead = is.read(buf, read, buf.length - read);
 			if (nowRead == -1) {
-				throw new ChromeCastException("Remote socket closed");
+				throw new ChromeCastException("Remote socket closed after reading " + read + " of " + size + " bytes");
 			}
 			read += nowRead;
 		}
