@@ -25,14 +25,14 @@ import java.util.List;
 /**
  * Current ChromeCast device status.
  */
-public class Status {
+public class ReceiverStatus {
 
 	public final Volume volume;
 	public final List<Application> applications;
 	public final boolean activeInput;
 	public final boolean standBy;
 
-	public Status(
+	public ReceiverStatus(
 		@JsonProperty("volume") Volume volume,
 		@JsonProperty("applications") List<Application> applications,
 		@JsonProperty("isActiveInput") boolean activeInput,

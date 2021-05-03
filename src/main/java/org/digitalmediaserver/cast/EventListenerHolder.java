@@ -69,8 +69,8 @@ class EventListenerHolder implements ChromeCastSpontaneousEventListener, ChromeC
 		 * others are observed, they should be added here. see:
 		 * https://developers.google.com/cast/docs/reference/messages#MediaMess
 		 */
-		if (resp instanceof StandardResponse.MediaStatus) {
-			StandardResponse.MediaStatus mediaStatusResponse = (StandardResponse.MediaStatus) resp;
+		if (resp instanceof StandardResponse.MediaStatusResponse) {
+			StandardResponse.MediaStatusResponse mediaStatusResponse = (StandardResponse.MediaStatusResponse) resp;
 			// it may be a single media status event
 			if (mediaStatusResponse.statuses == null) {
 				if (json.has("media")) {
@@ -86,9 +86,9 @@ class EventListenerHolder implements ChromeCastSpontaneousEventListener, ChromeC
 					spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.MEDIA_STATUS, ms));
 				}
 			}
-		} else if (resp instanceof StandardResponse.Status) {
-			spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.STATUS, ((StandardResponse.Status) resp).status));
-		} else if (resp instanceof StandardResponse.Close) {
+		} else if (resp instanceof StandardResponse.ReceiverStatusResponse) {
+			spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.STATUS, ((StandardResponse.ReceiverStatusResponse) resp).status));
+		} else if (resp instanceof StandardResponse.CloseResponse) {
 			spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.CLOSE, new Object()));
 		} else {
 			spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.UNKNOWN, json));

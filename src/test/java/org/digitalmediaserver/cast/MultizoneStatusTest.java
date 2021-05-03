@@ -31,7 +31,7 @@ public class MultizoneStatusTest {
 	@Test
 	public void testStandard() throws IOException {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/multizoneStatus.json").replaceFirst("\"type\"", "\"responseType\"");
-		final StandardResponse.MultizoneStatus response = (StandardResponse.MultizoneStatus) jsonMapper.readValue(
+		final StandardResponse.MultizoneStatusResponse response = (StandardResponse.MultizoneStatusResponse) jsonMapper.readValue(
 			jsonMSG,
 			StandardResponse.class
 		);

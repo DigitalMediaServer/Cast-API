@@ -24,14 +24,14 @@ import java.util.Map;
 /**
  * Media item.
  */
-public class Item {
+public class QueueItem {
 
 	public final boolean autoplay;
 	public final Map<String, Object> customData;
 	public final Media media;
 	public final long id;
 
-	public Item(
+	public QueueItem(
 		@JsonProperty("autoplay") boolean autoplay,
 		@JsonProperty("customData") Map<String, Object> customData,
 		@JsonProperty("itemId") long id,
@@ -56,10 +56,10 @@ public class Item {
 		if (obj == this) {
 			return true;
 		}
-		if (!(obj instanceof Item)) {
+		if (!(obj instanceof QueueItem)) {
 			return false;
 		}
-		final Item that = (Item) obj;
+		final QueueItem that = (QueueItem) obj;
 		return
 			autoplay == that.autoplay &&
 			customData == null ?

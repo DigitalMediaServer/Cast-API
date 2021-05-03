@@ -26,20 +26,20 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Utility class that discovers ChromeCast devices and holds references to all
+ * Utility class that discovers cast devices and holds references to all
  * of them.
  */
-public final class ChromeCasts {
+public final class CastDeviceMonitor {
 
-	private static final ChromeCasts INSTANCE = new ChromeCasts();
+	private static final CastDeviceMonitor INSTANCE = new CastDeviceMonitor();
 	private final MyServiceListener listener = new MyServiceListener();
 
 	private JmDNS mDNS;
 
-	private final List<ChromeCastsListener> listeners = new ArrayList<>();
-	private final List<ChromeCast> chromeCasts = Collections.synchronizedList(new ArrayList<ChromeCast>());
+	private final List<DeviceDiscoveryListener> listeners = new ArrayList<>();
+	private final List<CastDevice> chromeCasts = Collections.synchronizedList(new ArrayList<CastDevice>());
 
-	private ChromeCasts() {
+	private CastDeviceMonitor() {
 	}
 
 	/**
@@ -47,7 +47,7 @@ public final class ChromeCasts {
 	 *
 	 * @return a copy of the currently seen chromecast devices.
 	 */
-	public static List<ChromeCast> get() {
+	public static List<CastDevice> get() {
 		return new ArrayList<>(INSTANCE.chromeCasts);
 	}
 
@@ -59,22 +59,22 @@ public final class ChromeCasts {
 		@Override
 		public void serviceAdded(ServiceEvent se) {
 			if (se.getInfo() != null) {
-				ChromeCast device = new ChromeCast(mDNS, se.getInfo().getName());
+				CastDevice device = new CastDevice(mDNS, se.getInfo().getName());
 				chromeCasts.add(device);
-				for (ChromeCastsListener nextListener : listeners) {
-					nextListener.newChromeCastDiscovered(device);
+				for (DeviceDiscoveryListener nextListener : listeners) {
+					nextListener.deviceDiscovered(device);
 				}
 			}
 		}
 
 		@Override
 		public void serviceRemoved(ServiceEvent se) {
-			if (ChromeCast.SERVICE_TYPE.equals(se.getType())) {
+			if (CastDevice.SERVICE_TYPE.equals(se.getType())) {
 				// We have a ChromeCast device unregistering
-				List<ChromeCast> copy = get();
-				ChromeCast deviceRemoved = null;
+				List<CastDevice> copy = get();
+				CastDevice deviceRemoved = null;
 				// Probably better keep a map to better lookup devices
-				for (ChromeCast device : copy) {
+				for (CastDevice device : copy) {
 					if (device.getName().equals(se.getInfo().getName())) {
 						deviceRemoved = device;
 						chromeCasts.remove(device);
@@ -82,8 +82,8 @@ public final class ChromeCasts {
 					}
 				}
 				if (deviceRemoved != null) {
-					for (ChromeCastsListener nextListener : listeners) {
-						nextListener.chromeCastRemoved(deviceRemoved);
+					for (DeviceDiscoveryListener nextListener : listeners) {
+						nextListener.deviceRemoved(deviceRemoved);
 					}
 				}
 			}
@@ -104,7 +104,7 @@ public final class ChromeCasts {
 			} else {
 				mDNS = JmDNS.create();
 			}
-			mDNS.addServiceListener(ChromeCast.SERVICE_TYPE, listener);
+			mDNS.addServiceListener(CastDevice.SERVICE_TYPE, listener);
 		}
 	}
 
@@ -158,13 +158,13 @@ public final class ChromeCasts {
 		startDiscovery(addr);
 	}
 
-	public static void registerListener(ChromeCastsListener listener) {
+	public static void registerListener(DeviceDiscoveryListener listener) {
 		if (listener != null) {
 			INSTANCE.listeners.add(listener);
 		}
 	}
 
-	public static void unregisterListener(ChromeCastsListener listener) {
+	public static void unregisterListener(DeviceDiscoveryListener listener) {
 		if (listener != null) {
 			INSTANCE.listeners.remove(listener);
 		}

@@ -161,9 +161,9 @@ public class MockedChromeCast {
 
 		public Response handleJSON(Message message) {
 			if (message instanceof StandardMessage.Ping) {
-				return new StandardResponse.Pong();
+				return new StandardResponse.PongResponse();
 			} else if (message instanceof StandardRequest.Status) {
-				return new StandardResponse.Status(status());
+				return new StandardResponse.ReceiverStatusResponse(status());
 			} else if (message instanceof StandardRequest.Launch) {
 				StandardRequest.Launch launch = (StandardRequest.Launch) message;
 				runningApplications.add(new Application(
@@ -177,15 +177,15 @@ public class MockedChromeCast {
 					"",
 					Collections.<Namespace> emptyList()
 				));
-				StandardResponse response = new StandardResponse.Status(status());
+				StandardResponse response = new StandardResponse.ReceiverStatusResponse(status());
 				response.setRequestId(launch.getRequestId());
 				return response;
 			}
 			return null;
 		}
 
-		public Status status() {
-			return new Status(
+		public ReceiverStatus status() {
+			return new ReceiverStatus(
 				new Volume(
 					1f,
 					false,
@@ -216,7 +216,7 @@ public class MockedChromeCast {
 			while (read < buf.length) {
 				int nextByte = is.read();
 				if (nextByte == -1) {
-					throw new ChromeCastException("Remote socket was closed");
+					throw new CastException("Remote socket was closed");
 				}
 				buf[read++] = (byte) nextByte;
 			}
@@ -227,7 +227,7 @@ public class MockedChromeCast {
 			while (read < size) {
 				int nowRead = is.read(buf, read, buf.length - read);
 				if (nowRead == -1) {
-					throw new ChromeCastException("Remote socket was closed");
+					throw new CastException("Remote socket was closed");
 				}
 				read += nowRead;
 			}

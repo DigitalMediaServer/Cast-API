@@ -15,12 +15,21 @@
  */
 package org.digitalmediaserver.cast;
 
+import java.io.IOException;
+
 /**
- * The listener interface for discovering ChromeCast devices.
+ * Generic error, which may happen during interaction with a cast device.
+ * Contains some descriptive message.
  */
-public interface ChromeCastsListener {
+public class CastException extends IOException {
 
-	void newChromeCastDiscovered(ChromeCast chromeCast);
+	private static final long serialVersionUID = 1L;
 
-	void chromeCastRemoved(ChromeCast chromeCast);
+	public CastException(String message) {
+		super(message);
+	}
+
+	public CastException(String message, Throwable cause) {
+		super(message, cause);
+	}
 }
