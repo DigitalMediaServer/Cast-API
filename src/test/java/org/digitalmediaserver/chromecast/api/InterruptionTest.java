@@ -41,7 +41,7 @@ public class InterruptionTest {
 	public ExpectedException thrown = ExpectedException.none();
 
 	MockedChromeCast chromeCastStub;
-	ChromeCast cast = new ChromeCast("localhost");
+	CastDevice cast = new CastDevice("localhost");
 	CyclicBarrier barrier = new CyclicBarrier(2);
 
 	public static class Custom implements Request, Response {
@@ -110,7 +110,7 @@ public class InterruptionTest {
 		t.interrupt();
 		barrier.await();
 		assertNotNull(exception.get());
-		assertTrue(exception.get() instanceof ChromeCastException);
+		assertTrue(exception.get() instanceof CastException);
 		assertTrue(exception.get().getCause() instanceof InterruptedException);
 		assertEquals("Interrupted while waiting for response", exception.get().getMessage());
 	}
@@ -130,7 +130,7 @@ public class InterruptionTest {
 			}
 		};
 		cast.setRequestTimeout(100L);
-		thrown.expect(ChromeCastException.class);
+		thrown.expect(CastException.class);
 		thrown.expectCause(CoreMatchers.isA(TimeoutException.class));
 		thrown.expectMessage("Waiting for response timed out");
 		cast.send("", new Custom(), Custom.class);

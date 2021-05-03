@@ -130,7 +130,7 @@ public class EventListenerHolderTest {
 	@Test
 	public void itHandlesStatusEvent() throws Exception {
 		Volume volume = new Volume(123f, false, 2f, Volume.DEFAULT_INCREMENT.doubleValue(), Volume.DEFAULT_CONTROL_TYPE);
-		StandardResponse.Status status = new StandardResponse.Status(new Status(volume, null, false, false));
+		StandardResponse.ReceiverStatusResponse status = new StandardResponse.ReceiverStatusResponse(new ReceiverStatus(volume, null, false, false));
 		this.underTest.deliverEvent(jsonMapper.valueToTree(status));
 
 		ChromeCastSpontaneousEvent event = emittedEvents.get(0);
@@ -138,7 +138,7 @@ public class EventListenerHolderTest {
 		assertEquals(SpontaneousEventType.STATUS, event.getType());
 		// Not trying to test everything, just that is basically what we passed
 		// in.
-		assertEquals(volume, event.getData(Status.class).volume);
+		assertEquals(volume, event.getData(ReceiverStatus.class).volume);
 
 		assertEquals(1, emittedEvents.size());
 	}
@@ -181,7 +181,7 @@ public class EventListenerHolderTest {
 
 	@Test
 	public void itHandlesCloseBySenderEvent() throws Exception {
-		StandardResponse.Close ev = new StandardResponse.Close();
+		StandardResponse.CloseResponse ev = new StandardResponse.CloseResponse();
 		this.underTest.deliverEvent(jsonMapper.valueToTree(ev));
 
 		ChromeCastSpontaneousEvent event = emittedEvents.get(0);

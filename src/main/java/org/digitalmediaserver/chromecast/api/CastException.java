@@ -18,18 +18,18 @@ package org.digitalmediaserver.chromecast.api;
 import java.io.IOException;
 
 /**
- * Generic error, which may happen during interaction with ChromeCast device.
+ * Generic error, which may happen during interaction with a cast device.
  * Contains some descriptive message.
  */
-public class ChromeCastException extends IOException {
+public class CastException extends IOException {
 
 	private static final long serialVersionUID = 1L;
 
-	public ChromeCastException(String message) {
+	public CastException(String message) {
 		super(message);
 	}
 
-	public ChromeCastException(String message, Throwable cause) {
+	public CastException(String message, Throwable cause) {
 		super(message, cause);
 	}
 }

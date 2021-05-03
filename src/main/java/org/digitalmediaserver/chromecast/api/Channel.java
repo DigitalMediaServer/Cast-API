@@ -49,7 +49,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 /**
  * Internal class for low-level communication with ChromeCast device. Should
- * never be used directly, use {@link ChromeCast} methods instead
+ * never be used directly, use {@link CastDevice} methods instead
  */
 public class Channel implements Closeable {
 
@@ -300,7 +300,7 @@ public class Channel implements Closeable {
 	 */
 	public void open() throws IOException, KeyManagementException, NoSuchAlgorithmException {
 		if (!closed) {
-			throw new ChromeCastException("Channel already opened.");
+			throw new CastException("Channel already opened.");
 		}
 		connect();
 	}
@@ -338,7 +338,7 @@ public class Channel implements Closeable {
 			CastMessage response = read();
 			CastChannel.DeviceAuthMessage authResponse = CastChannel.DeviceAuthMessage.parseFrom(response.getPayloadBinary());
 			if (authResponse.hasError()) {
-				throw new ChromeCastException("Authentication failed: " + authResponse.getError().getErrorType().toString());
+				throw new CastException("Authentication failed: " + authResponse.getError().getErrorType().toString());
 			}
 
 			// Send 'PING' message
@@ -382,7 +382,7 @@ public class Channel implements Closeable {
 			try {
 				connect();
 			} catch (GeneralSecurityException gse) {
-				throw new ChromeCastException("Unexpected security exception", gse);
+				throw new CastException("Unexpected security exception", gse);
 			}
 		}
 
@@ -403,20 +403,20 @@ public class Channel implements Closeable {
 		write(namespace, message, destinationId);
 		try {
 			T response = rp.get();
-			if (response instanceof StandardResponse.Invalid) {
-				StandardResponse.Invalid invalid = (StandardResponse.Invalid) response;
-				throw new ChromeCastException("Invalid request: " + invalid.reason);
-			} else if (response instanceof StandardResponse.LoadFailed) {
-				throw new ChromeCastException("Unable to load media");
-			} else if (response instanceof StandardResponse.LaunchError) {
-				StandardResponse.LaunchError launchError = (StandardResponse.LaunchError) response;
-				throw new ChromeCastException("Application launch error: " + launchError.reason);
+			if (response instanceof StandardResponse.InvalidResponse) {
+				StandardResponse.InvalidResponse invalid = (StandardResponse.InvalidResponse) response;
+				throw new CastException("Invalid request: " + invalid.reason);
+			} else if (response instanceof StandardResponse.LoadFailedResponse) {
+				throw new CastException("Unable to load media");
+			} else if (response instanceof StandardResponse.LaunchErrorResponse) {
+				StandardResponse.LaunchErrorResponse launchError = (StandardResponse.LaunchErrorResponse) response;
+				throw new CastException("Application launch error: " + launchError.reason);
 			}
 			return response;
 		} catch (InterruptedException e) {
-			throw new ChromeCastException("Interrupted while waiting for response", e);
+			throw new CastException("Interrupted while waiting for response", e);
 		} catch (TimeoutException e) {
-			throw new ChromeCastException("Waiting for response timed out", e);
+			throw new CastException("Waiting for response timed out", e);
 		} finally {
 			requests.remove(requestId);
 		}
@@ -452,7 +452,7 @@ public class Channel implements Closeable {
 		while (read < buf.length) {
 			int nextByte = is.read();
 			if (nextByte == -1) {
-				throw new ChromeCastException("Remote socket closed");
+				throw new CastException("Remote socket closed");
 			}
 			buf[read++] = (byte) nextByte;
 		}
@@ -463,7 +463,7 @@ public class Channel implements Closeable {
 		while (read < size) {
 			int nowRead = is.read(buf, read, buf.length - read);
 			if (nowRead == -1) {
-				throw new ChromeCastException("Remote socket closed");
+				throw new CastException("Remote socket closed");
 			}
 			read += nowRead;
 		}
@@ -489,8 +489,8 @@ public class Channel implements Closeable {
 		}
 	}
 
-	public Status getStatus() throws IOException {
-		StandardResponse.Status status = sendStandard(
+	public ReceiverStatus getStatus() throws IOException {
+		StandardResponse.ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.status(),
 			DEFAULT_RECEIVER_ID
@@ -499,7 +499,7 @@ public class Channel implements Closeable {
 	}
 
 	public boolean isAppAvailable(String appId) throws IOException {
-		StandardResponse.AppAvailability availability = sendStandard(
+		StandardResponse.AppAvailabilityResponse availability = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.appAvailability(appId),
 			DEFAULT_RECEIVER_ID
@@ -507,8 +507,8 @@ public class Channel implements Closeable {
 		return availability != null && "APP_AVAILABLE".equals(availability.availability.get(appId));
 	}
 
-	public Status launch(String appId) throws IOException {
-		StandardResponse.Status status = sendStandard(
+	public ReceiverStatus launch(String appId) throws IOException {
+		StandardResponse.ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.launch(appId),
 			DEFAULT_RECEIVER_ID
@@ -516,8 +516,8 @@ public class Channel implements Closeable {
 		return status == null ? null : status.status;
 	}
 
-	public Status stop(String sessionId) throws IOException {
-		StandardResponse.Status status = sendStandard(
+	public ReceiverStatus stop(String sessionId) throws IOException {
+		StandardResponse.ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.stop(sessionId),
 			DEFAULT_RECEIVER_ID
@@ -535,7 +535,7 @@ public class Channel implements Closeable {
 	public MediaStatus load(String destinationId, String sessionId, Media media, boolean autoplay, double currentTime,
 		Map<String, String> customData) throws IOException {
 		startSession(destinationId);
-		StandardResponse.MediaStatus status = sendStandard(
+		StandardResponse.MediaStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.load(sessionId, media, autoplay, currentTime, customData),
 			destinationId
@@ -545,7 +545,7 @@ public class Channel implements Closeable {
 
 	public MediaStatus play(String destinationId, String sessionId, long mediaSessionId) throws IOException {
 		startSession(destinationId);
-		StandardResponse.MediaStatus status = sendStandard(
+		StandardResponse.MediaStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.play(sessionId, mediaSessionId),
 			destinationId
@@ -555,7 +555,7 @@ public class Channel implements Closeable {
 
 	public MediaStatus pause(String destinationId, String sessionId, long mediaSessionId) throws IOException {
 		startSession(destinationId);
-		StandardResponse.MediaStatus status = sendStandard(
+		StandardResponse.MediaStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.pause(sessionId, mediaSessionId),
 			destinationId
@@ -565,7 +565,7 @@ public class Channel implements Closeable {
 
 	public MediaStatus seek(String destinationId, String sessionId, long mediaSessionId, double currentTime) throws IOException {
 		startSession(destinationId);
-		StandardResponse.MediaStatus status = sendStandard(
+		StandardResponse.MediaStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.seek(sessionId, mediaSessionId, currentTime),
 			destinationId
@@ -573,8 +573,8 @@ public class Channel implements Closeable {
 		return status == null || status.statuses.length == 0 ? null : status.statuses[0];
 	}
 
-	public Status setVolume(Volume volume) throws IOException {
-		StandardResponse.Status status = sendStandard(
+	public ReceiverStatus setVolume(Volume volume) throws IOException {
+		StandardResponse.ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.setVolume(volume),
 			DEFAULT_RECEIVER_ID
@@ -584,7 +584,7 @@ public class Channel implements Closeable {
 
 	public MediaStatus getMediaStatus(String destinationId) throws IOException {
 		startSession(destinationId);
-		StandardResponse.MediaStatus status = sendStandard(
+		StandardResponse.MediaStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.status(),
 			destinationId
@@ -606,7 +606,7 @@ public class Channel implements Closeable {
 	public void close() throws IOException {
 		synchronized (closedSync) {
 			if (closed) {
-				throw new ChromeCastException("Channel already closed.");
+				throw new CastException("Channel already closed.");
 			} else {
 				closed = true;
 				notifyListenerOfConnectionEvent(false);

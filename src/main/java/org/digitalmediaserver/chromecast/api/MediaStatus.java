@@ -80,7 +80,7 @@ public class MediaStatus {
 	public final double currentTime;
 	public final Map<String, Object> customData;
 	public final Integer loadingItemId;
-	public final List<Item> items;
+	public final List<QueueItem> items;
 	public final Integer preloadedItemId;
 	public final int supportedMediaCommands;
 	public final Volume volume;
@@ -97,7 +97,7 @@ public class MediaStatus {
 		@JsonProperty("currentTime") double currentTime,
 		@JsonProperty("customData") Map<String, Object> customData,
 		@JsonProperty("loadingItemId") Integer loadingItemId,
-		@JsonProperty("items") List<Item> items,
+		@JsonProperty("items") List<QueueItem> items,
 		@JsonProperty("preloadedItemId") Integer preloadedItemId,
 		@JsonProperty("supportedMediaCommands") int supportedMediaCommands,
 		@JsonProperty("volume") Volume volume,

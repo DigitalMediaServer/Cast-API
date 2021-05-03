@@ -16,11 +16,21 @@
 package org.digitalmediaserver.chromecast.api;
 
 /**
- * The listener interface for discovering ChromeCast devices.
+ * The listener interface for cast device discovery.
  */
-public interface ChromeCastsListener {
+public interface DeviceDiscoveryListener {
 
-	void newChromeCastDiscovered(ChromeCast chromeCast);
+	/**
+	 * Invoked when a new cast device is discovered.
+	 *
+	 * @param castDevice the new cast device.
+	 */
+	void deviceDiscovered(CastDevice castDevice);
 
-	void chromeCastRemoved(ChromeCast chromeCast);
+	/**
+	 * Invoked when a cast device disappears.
+	 *
+	 * @param castDevice the disappeared cast device.
+	 */
+	void deviceRemoved(CastDevice castDevice);
 }
