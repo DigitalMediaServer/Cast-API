@@ -46,15 +46,15 @@ public class InterruptionTest {
 
 	public static class Custom implements Request, Response {
 
-		Long requestId;
+		long requestId;
 
 		@Override
-		public Long getRequestId() {
+		public long getRequestId() {
 			return requestId;
 		}
 
 		@Override
-		public void setRequestId(Long requestId) {
+		public void setRequestId(long requestId) {
 			this.requestId = requestId;
 		}
 	}
@@ -81,7 +81,7 @@ public class InterruptionTest {
 			}
 		};
 
-		final AtomicReference<IOException> exception = new AtomicReference<IOException>();
+		final AtomicReference<IOException> exception = new AtomicReference<>();
 		Thread t = new Thread() {
 
 			@Override

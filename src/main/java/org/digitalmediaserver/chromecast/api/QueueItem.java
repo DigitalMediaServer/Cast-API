@@ -19,33 +19,60 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Media item.
  */
+@Immutable
 public class QueueItem {
 
-	public final boolean autoplay;
-	public final Map<String, Object> customData;
-	public final Media media;
-	public final long id;
+	protected final boolean autoplay;
+
+	@Nonnull
+	protected final Map<String, Object> customData;
+	protected final Media media;
+	protected final long itemId;
 
 	public QueueItem(
 		@JsonProperty("autoplay") boolean autoplay,
 		@JsonProperty("customData") Map<String, Object> customData,
-		@JsonProperty("itemId") long id,
+		@JsonProperty("itemId") long itemId,
 		@JsonProperty("media") Media media
 	) {
 		this.autoplay = autoplay;
-		this.customData = customData != null ? Collections.unmodifiableMap(customData) : null;
-		this.id = id;
+		if (customData == null || customData.isEmpty()) {
+			this.customData = Collections.emptyMap();
+		} else {
+			this.customData = Collections.unmodifiableMap(new LinkedHashMap<>(customData));
+		}
+		this.itemId = itemId;
 		this.media = media;
+	}
+
+	public boolean isAutoplay() {
+		return autoplay;
+	}
+
+	@Nonnull
+	public Map<String, Object> getCustomData() {
+		return customData;
+	}
+
+	public long getItemId() {
+		return itemId;
+	}
+
+	public Media getMedia() {
+		return media;
 	}
 
 	@Override
 	public final int hashCode() {
-		return Arrays.hashCode(new Object[] {this.autoplay, this.customData, this.id, this.media});
+		return Arrays.hashCode(new Object[] {this.autoplay, this.customData, this.itemId, this.media});
 	}
 
 	@Override
@@ -65,7 +92,7 @@ public class QueueItem {
 			customData == null ?
 				that.customData == null :
 				customData.equals(that.customData) &&
-			id == that.id &&
+			itemId == that.itemId &&
 			media == null ?
 				that.media == null :
 				this.media.equals(that.media);
@@ -73,6 +100,6 @@ public class QueueItem {
 
 	@Override
 	public final String toString() {
-		return String.format("Item{id: %s, media: %s}", this.id, this.media);
+		return String.format("Item{id: %s, media: %s}", this.itemId, this.media);
 	}
 }

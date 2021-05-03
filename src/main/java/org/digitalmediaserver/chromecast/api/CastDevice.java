@@ -161,7 +161,7 @@ public class CastDevice {
 	}
 
 	protected String getTransportId(Application runningApp) {
-		return runningApp.transportId == null ? runningApp.sessionId : runningApp.transportId;
+		return runningApp.getTransportId() == null ? runningApp.getSessionId() : runningApp.getTransportId();
 	}
 
 	public synchronized void connect() throws IOException, KeyManagementException, NoSuchAlgorithmException {
@@ -256,7 +256,7 @@ public class CastDevice {
 	 */
 	public boolean isAppRunning(String appId) throws IOException {
 		ReceiverStatus status = getStatus();
-		return status.getRunningApp() != null && appId.equals(status.getRunningApp().id);
+		return status.getRunningApp() != null && appId.equals(status.getRunningApp().getAppId());
 	}
 
 	/**
@@ -286,7 +286,7 @@ public class CastDevice {
 		if (runningApp == null) {
 			throw new CastException("No application is running in ChromeCast");
 		}
-		channel().stop(runningApp.sessionId);
+		channel().stop(runningApp.getSessionId());
 	}
 
 	/**
@@ -324,10 +324,10 @@ public class CastDevice {
 	 *      "https://developers.google.com/cast/docs/design_checklist/sender#sender-control-volume">sender</a>
 	 */
 	public void setVolumeByIncrement(float level) throws IOException {
-		Volume volume = this.getStatus().volume;
-		float total = volume.level;
+		Volume volume = this.getStatus().getVolume();
+		float total = volume.getLevel();
 
-		if (volume.increment <= 0f) {
+		if (volume.getIncrement() <= 0f) {
 			throw new CastException("Volume.increment is <= 0");
 		}
 
@@ -337,13 +337,13 @@ public class CastDevice {
 		// Increase volume
 		if (level > total) {
 			while (total < level) {
-				total = Math.min(total + volume.increment, level);
+				total = Math.min(total + volume.getIncrement(), level);
 				setVolume(total);
 			}
 			// Decrease Volume
 		} else if (level < total) {
 			while (total > level) {
-				total = Math.max(total - volume.increment, level);
+				total = Math.max(total - volume.getIncrement(), level);
 				setVolume(total);
 			}
 		}
@@ -399,7 +399,7 @@ public class CastDevice {
 		if (mediaStatus == null) {
 			throw new CastException("ChromeCast has invalid state to resume media playback");
 		}
-		channel().play(getTransportId(runningApp), runningApp.sessionId, mediaStatus.mediaSessionId);
+		channel().play(getTransportId(runningApp), runningApp.getSessionId(), mediaStatus.getMediaSessionId());
 	}
 
 	/**
@@ -423,7 +423,7 @@ public class CastDevice {
 		if (mediaStatus == null) {
 			throw new CastException("ChromeCast has invalid state to pause media playback");
 		}
-		channel().pause(getTransportId(runningApp), runningApp.sessionId, mediaStatus.mediaSessionId);
+		channel().pause(getTransportId(runningApp), runningApp.getSessionId(), mediaStatus.getMediaSessionId());
 	}
 
 	/**
@@ -448,7 +448,7 @@ public class CastDevice {
 		if (mediaStatus == null) {
 			throw new CastException("ChromeCast has invalid state to seek media playback");
 		}
-		channel().seek(getTransportId(runningApp), runningApp.sessionId, mediaStatus.mediaSessionId, time);
+		channel().seek(getTransportId(runningApp), runningApp.getSessionId(), mediaStatus.getMediaSessionId(), time);
 	}
 
 	/**
@@ -496,7 +496,7 @@ public class CastDevice {
 		metadata.put("thumb", thumb);
 		return channel().load(
 			getTransportId(runningApp),
-			runningApp.sessionId,
+			runningApp.getSessionId(),
 			new Media(
 				url,
 				contentType == null ? getContentType(url) : contentType,
@@ -536,21 +536,21 @@ public class CastDevice {
 			throw new CastException("No application is running in ChromeCast");
 		}
 		Media mediaToPlay;
-		if (media.contentType == null) {
+		if (media.getContentType() == null) {
 			mediaToPlay = new Media(
-				media.url,
-				getContentType(media.url),
-				media.duration,
-				media.streamType,
-				media.customData,
-				media.metadata,
-				media.textTrackStyle,
-				media.tracks
+				media.getUrl(),
+				getContentType(media.getUrl()),
+				media.getDuration(),
+				media.getStreamType(),
+				media.getCustomData(),
+				media.getMetadata(),
+				media.getTextTrackStyle(),
+				media.getTracks()
 			);
 		} else {
 			mediaToPlay = media;
 		}
-		return channel().load(getTransportId(runningApp), runningApp.sessionId, mediaToPlay, true, 0d, null);
+		return channel().load(getTransportId(runningApp), runningApp.getSessionId(), mediaToPlay, true, 0d, null);
 	}
 
 	/**

@@ -34,18 +34,18 @@ public class DeviceTest {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/device-added.json").replaceFirst("\"type\"", "\"responseType\"");
 		final StandardResponse.DeviceAddedResponse response = jsonMapper.readValue(jsonMSG, StandardResponse.DeviceAddedResponse.class);
 
-		assertNotNull(response.device);
-		Device device = response.device;
-		assertEquals("Amplifier", device.name);
-		assertEquals("123456", device.deviceId);
-		assertEquals(4, device.capabilities);
-		assertNotNull(device.volume);
-		Volume volume = device.volume;
-		assertEquals(0.24, volume.level, 0.001);
-		assertFalse(volume.muted);
-		assertNotNull(volume.increment);
-		assertNotNull(volume.stepInterval);
-		assertNull(volume.controlType);
+		assertNotNull(response.getDevice());
+		Device device = response.getDevice();
+		assertEquals("Amplifier", device.getName());
+		assertEquals("123456", device.getDeviceId());
+		assertEquals(4, device.getCapabilities());
+		assertNotNull(device.getVolume());
+		Volume volume = device.getVolume();
+		assertEquals(0.24, volume.getLevel(), 0.001);
+		assertFalse(volume.isMuted());
+		assertNotNull(volume.getIncrement());
+		assertNotNull(volume.getStepInterval());
+		assertNull(volume.getControlType());
 	}
 
 	@Test
@@ -53,8 +53,8 @@ public class DeviceTest {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/device-removed.json").replaceFirst("\"type\"", "\"responseType\"");
 		final StandardResponse.DeviceRemovedResponse response = jsonMapper.readValue(jsonMSG, StandardResponse.DeviceRemovedResponse.class);
 
-		assertNotNull(response.deviceId);
-		assertEquals("111111", response.deviceId);
+		assertNotNull(response.getDeviceId());
+		assertEquals("111111", response.getDeviceId());
 	}
 
 	@Test
@@ -62,17 +62,17 @@ public class DeviceTest {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/device-updated.json").replaceFirst("\"type\"", "\"responseType\"");
 		final StandardResponse.DeviceUpdatedResponse response = jsonMapper.readValue(jsonMSG, StandardResponse.DeviceUpdatedResponse.class);
 
-		assertNotNull(response.device);
-		Device device = response.device;
-		assertEquals("Amplifier", device.name);
-		assertEquals("654321", device.deviceId);
-		assertEquals(4, device.capabilities);
-		assertNotNull(device.volume);
-		Volume volume = device.volume;
-		assertEquals(0.35, volume.level, 0.001);
-		assertFalse(volume.muted);
-		assertNotNull(volume.increment);
-		assertNotNull(volume.stepInterval);
-		assertNull(volume.controlType);
+		assertNotNull(response.getDevice());
+		Device device = response.getDevice();
+		assertEquals("Amplifier", device.getName());
+		assertEquals("654321", device.getDeviceId());
+		assertEquals(4, device.getCapabilities());
+		assertNotNull(device.getVolume());
+		Volume volume = device.getVolume();
+		assertEquals(0.35, volume.getLevel(), 0.001);
+		assertFalse(volume.isMuted());
+		assertNotNull(volume.getIncrement());
+		assertNotNull(volume.getStepInterval());
+		assertNull(volume.getControlType());
 	}
 }

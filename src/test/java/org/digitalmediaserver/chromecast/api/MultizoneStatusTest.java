@@ -35,11 +35,11 @@ public class MultizoneStatusTest {
 			jsonMSG,
 			StandardResponse.class
 		);
-		assertNotNull(response.status);
-		assertEquals(1, response.status.devices.length);
-		assertFalse(response.status.isMultichannel);
-		assertEquals("Living Room speaker", response.status.devices[0].name);
-		assertEquals(196612, response.status.devices[0].capabilities);
-		assertNotNull(response.status.devices[0].volume);
+		assertNotNull(response.getStatus());
+		assertEquals(1, response.getStatus().getDevices().size());
+		assertFalse(response.getStatus().isMultichannel());
+		assertEquals("Living Room speaker", response.getStatus().getDevices().get(0).getName());
+		assertEquals(196612, response.getStatus().getDevices().get(0).getCapabilities());
+		assertNotNull(response.getStatus().getDevices().get(0).getVolume());
 	}
 }
