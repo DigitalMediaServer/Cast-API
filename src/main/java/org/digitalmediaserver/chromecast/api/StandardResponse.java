@@ -41,7 +41,7 @@ import java.util.Map;
 	@JsonSubTypes.Type(name = "DEVICE_UPDATED", value = StandardResponse.DeviceUpdated.class),
 	@JsonSubTypes.Type(name = "DEVICE_REMOVED", value = StandardResponse.DeviceRemoved.class)
 })
-abstract class StandardResponse implements Response {
+public abstract class StandardResponse implements Response {
 
 	Long requestId;
 

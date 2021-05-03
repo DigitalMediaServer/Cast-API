@@ -47,7 +47,7 @@ public class ChromeCast {
 	private String appTitle;
 	private String model;
 
-	ChromeCast(JmDNS mDNS, String name) {
+	public ChromeCast(JmDNS mDNS, String name) {
 		this.name = name;
 		ServiceInfo serviceInfo = mDNS.getServiceInfo(SERVICE_TYPE, name);
 		this.address = serviceInfo.getInet4Addresses()[0].getHostAddress();

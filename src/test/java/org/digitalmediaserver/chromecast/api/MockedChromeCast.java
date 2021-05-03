@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
-import static org.digitalmediaserver.chromecast.api.Util.fromArray;
-import static org.digitalmediaserver.chromecast.api.Util.toArray;
+import static org.digitalmediaserver.chromecast.api.Util.intFromBytes;
+import static org.digitalmediaserver.chromecast.api.Util.intToBytes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
@@ -221,7 +221,7 @@ final class MockedChromeCast {
 				buf[read++] = (byte) nextByte;
 			}
 
-			int size = fromArray(buf);
+			int size = intFromBytes(buf);
 			buf = new byte[size];
 			read = 0;
 			while (read < size) {
@@ -236,7 +236,7 @@ final class MockedChromeCast {
 		}
 
 		void write(Socket mySocket, CastMessage message) throws IOException {
-			mySocket.getOutputStream().write(toArray(message.getSerializedSize()));
+			mySocket.getOutputStream().write(intToBytes(message.getSerializedSize()));
 			message.writeTo(mySocket.getOutputStream());
 		}
 	}

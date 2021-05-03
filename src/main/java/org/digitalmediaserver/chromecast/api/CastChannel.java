@@ -3412,7 +3412,6 @@ final class CastChannel {
 			@Override
 			public boolean isInitialized() {
 				if (!hasErrorType()) {
-
 					return false;
 				}
 				return true;
