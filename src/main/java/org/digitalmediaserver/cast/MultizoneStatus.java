@@ -15,19 +15,44 @@
  */
 package org.digitalmediaserver.cast;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Status received in case there a multiple ChomeCast devices in several "zones"
  * (multi-zone setup).
  */
+@Immutable
 public class MultizoneStatus {
 
-	public final Device[] devices;
-	public final boolean isMultichannel;
+	@Nonnull
+	protected final List<Device> devices;
+	protected final boolean isMultichannel;
 
-	public MultizoneStatus(@JsonProperty("devices") Device[] devices, @JsonProperty("isMultichannel") boolean isMultichannel) {
-		this.devices = devices;
+	public MultizoneStatus(
+		@JsonProperty("devices") Device[] devices,
+		@JsonProperty("isMultichannel") boolean isMultichannel
+	) {
+		if (devices == null || devices.length == 0) {
+			this.devices = Collections.emptyList();
+		} else {
+			this.devices = Collections.unmodifiableList(new ArrayList<>(Arrays.asList(devices)));
+		}
 		this.isMultichannel = isMultichannel;
+	}
+
+	@Nonnull
+	public List<Device> getDevices() {
+		return devices;
+	}
+
+	@JsonProperty("isMultichannel")
+	public boolean isMultichannel() {
+		return isMultichannel;
 	}
 }

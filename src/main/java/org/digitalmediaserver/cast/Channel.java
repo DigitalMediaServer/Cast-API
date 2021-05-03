@@ -417,12 +417,12 @@ public class Channel implements Closeable {
 			T response = rp.get();
 			if (response instanceof StandardResponse.InvalidResponse) {
 				StandardResponse.InvalidResponse invalid = (StandardResponse.InvalidResponse) response;
-				throw new CastException("Invalid request: " + invalid.reason);
+				throw new CastException("Invalid request: " + invalid.getReason());
 			} else if (response instanceof StandardResponse.LoadFailedResponse) {
 				throw new CastException("Unable to load media");
 			} else if (response instanceof StandardResponse.LaunchErrorResponse) {
 				StandardResponse.LaunchErrorResponse launchError = (StandardResponse.LaunchErrorResponse) response;
-				throw new CastException("Application launch error: " + launchError.reason);
+				throw new CastException("Application launch error: " + launchError.getReason());
 			}
 			return response;
 		} catch (InterruptedException e) {
@@ -507,7 +507,7 @@ public class Channel implements Closeable {
 			StandardRequest.status(),
 			DEFAULT_RECEIVER_ID
 		);
-		return status == null ? null : status.status;
+		return status == null ? null : status.getStatus();
 	}
 
 	public boolean isAppAvailable(String appId) throws IOException {
@@ -516,7 +516,7 @@ public class Channel implements Closeable {
 			StandardRequest.appAvailability(appId),
 			DEFAULT_RECEIVER_ID
 		);
-		return availability != null && "APP_AVAILABLE".equals(availability.availability.get(appId));
+		return availability != null && "APP_AVAILABLE".equals(availability.getAvailability().get(appId));
 	}
 
 	public ReceiverStatus launch(String appId) throws IOException {
@@ -525,7 +525,7 @@ public class Channel implements Closeable {
 			StandardRequest.launch(appId),
 			DEFAULT_RECEIVER_ID
 		);
-		return status == null ? null : status.status;
+		return status == null ? null : status.getStatus();
 	}
 
 	public ReceiverStatus stop(String sessionId) throws IOException {
@@ -534,7 +534,7 @@ public class Channel implements Closeable {
 			StandardRequest.stop(sessionId),
 			DEFAULT_RECEIVER_ID
 		);
-		return status == null ? null : status.status;
+		return status == null ? null : status.getStatus();
 	}
 
 	protected void startSession(String destinationId) throws IOException {
@@ -552,7 +552,7 @@ public class Channel implements Closeable {
 			StandardRequest.load(sessionId, media, autoplay, currentTime, customData),
 			destinationId
 		);
-		return status == null || status.statuses.length == 0 ? null : status.statuses[0];
+		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
 	public MediaStatus play(String destinationId, String sessionId, long mediaSessionId) throws IOException {
@@ -562,7 +562,7 @@ public class Channel implements Closeable {
 			StandardRequest.play(sessionId, mediaSessionId),
 			destinationId
 		);
-		return status == null || status.statuses.length == 0 ? null : status.statuses[0];
+		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
 	public MediaStatus pause(String destinationId, String sessionId, long mediaSessionId) throws IOException {
@@ -572,7 +572,7 @@ public class Channel implements Closeable {
 			StandardRequest.pause(sessionId, mediaSessionId),
 			destinationId
 		);
-		return status == null || status.statuses.length == 0 ? null : status.statuses[0];
+		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
 	public MediaStatus seek(String destinationId, String sessionId, long mediaSessionId, double currentTime) throws IOException {
@@ -582,7 +582,7 @@ public class Channel implements Closeable {
 			StandardRequest.seek(sessionId, mediaSessionId, currentTime),
 			destinationId
 		);
-		return status == null || status.statuses.length == 0 ? null : status.statuses[0];
+		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
 	public ReceiverStatus setVolume(Volume volume) throws IOException {
@@ -591,7 +591,7 @@ public class Channel implements Closeable {
 			StandardRequest.setVolume(volume),
 			DEFAULT_RECEIVER_ID
 		);
-		return status == null ? null : status.status;
+		return status == null ? null : status.getStatus();
 	}
 
 	public MediaStatus getMediaStatus(String destinationId) throws IOException {
@@ -601,7 +601,7 @@ public class Channel implements Closeable {
 			StandardRequest.status(),
 			destinationId
 		);
-		return status == null || status.statuses.length == 0 ? null : status.statuses[0];
+		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
 	public <T extends Response> T sendGenericRequest(

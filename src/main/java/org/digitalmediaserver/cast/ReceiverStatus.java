@@ -17,20 +17,26 @@ package org.digitalmediaserver.cast;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Current ChromeCast device status.
  */
+@Immutable
 public class ReceiverStatus {
 
-	public final Volume volume;
-	public final List<Application> applications;
-	public final boolean activeInput;
-	public final boolean standBy;
+	protected final Volume volume;
+
+	@Nonnull
+	protected final List<Application> applications;
+	protected final boolean activeInput;
+	protected final boolean standBy;
 
 	public ReceiverStatus(
 		@JsonProperty("volume") Volume volume,
@@ -39,28 +45,47 @@ public class ReceiverStatus {
 		@JsonProperty("isStandBy") boolean standBy
 	) {
 		this.volume = volume;
-		this.applications = applications == null ? Collections.<Application>emptyList() : applications;
+		this.applications = applications == null ?
+			Collections.<Application>emptyList() :
+			Collections.unmodifiableList(new ArrayList<>(applications));
 		this.activeInput = activeInput;
 		this.standBy = standBy;
 	}
 
+	public Volume getVolume() {
+		return volume;
+	}
+
+	@Nonnull
+	public List<Application> getApplications() {
+		return applications;
+	}
+
+	public boolean isActiveInput() {
+		return activeInput;
+	}
+
+	public boolean isStandBy() {
+		return standBy;
+	}
+
+	@Nullable
 	@JsonIgnore
-	public final Application getRunningApp() {
+	public Application getRunningApp() {
 		return applications.isEmpty() ? null : applications.get(0);
 	}
 
-	public final boolean isAppRunning(String appId) {
-		return getRunningApp() != null && getRunningApp().id.equals(appId);
+	public boolean isAppRunning(String appId) {
+		Application runningApp = getRunningApp();
+		return runningApp != null && runningApp.getAppId().equals(appId);
 	}
 
 	@Override
-	public final String toString() {
-		final String applicationsString = applications == null ? "<null>" : Arrays.toString(applications.toArray());
-
+	public String toString() {
 		return String.format(
 			"Media{volume: %s, applications: %s, activeInput: %b, standBy; %b}",
 			volume,
-			applicationsString,
+			Arrays.toString(applications.toArray()),
 			activeInput,
 			standBy
 		);

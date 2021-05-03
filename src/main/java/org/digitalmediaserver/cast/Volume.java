@@ -19,26 +19,28 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Arrays;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Volume settings.
  */
+@Immutable
 public class Volume {
 
-	static final Float DEFAULT_INCREMENT = 0.05f;
-	static final String DEFAULT_CONTROL_TYPE = "attenuation";
+	protected static final Float DEFAULT_INCREMENT = 0.05f;
+	protected static final String DEFAULT_CONTROL_TYPE = "attenuation";
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public final Float level;
+	protected final Float level;
 	@JsonProperty
-	public final boolean muted;
+	protected final boolean muted;
 
 	@JsonProperty
-	public final Float increment;
+	protected final Float increment;
 	@JsonProperty
-	public final Double stepInterval;
+	protected final Double stepInterval;
 	@JsonProperty
-	public final String controlType;
+	protected final String controlType;
 
 	public Volume() {
 		level = -1f;
@@ -68,6 +70,26 @@ public class Volume {
 			this.stepInterval = DEFAULT_INCREMENT.doubleValue();
 		}
 		this.controlType = controlType;
+	}
+
+	public Float getLevel() {
+		return level;
+	}
+
+	public boolean isMuted() {
+		return muted;
+	}
+
+	public Float getIncrement() {
+		return increment;
+	}
+
+	public Double getStepInterval() {
+		return stepInterval;
+	}
+
+	public String getControlType() {
+		return controlType;
 	}
 
 	@Override

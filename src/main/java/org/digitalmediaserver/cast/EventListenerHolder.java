@@ -72,7 +72,7 @@ class EventListenerHolder implements ChromeCastSpontaneousEventListener, ChromeC
 		if (resp instanceof StandardResponse.MediaStatusResponse) {
 			StandardResponse.MediaStatusResponse mediaStatusResponse = (StandardResponse.MediaStatusResponse) resp;
 			// it may be a single media status event
-			if (mediaStatusResponse.statuses == null) {
+			if (mediaStatusResponse.getStatuses().isEmpty()) {
 				if (json.has("media")) {
 					try {
 						MediaStatus ms = jsonMapper.treeToValue(json, MediaStatus.class);
@@ -82,12 +82,12 @@ class EventListenerHolder implements ChromeCastSpontaneousEventListener, ChromeC
 					}
 				}
 			} else {
-				for (final MediaStatus ms : mediaStatusResponse.statuses) {
+				for (final MediaStatus ms : mediaStatusResponse.getStatuses()) {
 					spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.MEDIA_STATUS, ms));
 				}
 			}
 		} else if (resp instanceof StandardResponse.ReceiverStatusResponse) {
-			spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.STATUS, ((StandardResponse.ReceiverStatusResponse) resp).status));
+			spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.STATUS, ((StandardResponse.ReceiverStatusResponse) resp).getStatus()));
 		} else if (resp instanceof StandardResponse.CloseResponse) {
 			spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.CLOSE, new Object()));
 		} else {

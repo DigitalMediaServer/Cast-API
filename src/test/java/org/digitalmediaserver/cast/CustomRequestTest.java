@@ -37,19 +37,19 @@ public class CustomRequestTest {
 		@JsonProperty
 		final boolean status;
 
-		private Long requestId;
+		private long requestId;
 
 		KioskStatusRequest() {
 			status = true;
 		}
 
 		@Override
-		public Long getRequestId() {
+		public long getRequestId() {
 			return requestId;
 		}
 
 		@Override
-		public void setRequestId(Long requestId) {
+		public void setRequestId(long requestId) {
 			this.requestId = requestId;
 		}
 
@@ -64,7 +64,7 @@ public class CustomRequestTest {
 		@JsonProperty("refresh")
 		int refresh;
 
-		private Long requestId;
+		private long requestId;
 
 		public String getUrl() {
 			return this.url;
@@ -75,15 +75,14 @@ public class CustomRequestTest {
 		}
 
 		@Override
-		public Long getRequestId() {
+		public long getRequestId() {
 			return requestId;
 		}
 
-		@Override
-		public void setRequestId(Long arg0) {
+		@SuppressWarnings("unused")
+		public void setRequestId(long arg0) {
 			requestId = arg0;
 		}
-
 	}
 
 	@Before
@@ -105,7 +104,14 @@ public class CustomRequestTest {
 
 			@Override
 			public Response handle(JsonNode json) {
+				long requestId;
+				if (json.has("requestId")) {
+					requestId = json.get("requestId").asLong();
+				} else {
+					requestId = 0L;
+				}
 				KioskStatusResponse response = new KioskStatusResponse();
+				response.requestId = requestId;
 				response.url = "http://google.com";
 				response.refresh = 50;
 				return response;
