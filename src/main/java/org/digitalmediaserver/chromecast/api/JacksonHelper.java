@@ -23,10 +23,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class JacksonHelper {
 
+	/**
+	 * Not to be instantiated.
+	 */
 	private JacksonHelper() {
 	}
 
-	static ObjectMapper createJSONMapper() {
+	/**
+	 * @return A new configured {@link ObjectMapper}.
+	 */
+	public static ObjectMapper createJSONMapper() {
 		ObjectMapper jsonMapper = new ObjectMapper();
 		jsonMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		return jsonMapper;
