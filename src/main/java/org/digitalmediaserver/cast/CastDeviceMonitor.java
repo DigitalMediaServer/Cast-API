@@ -59,7 +59,7 @@ public final class CastDeviceMonitor {
 		@Override
 		public void serviceAdded(ServiceEvent se) {
 			if (se.getInfo() != null) {
-				CastDevice device = new CastDevice(mDNS, se.getInfo().getName());
+				CastDevice device = new CastDevice(mDNS, se.getInfo().getName(), null);
 				chromeCasts.add(device);
 				for (DeviceDiscoveryListener nextListener : listeners) {
 					nextListener.deviceDiscovered(device);

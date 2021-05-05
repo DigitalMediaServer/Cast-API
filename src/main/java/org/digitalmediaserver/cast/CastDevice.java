@@ -23,8 +23,22 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
+import org.digitalmediaserver.cast.CastEvent.CastEventListener;
+import org.digitalmediaserver.cast.CastEvent.CastEventListenerList;
+import org.digitalmediaserver.cast.CastEvent.CastEventType;
+import org.digitalmediaserver.cast.CastEvent.ThreadedCastEventListenerList;
 
 /**
  * ChromeCast device - main object used for interaction with ChromeCast dongle.
@@ -33,7 +47,13 @@ public class CastDevice {
 
 	public static final String SERVICE_TYPE = "_googlecast._tcp.local.";
 
-	protected final EventListenerHolder eventListenerHolder = new EventListenerHolder();
+	/** The {@link ExecutorService} that is used for asynchronous operations */
+	@Nonnull
+	protected static final ExecutorService EXECUTOR = createExecutor();
+
+	/** The currently registered {@link CastEventListener}s */
+	@Nonnull
+	protected final CastEventListenerList listeners;
 
 	protected String name;
 	protected final String address;
@@ -47,7 +67,13 @@ public class CastDevice {
 	protected String appTitle;
 	protected String model;
 
-	public CastDevice(JmDNS mDNS, String name) {
+	@Nonnull
+	protected final String displayName;
+
+	@Nonnull
+	protected final String sourceId;
+
+	public CastDevice(JmDNS mDNS, String name, @Nullable String sourceId) {
 		this.name = name;
 		ServiceInfo serviceInfo = mDNS.getServiceInfo(SERVICE_TYPE, name);
 		this.address = serviceInfo.getInet4Addresses()[0].getHostAddress();
@@ -58,15 +84,21 @@ public class CastDevice {
 		this.title = serviceInfo.getPropertyString("fn");
 		this.appTitle = serviceInfo.getPropertyString("rs");
 		this.model = serviceInfo.getPropertyString("md");
+		this.displayName = generateDisplayName();
+		this.listeners = new ThreadedCastEventListenerList(EXECUTOR, displayName);
+		this.sourceId = Util.isBlank(sourceId) ? "sender-" + new RandomString(10).nextString() : sourceId;
 	}
 
-	public CastDevice(String address) {
-		this(address, 8009);
+	public CastDevice(String address, @Nullable String sourceId) {
+		this(address, 8009, sourceId);
 	}
 
-	public CastDevice(String address, int port) {
+	public CastDevice(String address, int port, @Nullable String sourceId) {
 		this.address = address;
 		this.port = port;
+		this.displayName = generateDisplayName();
+		this.listeners = new ThreadedCastEventListenerList(EXECUTOR, displayName);
+		this.sourceId = Util.isBlank(sourceId) ? "sender-" + new RandomString(10).nextString() : sourceId;
 	}
 
 	/**
@@ -166,8 +198,8 @@ public class CastDevice {
 
 	public synchronized void connect() throws IOException, KeyManagementException, NoSuchAlgorithmException {
 		if (channel == null || channel.isClosed()) {
-			channel = new Channel(this.address, this.port, this.eventListenerHolder);
-			channel.open();
+			channel = new Channel(address, port, displayName, sourceId, listeners);
+			channel.connect();
 		}
 	}
 
@@ -227,7 +259,7 @@ public class CastDevice {
 	 * @throws IOException
 	 */
 	public ReceiverStatus getStatus() throws IOException {
-		return channel().getStatus();
+		return channel().getReceiverStatus();
 	}
 
 	/**
@@ -246,7 +278,7 @@ public class CastDevice {
 	 * @throws IOException
 	 */
 	public boolean isAppAvailable(String appId) throws IOException {
-		return channel().isAppAvailable(appId);
+		return channel().isApplicationAvailable(appId);
 	}
 
 	/**
@@ -596,20 +628,12 @@ public class CastDevice {
 		send(namespace, request, null);
 	}
 
-	public void registerListener(ChromeCastSpontaneousEventListener listener) {
-		eventListenerHolder.registerListener(listener);
+	public boolean addEventListener(@Nullable CastEventListener listener, CastEventType... eventTypes) {
+		return listeners.add(listener, eventTypes);
 	}
 
-	public void unregisterListener(ChromeCastSpontaneousEventListener listener) {
-		eventListenerHolder.unregisterListener(listener);
-	}
-
-	public void registerConnectionListener(ChromeCastConnectionEventListener listener) {
-		eventListenerHolder.registerConnectionListener(listener);
-	}
-
-	public void unregisterConnectionListener(ChromeCastConnectionEventListener listener) {
-		eventListenerHolder.unregisterConnectionListener(listener);
+	public boolean removeEventListener(@Nullable CastEventListener listener) {
+		return listeners.remove(listener);
 	}
 
 	@Override
@@ -622,5 +646,56 @@ public class CastDevice {
 			this.address,
 			this.port
 		);
+	}
+
+	/**
+	 * @return The new {@link ExecutorService}.
+	 */
+	protected static ExecutorService createExecutor() {
+		ThreadPoolExecutor result = new ThreadPoolExecutor(
+			0,
+			Integer.MAX_VALUE,
+			300L,
+			TimeUnit.SECONDS,
+			new SynchronousQueue<Runnable>(true),
+			new ThreadFactory() {
+
+				private final AtomicInteger threadNumber = new AtomicInteger(1);
+
+				@Override
+				public Thread newThread(Runnable r) {
+					return new Thread(r, "Cast API worker #" + threadNumber.getAndIncrement());
+				}
+			}
+		);
+		return result;
+	}
+
+	/**
+	 * Tries to generate a suitable "display name" from the available device
+	 * information.
+	 *
+	 * @return The generated display name.
+	 */
+	@Nonnull
+	protected String generateDisplayName() {
+		StringBuilder sb = new StringBuilder();
+		if (!Util.isBlank(title)) {
+			sb.append(title);
+		} else if (!Util.isBlank(name)) {
+			Pattern pattern = Pattern.compile("\\s*([^\\s-]+)-[A-Fa-f0-9]*\\s*");
+			Matcher matcher = pattern.matcher(name);
+			if (matcher.find()) {
+				sb.append(matcher.group(1));
+			}
+		}
+		if (sb.length() == 0) {
+			sb.append("Unidentified cast device");
+		}
+
+		if (!Util.isBlank(model) && !model.equals(sb.toString())) {
+			sb.append(" (").append(model).append(')');
+		}
+		return sb.toString();
 	}
 }
