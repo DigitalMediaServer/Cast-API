@@ -185,7 +185,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		return new Status();
 	}
 
-	public static AppAvailability appAvailability(String... appId) {
+	public static AppAvailability getAppAvailability(String... appId) {
 		return new AppAvailability(appId);
 	}
 
