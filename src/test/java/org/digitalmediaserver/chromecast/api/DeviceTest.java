@@ -32,10 +32,10 @@ public class DeviceTest {
 	@Test
 	public void testDeviceAdded() throws IOException {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/device-added.json").replaceFirst("\"type\"", "\"responseType\"");
-		final StandardResponse.DeviceAdded response = jsonMapper.readValue(jsonMSG, StandardResponse.DeviceAdded.class);
+		final StandardResponse.DeviceAddedResponse response = jsonMapper.readValue(jsonMSG, StandardResponse.DeviceAddedResponse.class);
 
-		assertNotNull(response.device);
-		Device device = response.device;
+		assertNotNull(response.getDevice());
+		Device device = response.getDevice();
 		assertEquals("Amplifier", device.name);
 		assertEquals("123456", device.deviceId);
 		assertEquals(4, device.capabilities);
@@ -51,19 +51,19 @@ public class DeviceTest {
 	@Test
 	public void testDeviceRemoved() throws IOException {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/device-removed.json").replaceFirst("\"type\"", "\"responseType\"");
-		final StandardResponse.DeviceRemoved response = jsonMapper.readValue(jsonMSG, StandardResponse.DeviceRemoved.class);
+		final StandardResponse.DeviceRemovedResponse response = jsonMapper.readValue(jsonMSG, StandardResponse.DeviceRemovedResponse.class);
 
-		assertNotNull(response.deviceId);
-		assertEquals("111111", response.deviceId);
+		assertNotNull(response.getDeviceId());
+		assertEquals("111111", response.getDeviceId());
 	}
 
 	@Test
 	public void testDeviceUpdated() throws IOException {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/device-updated.json").replaceFirst("\"type\"", "\"responseType\"");
-		final StandardResponse.DeviceUpdated response = jsonMapper.readValue(jsonMSG, StandardResponse.DeviceUpdated.class);
+		final StandardResponse.DeviceUpdatedResponse response = jsonMapper.readValue(jsonMSG, StandardResponse.DeviceUpdatedResponse.class);
 
-		assertNotNull(response.device);
-		Device device = response.device;
+		assertNotNull(response.getDevice());
+		Device device = response.getDevice();
 		assertEquals("Amplifier", device.name);
 		assertEquals("654321", device.deviceId);
 		assertEquals(4, device.capabilities);

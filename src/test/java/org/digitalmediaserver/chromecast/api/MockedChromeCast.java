@@ -26,8 +26,8 @@ import org.slf4j.LoggerFactory;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
-import static org.digitalmediaserver.chromecast.api.Util.intFromBytes;
-import static org.digitalmediaserver.chromecast.api.Util.intToBytes;
+import static org.digitalmediaserver.chromecast.api.Util.intFromB32Bytes;
+import static org.digitalmediaserver.chromecast.api.Util.intToB32Bytes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
@@ -161,9 +161,9 @@ final class MockedChromeCast {
 
 		Response handleJSON(Message message) {
 			if (message instanceof StandardMessage.Ping) {
-				return new StandardResponse.Pong();
+				return new StandardResponse.PongResponse();
 			} else if (message instanceof StandardRequest.Status) {
-				return new StandardResponse.Status(status());
+				return new StandardResponse.StatusResponse(status());
 			} else if (message instanceof StandardRequest.Launch) {
 				StandardRequest.Launch launch = (StandardRequest.Launch) message;
 				runningApplications.add(new Application(
@@ -177,7 +177,7 @@ final class MockedChromeCast {
 					"",
 					Collections.<Namespace> emptyList()
 				));
-				StandardResponse response = new StandardResponse.Status(status());
+				StandardResponse response = new StandardResponse.StatusResponse(status());
 				response.setRequestId(launch.getRequestId());
 				return response;
 			}
@@ -221,7 +221,7 @@ final class MockedChromeCast {
 				buf[read++] = (byte) nextByte;
 			}
 
-			int size = intFromBytes(buf);
+			int size = intFromB32Bytes(buf);
 			buf = new byte[size];
 			read = 0;
 			while (read < size) {
@@ -236,7 +236,7 @@ final class MockedChromeCast {
 		}
 
 		void write(Socket mySocket, CastMessage message) throws IOException {
-			mySocket.getOutputStream().write(intToBytes(message.getSerializedSize()));
+			mySocket.getOutputStream().write(intToB32Bytes(message.getSerializedSize()));
 			message.writeTo(mySocket.getOutputStream());
 		}
 	}

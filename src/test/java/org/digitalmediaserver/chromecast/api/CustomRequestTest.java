@@ -44,12 +44,12 @@ public class CustomRequestTest {
 		}
 
 		@Override
-		public Long getRequestId() {
+		public long getRequestId() {
 			return requestId;
 		}
 
 		@Override
-		public void setRequestId(Long requestId) {
+		public void setRequestId(long requestId) {
 			this.requestId = requestId;
 		}
 
@@ -75,12 +75,12 @@ public class CustomRequestTest {
 		}
 
 		@Override
-		public Long getRequestId() {
+		public long getRequestId() {
 			return requestId;
 		}
 
 		@Override
-		public void setRequestId(Long arg0) {
+		public void setRequestId(long arg0) {
 			requestId = arg0;
 		}
 

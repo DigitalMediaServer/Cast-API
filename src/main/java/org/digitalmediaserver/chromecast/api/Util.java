@@ -16,9 +16,13 @@
 package org.digitalmediaserver.chromecast.api;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * Contains utility methods.
@@ -31,15 +35,53 @@ final class Util {
 	/**
 	 * Converts specified byte array in Big Endian to int.
 	 */
-	public static int intFromBytes(byte[] payload) {
+	public static int intFromB32Bytes(byte[] payload) {
 		return payload[0] << 24 | (payload[1] & 0xFF) << 16 | (payload[2] & 0xFF) << 8 | (payload[3] & 0xFF);
 	}
 
 	/**
 	 * Converts specified int to byte array in Big Endian.
 	 */
-	public static byte[] intToBytes(int value) {
+	public static byte[] intToB32Bytes(int value) {
 		return new byte[] {(byte) (value >> 24), (byte) (value >> 16), (byte) (value >> 8), (byte) value};
+	}
+
+	/**
+	 * Writes the specified {@code int} as a 32-bit big endian integer to the
+	 * specified {@link OutputStream}.
+	 *
+	 * @param value the {@code int} value to write.
+	 * @param os the {@link OutputStream} to write to.
+	 * @return The number of bytes written.
+	 * @throws IOException If an I/O error occurs during the operation.
+	 */
+	public static int writeB32Int(int value, @Nonnull OutputStream os) throws IOException {
+		os.write(value >> 24);
+		os.write(value >> 16);
+		os.write(value >> 8);
+		os.write(value);
+		return 4;
+	}
+
+	/**
+	 * Reads a 32-bit big endian integer from the specified {@link InputStream}.
+	 *
+	 * @param is the {@link InputStream} to read from.
+	 * @return The resulting {@code int} value.
+	 * @throws IOException If fewer than 4 bytes are available from {@code is}
+	 *             or if some other I/O error occurs during the operation.
+	 */
+	public static int readB32Int(@Nonnull InputStream is) throws IOException {
+		int result = 0;
+		int read;
+		for (int i = 24; i >= 0; i -= 8) {
+			read = is.read();
+			if (read < 0) {
+				throw new IOException("Incorrect message length (" + (3 - i / 8) + " bytes)");
+			}
+			result |= (read & 0xff) << i;
+		}
+		return result;
 	}
 
 	public static String getContentType(String url) {
@@ -76,5 +118,29 @@ final class Util {
 		} catch (MalformedURLException mfu) {
 			return url;
 		}
+	}
+
+	/**
+	 * Evaluates if the specified character sequence is {@code null}, empty or
+	 * only consists of whitespace.
+	 *
+	 * @param cs the {@link CharSequence} to evaluate.
+	 * @return true if {@code cs} is {@code null}, empty or only consists of
+	 *         whitespace, {@code false} otherwise.
+	 */
+	public static boolean isBlank(@Nullable CharSequence cs) {
+		if (cs == null) {
+			return true;
+		}
+		int strLen = cs.length();
+		if (strLen == 0) {
+			return true;
+		}
+		for (int i = 0; i < strLen; i++) {
+			if (!Character.isWhitespace(cs.charAt(i))) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

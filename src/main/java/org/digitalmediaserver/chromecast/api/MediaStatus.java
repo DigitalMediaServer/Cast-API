@@ -74,7 +74,7 @@ public class MediaStatus {
 
 	public final List<Integer> activeTrackIds;
 	public final long mediaSessionId;
-	public final int playbackRate;
+	public final float playbackRate;
 	public final PlayerState playerState;
 	public final Integer currentItemId;
 	public final double currentTime;
@@ -88,10 +88,10 @@ public class MediaStatus {
 	public final RepeatMode repeatMode;
 	public final IdleReason idleReason;
 
-	MediaStatus(
+	public MediaStatus(
 		@JsonProperty("activeTrackIds") List<Integer> activeTrackIds,
 		@JsonProperty("mediaSessionId") long mediaSessionId,
-		@JsonProperty("playbackRate") int playbackRate,
+		@JsonProperty("playbackRate") float playbackRate,
 		@JsonProperty("playerState") PlayerState playerState,
 		@JsonProperty("currentItemId") Integer currentItemId,
 		@JsonProperty("currentTime") double currentTime,
@@ -129,7 +129,7 @@ public class MediaStatus {
 		String customDataString = this.customData == null ? "<null>" : Arrays.toString(this.customData.keySet().toArray());
 
 		return String.format(
-			"MediaStatus{activeTrackIds: %s, mediaSessionId: %d, playbackRate: %d, playerState: %s," +
+			"MediaStatus{activeTrackIds: %s, mediaSessionId: %d, playbackRate: %f, playerState: %s," +
 			" currentItemId: %s, currentTime: %f, customData: %s, loadingItemId: %s, items: %s," +
 			" preloadedItemId: %s, supportedMediaCommands: %d, volume: %s, media: %s, repeatMode: %s," +
 			" idleReason: %s}",
