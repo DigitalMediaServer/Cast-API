@@ -130,7 +130,7 @@ public class EventListenerHolderTest {
 	@Test
 	public void itHandlesStatusEvent() throws Exception {
 		Volume volume = new Volume(123f, false, 2f, Volume.DEFAULT_INCREMENT.doubleValue(), Volume.DEFAULT_CONTROL_TYPE);
-		StandardResponse.Status status = new StandardResponse.Status(new Status(volume, null, false, false));
+		StandardResponse.StatusResponse status = new StandardResponse.StatusResponse(new Status(volume, null, false, false));
 		this.underTest.deliverEvent(jsonMapper.valueToTree(status));
 
 		ChromeCastSpontaneousEvent event = emittedEvents.get(0);
@@ -181,7 +181,7 @@ public class EventListenerHolderTest {
 
 	@Test
 	public void itHandlesCloseBySenderEvent() throws Exception {
-		StandardResponse.Close ev = new StandardResponse.Close();
+		StandardResponse.CloseResponse ev = new StandardResponse.CloseResponse();
 		this.underTest.deliverEvent(jsonMapper.valueToTree(ev));
 
 		ChromeCastSpontaneousEvent event = emittedEvents.get(0);

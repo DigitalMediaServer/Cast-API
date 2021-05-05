@@ -24,8 +24,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public interface Response {
 
 	@JsonProperty
-	Long getRequestId();
+	long getRequestId();
 
 	@JsonProperty
-	void setRequestId(Long requestId);
+	void setRequestId(long requestId);
 }

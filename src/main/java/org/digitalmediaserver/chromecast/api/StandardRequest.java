@@ -23,17 +23,17 @@ import java.util.Map;
  * Parent class for transport object representing messages sent TO ChromeCast
  * device.
  */
-abstract class StandardRequest extends StandardMessage implements Request {
+public abstract class StandardRequest extends StandardMessage implements Request { //TODO: (Nad) Immutable..
 
-	Long requestId;
+	long requestId;
 
 	@Override
-	public final void setRequestId(Long requestId) {
+	public final void setRequestId(long requestId) {
 		this.requestId = requestId;
 	}
 
 	@Override
-	public final Long getRequestId() {
+	public final long getRequestId() {
 		return requestId;
 	}
 
