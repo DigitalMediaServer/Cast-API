@@ -36,16 +36,16 @@ public class DeviceTest {
 
 		assertNotNull(response.getDevice());
 		Device device = response.getDevice();
-		assertEquals("Amplifier", device.name);
-		assertEquals("123456", device.deviceId);
-		assertEquals(4, device.capabilities);
-		assertNotNull(device.volume);
-		Volume volume = device.volume;
-		assertEquals(0.24, volume.level, 0.001);
-		assertFalse(volume.muted);
-		assertNotNull(volume.increment);
-		assertNotNull(volume.stepInterval);
-		assertNull(volume.controlType);
+		assertEquals("Amplifier", device.getName());
+		assertEquals("123456", device.getDeviceId());
+		assertEquals(4, device.getCapabilities());
+		assertNotNull(device.getVolume());
+		Volume volume = device.getVolume();
+		assertEquals(0.24, volume.getLevel(), 0.001);
+		assertFalse(volume.isMuted());
+		assertNotNull(volume.getIncrement());
+		assertNotNull(volume.getStepInterval());
+		assertNull(volume.getControlType());
 	}
 
 	@Test
@@ -64,15 +64,15 @@ public class DeviceTest {
 
 		assertNotNull(response.getDevice());
 		Device device = response.getDevice();
-		assertEquals("Amplifier", device.name);
-		assertEquals("654321", device.deviceId);
-		assertEquals(4, device.capabilities);
-		assertNotNull(device.volume);
-		Volume volume = device.volume;
-		assertEquals(0.35, volume.level, 0.001);
-		assertFalse(volume.muted);
-		assertNotNull(volume.increment);
-		assertNotNull(volume.stepInterval);
-		assertNull(volume.controlType);
+		assertEquals("Amplifier", device.getName());
+		assertEquals("654321", device.getDeviceId());
+		assertEquals(4, device.getCapabilities());
+		assertNotNull(device.getVolume());
+		Volume volume = device.getVolume();
+		assertEquals(0.35, volume.getLevel(), 0.001);
+		assertFalse(volume.isMuted());
+		assertNotNull(volume.getIncrement());
+		assertNotNull(volume.getStepInterval());
+		assertNull(volume.getControlType());
 	}
 }

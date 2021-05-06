@@ -31,9 +31,9 @@ public class MediaTest {
 
 	@Test
 	public void itIncludesOptionalFieldsWhenSet() throws Exception {
-		Map<String, Object> customData = new HashMap<String, Object>();
+		Map<String, Object> customData = new HashMap<>();
 		customData.put("a", "b");
-		Map<String, Object> metadata = new HashMap<String, Object>();
+		Map<String, Object> metadata = new HashMap<>();
 		metadata.put("1", "2");
 		Media m = new Media(null, null, 123.456d, StreamType.BUFFERED, customData, metadata, null, null);
 
@@ -53,8 +53,8 @@ public class MediaTest {
 
 		assertThat(json, not(containsString("duration")));
 		assertThat(json, not(containsString("streamType")));
-		assertThat(json, not(containsString("customData")));
-		assertThat(json, not(containsString("metadata")));
+		assertThat(json, containsString("customData"));
+		assertThat(json, containsString("metadata"));
 		assertThat(json, not(containsString("metadataType")));
 	}
 

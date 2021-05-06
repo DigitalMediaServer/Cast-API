@@ -15,17 +15,23 @@
  */
 package org.digitalmediaserver.chromecast.api;
 
+import javax.annotation.concurrent.Immutable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Namespace of the ChromeCast application.
  */
+@Immutable
 public class Namespace {
 
-	public final String name;
+	private final String name;
 
 	public Namespace(@JsonProperty("name") String name) {
 		this.name = name;
+	}
+
+	public String getName() {
+		return name;
 	}
 
 	@Override

@@ -20,8 +20,7 @@ public class AppAvailabilityResponseTest {
 		sourceMap.put("key1", "value1");
 		sourceMap.put("key2", "value2");
 		sourceMap.put("key3", "value3");
-		AppAvailabilityResponse source = new AppAvailabilityResponse(sourceMap);
-		source.setRequestId(22391L);
+		AppAvailabilityResponse source = new AppAvailabilityResponse(22391L, sourceMap);
 
 		String json = jsonMapper.writeValueAsString(source);
 		AppAvailabilityResponse response = (AppAvailabilityResponse) jsonMapper.readValue(json, StandardResponse.class);

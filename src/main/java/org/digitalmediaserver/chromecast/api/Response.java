@@ -25,7 +25,4 @@ public interface Response {
 
 	@JsonProperty
 	long getRequestId();
-
-	@JsonProperty
-	void setRequestId(long requestId);
 }

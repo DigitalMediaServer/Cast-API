@@ -16,11 +16,14 @@
 package org.digitalmediaserver.chromecast.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Current media player status - which media is played, volume, time position,
@@ -30,6 +33,7 @@ import java.util.Map;
  *      "https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.MediaStatus">
  *      https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.MediaStatus</a>
  */
+@Immutable
 public class MediaStatus {
 
 	/**
@@ -72,21 +76,26 @@ public class MediaStatus {
 		CANCELLED, INTERRUPTED, FINISHED, ERROR, COMPLETED
 	}
 
-	public final List<Integer> activeTrackIds;
-	public final long mediaSessionId;
-	public final float playbackRate;
-	public final PlayerState playerState;
-	public final Integer currentItemId;
-	public final double currentTime;
-	public final Map<String, Object> customData;
-	public final Integer loadingItemId;
-	public final List<Item> items;
-	public final Integer preloadedItemId;
-	public final int supportedMediaCommands;
-	public final Volume volume;
-	public final Media media;
-	public final RepeatMode repeatMode;
-	public final IdleReason idleReason;
+	@Nonnull
+	private final List<Integer> activeTrackIds;
+	private final long mediaSessionId;
+	private final float playbackRate;
+	private final PlayerState playerState;
+	private final Integer currentItemId;
+	private final double currentTime;
+
+	@Nonnull
+	private final Map<String, Object> customData;
+	private final Integer loadingItemId;
+
+	@Nonnull
+	private final List<Item> items;
+	private final Integer preloadedItemId;
+	private final int supportedMediaCommands;
+	private final Volume volume;
+	private final Media media;
+	private final RepeatMode repeatMode;
+	private final IdleReason idleReason;
 
 	public MediaStatus(
 		@JsonProperty("activeTrackIds") List<Integer> activeTrackIds,
@@ -105,15 +114,27 @@ public class MediaStatus {
 		@JsonProperty("repeatMode") RepeatMode repeatMode,
 		@JsonProperty("idleReason") IdleReason idleReason
 	) {
-		this.activeTrackIds = activeTrackIds != null ? Collections.unmodifiableList(activeTrackIds) : null;
+		if (activeTrackIds == null) {
+			this.activeTrackIds = Collections.emptyList();
+		} else {
+			this.activeTrackIds = Collections.unmodifiableList(new ArrayList<>(activeTrackIds));
+		}
 		this.mediaSessionId = mediaSessionId;
 		this.playbackRate = playbackRate;
 		this.playerState = playerState;
 		this.currentItemId = currentItemId;
 		this.currentTime = currentTime;
-		this.customData = customData != null ? Collections.unmodifiableMap(customData) : null;
+		if (customData == null) {
+			this.customData = Collections.emptyMap();
+		} else {
+			this.customData = Collections.unmodifiableMap(new LinkedHashMap<>(customData));
+		}
 		this.loadingItemId = loadingItemId;
-		this.items = items != null ? Collections.unmodifiableList(items) : null;
+		if (items == null) {
+			this.items = Collections.emptyList();
+		} else {
+			this.items = Collections.unmodifiableList(new ArrayList<>(items));
+		}
 		this.preloadedItemId = preloadedItemId;
 		this.supportedMediaCommands = supportedMediaCommands;
 		this.volume = volume;
@@ -122,26 +143,85 @@ public class MediaStatus {
 		this.idleReason = idleReason;
 	}
 
+	@Nonnull
+	public List<Integer> getActiveTrackIds() {
+		return activeTrackIds;
+	}
+
+	public long getMediaSessionId() {
+		return mediaSessionId;
+	}
+
+	public float getPlaybackRate() {
+		return playbackRate;
+	}
+
+	public PlayerState getPlayerState() {
+		return playerState;
+	}
+
+	public Integer getCurrentItemId() {
+		return currentItemId;
+	}
+
+	public double getCurrentTime() {
+		return currentTime;
+	}
+
+	@Nonnull
+	public Map<String, Object> getCustomData() {
+		return customData;
+	}
+
+	public Integer getLoadingItemId() {
+		return loadingItemId;
+	}
+
+	@Nonnull
+	public List<Item> getItems() {
+		return items;
+	}
+
+	public Integer getPreloadedItemId() {
+		return preloadedItemId;
+	}
+
+	public int getSupportedMediaCommands() {
+		return supportedMediaCommands;
+	}
+
+	public Volume getVolume() {
+		return volume;
+	}
+
+	public Media getMedia() {
+		return media;
+	}
+
+	public RepeatMode getRepeatMode() {
+		return repeatMode;
+	}
+
+	public IdleReason getIdleReason() {
+		return idleReason;
+	}
+
 	@Override
 	public final String toString() {
-		String activeTrackIdsString = this.activeTrackIds == null ? "<null>" : Arrays.toString(this.activeTrackIds.toArray());
-		String itemsString = this.items == null ? "<null>" : Arrays.toString(this.items.toArray());
-		String customDataString = this.customData == null ? "<null>" : Arrays.toString(this.customData.keySet().toArray());
-
 		return String.format(
 			"MediaStatus{activeTrackIds: %s, mediaSessionId: %d, playbackRate: %f, playerState: %s," +
 			" currentItemId: %s, currentTime: %f, customData: %s, loadingItemId: %s, items: %s," +
 			" preloadedItemId: %s, supportedMediaCommands: %d, volume: %s, media: %s, repeatMode: %s," +
 			" idleReason: %s}",
-			activeTrackIdsString,
+			Arrays.toString(this.activeTrackIds.toArray()),
 			this.mediaSessionId,
 			this.playbackRate,
 			this.playerState,
 			this.currentItemId,
 			this.currentTime,
-			customDataString,
+			Arrays.toString(this.customData.keySet().toArray()),
 			this.loadingItemId,
-			itemsString,
+			Arrays.toString(this.items.toArray()),
 			this.preloadedItemId,
 			this.supportedMediaCommands,
 			this.volume,

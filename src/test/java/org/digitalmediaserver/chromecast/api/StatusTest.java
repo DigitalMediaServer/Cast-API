@@ -36,20 +36,20 @@ public class StatusTest {
 
 		Status status = response.getStatus();
 		assertNotNull(status);
-		assertTrue(status.activeInput);
-		assertFalse(status.standBy);
+		assertTrue(status.isActiveInput());
+		assertFalse(status.isStandBy());
 
-		assertEquals(1, status.applications.size());
+		assertEquals(1, status.getApplications().size());
 		Application app = status.getRunningApp();
-		assertFalse(app.isIdleScreen);
+		assertFalse(app.isIdleScreen());
 
-		Volume volume = status.volume;
+		Volume volume = status.getVolume();
 		assertNotNull(volume);
-		assertEquals(1.0, volume.level, 0.1);
-		assertFalse(volume.muted);
-		assertNull(volume.controlType);
-		assertEquals(Volume.DEFAULT_INCREMENT, volume.increment, 0.001);
-		assertEquals(Volume.DEFAULT_INCREMENT, volume.stepInterval, 0.001);
+		assertEquals(1.0, volume.getLevel(), 0.1);
+		assertFalse(volume.isMuted());
+		assertNull(volume.getControlType());
+		assertEquals(Volume.DEFAULT_INCREMENT, volume.getIncrement(), 0.001);
+		assertEquals(Volume.DEFAULT_INCREMENT, volume.getStepInterval(), 0.001);
 	}
 
 	@Test
@@ -60,20 +60,20 @@ public class StatusTest {
 
 		Status status = response.getStatus();
 		assertNotNull(status);
-		assertFalse(status.activeInput);
-		assertFalse(status.standBy);
+		assertFalse(status.isActiveInput());
+		assertFalse(status.isStandBy());
 
-		assertEquals(1, status.applications.size());
+		assertEquals(1, status.getApplications().size());
 		Application app = status.getRunningApp();
-		assertTrue(app.isIdleScreen);
+		assertTrue(app.isIdleScreen());
 
-		Volume volume = status.volume;
+		Volume volume = status.getVolume();
 		assertNotNull(volume);
-		assertEquals(1.0, volume.level, 0.1);
-		assertFalse(volume.muted);
-		assertEquals("attenuation", volume.controlType);
-		assertEquals(Volume.DEFAULT_INCREMENT, volume.increment, 0.001);
-		assertEquals(0.04, volume.stepInterval, 0.001);
+		assertEquals(1.0, volume.getLevel(), 0.1);
+		assertFalse(volume.isMuted());
+		assertEquals("attenuation", volume.getControlType());
+		assertEquals(Volume.DEFAULT_INCREMENT, volume.getIncrement(), 0.001);
+		assertEquals(0.04, volume.getStepInterval(), 0.001);
 	}
 
 	@Test
@@ -84,21 +84,21 @@ public class StatusTest {
 
 		Status status = response.getStatus();
 		assertNotNull(status);
-		assertFalse(status.activeInput);
-		assertFalse(status.standBy);
+		assertFalse(status.isActiveInput());
+		assertFalse(status.isStandBy());
 
-		assertEquals(1, status.applications.size());
+		assertEquals(1, status.getApplications().size());
 		Application app = status.getRunningApp();
-		assertTrue(app.isIdleScreen);
-		assertFalse(app.launchedFromCloud);
+		assertTrue(app.isIdleScreen());
+		assertFalse(app.isLaunchedFromCloud());
 
-		Volume volume = status.volume;
+		Volume volume = status.getVolume();
 		assertNotNull(volume);
-		assertEquals(1.0, volume.level, 0.1);
-		assertFalse(volume.muted);
-		assertEquals("attenuation", volume.controlType);
-		assertEquals(Volume.DEFAULT_INCREMENT, volume.increment, 0.001);
-		assertEquals(0.05, volume.stepInterval, 0.001);
+		assertEquals(1.0, volume.getLevel(), 0.1);
+		assertFalse(volume.isMuted());
+		assertEquals("attenuation", volume.getControlType());
+		assertEquals(Volume.DEFAULT_INCREMENT, volume.getIncrement(), 0.001);
+		assertEquals(0.05, volume.getStepInterval(), 0.001);
 	}
 
 	@Test
@@ -109,21 +109,21 @@ public class StatusTest {
 
 		Status status = response.getStatus();
 		assertNotNull(status);
-		assertFalse(status.activeInput);
-		assertFalse(status.standBy);
+		assertFalse(status.isActiveInput());
+		assertFalse(status.isStandBy());
 
-		assertEquals(1, status.applications.size());
+		assertEquals(1, status.getApplications().size());
 		Application app = status.getRunningApp();
-		assertFalse(app.isIdleScreen);
-		assertFalse(app.launchedFromCloud);
+		assertFalse(app.isIdleScreen());
+		assertFalse(app.isLaunchedFromCloud());
 
-		Volume volume = status.volume;
+		Volume volume = status.getVolume();
 		assertNotNull(volume);
-		assertEquals(1.0, volume.level, 0.1);
-		assertFalse(volume.muted);
-		assertEquals("attenuation", volume.controlType);
-		assertEquals(Volume.DEFAULT_INCREMENT, volume.increment, 0.001);
-		assertEquals(0.05, volume.stepInterval, 0.001);
+		assertEquals(1.0, volume.getLevel(), 0.1);
+		assertFalse(volume.isMuted());
+		assertEquals("attenuation", volume.getControlType());
+		assertEquals(Volume.DEFAULT_INCREMENT, volume.getIncrement(), 0.001);
+		assertEquals(0.05, volume.getStepInterval(), 0.001);
 	}
 
 	@Test
@@ -134,35 +134,35 @@ public class StatusTest {
 
 		Status status = response.getStatus();
 		assertNotNull(status);
-		assertFalse(status.activeInput);
-		assertFalse(status.standBy);
+		assertFalse(status.isActiveInput());
+		assertFalse(status.isStandBy());
 
-		assertEquals(1, status.applications.size());
+		assertEquals(1, status.getApplications().size());
 		Application app = status.getRunningApp();
-		assertFalse(app.isIdleScreen);
-		assertFalse(app.launchedFromCloud);
-		assertEquals("CC32E753", app.id);
-		assertEquals("Spotify", app.name);
+		assertFalse(app.isIdleScreen());
+		assertFalse(app.isLaunchedFromCloud());
+		assertEquals("CC32E753", app.getAppId());
+		assertEquals("Spotify", app.getDisplayName());
 		assertEquals(
 			"https://lh3.googleusercontent.com/HOX9yqNu6y87Chb1lHYqhK" + "VTQW43oFAFFe2ojx94yCLh0yMzgygTrM0RweAexApRWqq6UahgrWYimVgK",
-			app.iconUrl);
-		assertEquals(6, app.namespaces.size());
-		assertEquals("urn:x-cast:com.google.cast.debugoverlay", app.namespaces.get(0).name);
-		assertEquals("urn:x-cast:com.google.cast.cac", app.namespaces.get(1).name);
-		assertEquals("urn:x-cast:com.spotify.chromecast.secure.v1", app.namespaces.get(2).name);
-		assertEquals("urn:x-cast:com.google.cast.test", app.namespaces.get(3).name);
-		assertEquals("urn:x-cast:com.google.cast.broadcast", app.namespaces.get(4).name);
-		assertEquals("urn:x-cast:com.google.cast.media", app.namespaces.get(5).name);
-		assertEquals("7fb71850-b38b-43bb-967e-e2c76b6d0990", app.sessionId);
-		assertEquals("Spotify", app.statusText);
-		assertEquals("7fb71850-b38b-43bb-967e-e2c76b6d0990", app.transportId);
+			app.getIconUrl());
+		assertEquals(6, app.getNamespaces().size());
+		assertEquals("urn:x-cast:com.google.cast.debugoverlay", app.getNamespaces().get(0).getName());
+		assertEquals("urn:x-cast:com.google.cast.cac", app.getNamespaces().get(1).getName());
+		assertEquals("urn:x-cast:com.spotify.chromecast.secure.v1", app.getNamespaces().get(2).getName());
+		assertEquals("urn:x-cast:com.google.cast.test", app.getNamespaces().get(3).getName());
+		assertEquals("urn:x-cast:com.google.cast.broadcast", app.getNamespaces().get(4).getName());
+		assertEquals("urn:x-cast:com.google.cast.media", app.getNamespaces().get(5).getName());
+		assertEquals("7fb71850-b38b-43bb-967e-e2c76b6d0990", app.getSessionId());
+		assertEquals("Spotify", app.getStatusText());
+		assertEquals("7fb71850-b38b-43bb-967e-e2c76b6d0990", app.getTransportId());
 
-		Volume volume = status.volume;
+		Volume volume = status.getVolume();
 		assertNotNull(volume);
-		assertEquals(0.2258118838071823, volume.level, 0.001);
-		assertFalse(volume.muted);
-		assertEquals("master", volume.controlType);
-		assertEquals(Volume.DEFAULT_INCREMENT, volume.increment, 0.001);
-		assertEquals(0.019999999552965164, volume.stepInterval, 0.001);
+		assertEquals(0.2258118838071823, volume.getLevel(), 0.001);
+		assertFalse(volume.isMuted());
+		assertEquals("master", volume.getControlType());
+		assertEquals(Volume.DEFAULT_INCREMENT, volume.getIncrement(), 0.001);
+		assertEquals(0.019999999552965164, volume.getStepInterval(), 0.001);
 	}
 }

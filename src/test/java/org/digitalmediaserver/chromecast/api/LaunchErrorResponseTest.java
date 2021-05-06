@@ -13,8 +13,7 @@ public class LaunchErrorResponseTest {
 
 	@Test
 	public void deserializationTest() throws JsonProcessingException {
-		LaunchErrorResponse source = new LaunchErrorResponse("Couldn't ignite main engine");
-		source.setRequestId(92342L);
+		LaunchErrorResponse source = new LaunchErrorResponse(92342L, "Couldn't ignite main engine");
 
 		String json = jsonMapper.writeValueAsString(source);
 		LaunchErrorResponse response = (LaunchErrorResponse) jsonMapper.readValue(json, StandardResponse.class);

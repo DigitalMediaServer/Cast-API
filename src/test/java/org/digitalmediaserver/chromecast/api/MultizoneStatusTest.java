@@ -36,10 +36,10 @@ public class MultizoneStatusTest {
 			StandardResponse.class
 		);
 		assertNotNull(response.getStatus());
-		assertEquals(1, response.getStatus().devices.length);
-		assertFalse(response.getStatus().isMultichannel);
-		assertEquals("Living Room speaker", response.getStatus().devices[0].name);
-		assertEquals(196612, response.getStatus().devices[0].capabilities);
-		assertNotNull(response.getStatus().devices[0].volume);
+		assertEquals(1, response.getStatus().getDevices().size());
+		assertFalse(response.getStatus().isMultichannel());
+		assertEquals("Living Room speaker", response.getStatus().getDevices().get(0).getName());
+		assertEquals(196612, response.getStatus().getDevices().get(0).getCapabilities());
+		assertNotNull(response.getStatus().getDevices().get(0).getVolume());
 	}
 }

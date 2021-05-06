@@ -13,9 +13,7 @@ public class InvalidResponseTest {
 
 	@Test
 	public void deserializationTest() throws JsonProcessingException {
-		InvalidResponse source = new InvalidResponse("Couldn't find my wallet");
-		source.setRequestId(442L);
-
+		InvalidResponse source = new InvalidResponse(442L, "Couldn't find my wallet");
 		String json = jsonMapper.writeValueAsString(source);
 		InvalidResponse response = (InvalidResponse) jsonMapper.readValue(json, StandardResponse.class);
 		assertEquals(442L, response.getRequestId());

@@ -98,7 +98,7 @@ public class EventListenerHolderTest {
 
 	@Before
 	public void init() throws Exception {
-		this.emittedEvents = new ArrayList<ChromeCastSpontaneousEvent>();
+		this.emittedEvents = new ArrayList<>();
 		this.underTest = new EventListenerHolder();
 		this.underTest.registerListener(new ChromeCastSpontaneousEventListener() {
 
@@ -122,7 +122,7 @@ public class EventListenerHolderTest {
 		assertEquals(SpontaneousEventType.MEDIA_STATUS, event.getType());
 		// Is it roughly what we passed in? More throughly tested in
 		// MediaStatusTest.
-		assertEquals(15, event.getData(MediaStatus.class).supportedMediaCommands);
+		assertEquals(15, event.getData(MediaStatus.class).getSupportedMediaCommands());
 
 		assertEquals(1, emittedEvents.size());
 	}
@@ -130,7 +130,7 @@ public class EventListenerHolderTest {
 	@Test
 	public void itHandlesStatusEvent() throws Exception {
 		Volume volume = new Volume(123f, false, 2f, Volume.DEFAULT_INCREMENT.doubleValue(), Volume.DEFAULT_CONTROL_TYPE);
-		StandardResponse.StatusResponse status = new StandardResponse.StatusResponse(new Status(volume, null, false, false));
+		StandardResponse.StatusResponse status = new StandardResponse.StatusResponse(0L, new Status(volume, null, false, false));
 		this.underTest.deliverEvent(jsonMapper.valueToTree(status));
 
 		ChromeCastSpontaneousEvent event = emittedEvents.get(0);
@@ -138,7 +138,7 @@ public class EventListenerHolderTest {
 		assertEquals(SpontaneousEventType.STATUS, event.getType());
 		// Not trying to test everything, just that is basically what we passed
 		// in.
-		assertEquals(volume, event.getData(Status.class).volume);
+		assertEquals(volume, event.getData(Status.class).getVolume());
 
 		assertEquals(1, emittedEvents.size());
 	}
@@ -153,8 +153,8 @@ public class EventListenerHolderTest {
 		ChromeCastSpontaneousEvent event = emittedEvents.get(0);
 
 		assertEquals(SpontaneousEventType.APPEVENT, event.getType());
-		assertEquals(namespace, event.getData(AppEvent.class).namespace);
-		assertEquals(message, event.getData(AppEvent.class).message);
+		assertEquals(namespace, event.getData(AppEvent.class).getNamespace());
+		assertEquals(message, event.getData(AppEvent.class).getMessage());
 
 		assertEquals(1, emittedEvents.size());
 	}
@@ -170,10 +170,10 @@ public class EventListenerHolderTest {
 		ChromeCastSpontaneousEvent event = emittedEvents.get(0);
 
 		assertEquals(SpontaneousEventType.APPEVENT, event.getType());
-		assertEquals(namespace, event.getData(AppEvent.class).namespace);
+		assertEquals(namespace, event.getData(AppEvent.class).getNamespace());
 
 		// Check whether we received the same object
-		CustomAppEvent responseEvent = jsonMapper.readValue(event.getData(AppEvent.class).message, CustomAppEvent.class);
+		CustomAppEvent responseEvent = jsonMapper.readValue(event.getData(AppEvent.class).getMessage(), CustomAppEvent.class);
 		assertEquals(customAppEvent, responseEvent);
 
 		assertEquals(1, emittedEvents.size());
@@ -181,7 +181,7 @@ public class EventListenerHolderTest {
 
 	@Test
 	public void itHandlesCloseBySenderEvent() throws Exception {
-		StandardResponse.CloseResponse ev = new StandardResponse.CloseResponse();
+		StandardResponse.CloseResponse ev = new StandardResponse.CloseResponse(0L);
 		this.underTest.deliverEvent(jsonMapper.valueToTree(ev));
 
 		ChromeCastSpontaneousEvent event = emittedEvents.get(0);
@@ -221,9 +221,9 @@ public class EventListenerHolderTest {
 		assertEquals(SpontaneousEventType.MEDIA_STATUS, event.getType());
 		MediaStatus mediaStatus = event.getData(MediaStatus.class);
 		assertNotNull(mediaStatus);
-		assertEquals(0, mediaStatus.mediaSessionId);
-		assertNotNull(mediaStatus.media);
-		assertEquals(Media.StreamType.NONE, mediaStatus.media.streamType);
-		assertEquals(MediaStatus.PlayerState.IDLE, mediaStatus.playerState);
+		assertEquals(0, mediaStatus.getMediaSessionId());
+		assertNotNull(mediaStatus.getMedia());
+		assertEquals(Media.StreamType.NONE, mediaStatus.getMedia().getStreamType());
+		assertEquals(MediaStatus.PlayerState.IDLE, mediaStatus.getPlayerState());
 	}
 }

@@ -15,23 +15,45 @@
  */
 package org.digitalmediaserver.chromecast.api;
 
+import javax.annotation.concurrent.Immutable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Device descriptor.
  */
+@Immutable
 public class Device {
 
-	public final String name;
-	public final int capabilities;
-	public final String deviceId;
-	public final Volume volume;
+	private final String name;
+	private final int capabilities;
+	private final String deviceId;
+	private final Volume volume;
 
-	public Device(@JsonProperty("name") String name, @JsonProperty("capabilities") int capabilities,
-		@JsonProperty("deviceId") String deviceId, @JsonProperty("volume") Volume volume) {
+	public Device(
+		@JsonProperty("name") String name,
+		@JsonProperty("capabilities") int capabilities,
+		@JsonProperty("deviceId") String deviceId,
+		@JsonProperty("volume") Volume volume
+	) {
 		this.name = name;
 		this.capabilities = capabilities;
 		this.deviceId = deviceId;
 		this.volume = volume;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public int getCapabilities() {
+		return capabilities;
+	}
+
+	public String getDeviceId() {
+		return deviceId;
+	}
+
+	public Volume getVolume() {
+		return volume;
 	}
 }
