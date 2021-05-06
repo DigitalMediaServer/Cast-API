@@ -19,10 +19,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import static org.digitalmediaserver.chromecast.api.Media.MetadataType.GENERIC;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Media streamed on ChromeCast device.
@@ -31,6 +35,7 @@ import java.util.Map;
  *      "https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.MediaInformation">
  *      https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.MediaInformation</a>
  */
+@Immutable
 public class Media {
 
 	public static final String METADATA_TYPE = "metadataType";
@@ -92,33 +97,37 @@ public class Media {
 		BUFFERED, buffered, LIVE, live, NONE, none
 	}
 
+	@Nonnull
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public final Map<String, Object> metadata;
+	private final Map<String, Object> metadata;
 
 	@JsonProperty("contentId")
-	public final String url;
+	private final String url;
 
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public final Double duration;
+	private final Double duration;
 
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public final StreamType streamType;
+	private final StreamType streamType;
 
 	@JsonProperty
-	public final String contentType;
+	private final String contentType;
 
+	@Nonnull
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public final Map<String, Object> customData;
+	private final Map<String, Object> customData;
 
+	@Nonnull
 	@JsonIgnore
-	public final Map<String, Object> textTrackStyle;
+	private final Map<String, Object> textTrackStyle;
 
+	@Nonnull
 	@JsonIgnore
-	public final List<Track> tracks;
+	private final List<Track> tracks;
 
 	public Media(String url, String contentType) {
 		this(url, contentType, null, null);
@@ -128,31 +137,89 @@ public class Media {
 		this(url, contentType, duration, streamType, null, null, null, null);
 	}
 
-	public Media(@JsonProperty("contentId") String url, @JsonProperty("contentType") String contentType,
-		@JsonProperty("duration") Double duration, @JsonProperty("streamType") StreamType streamType,
-		@JsonProperty("customData") Map<String, Object> customData, @JsonProperty("metadata") Map<String, Object> metadata,
-		@JsonProperty("textTrackStyle") Map<String, Object> textTrackStyle, @JsonProperty("tracks") List<Track> tracks) {
+	public Media(
+		@JsonProperty("contentId") String url,
+		@JsonProperty("contentType") String contentType,
+		@JsonProperty("duration") Double duration,
+		@JsonProperty("streamType") StreamType streamType,
+		@JsonProperty("customData") Map<String, Object> customData,
+		@JsonProperty("metadata") Map<String, Object> metadata,
+		@JsonProperty("textTrackStyle") Map<String, Object> textTrackStyle,
+		@JsonProperty("tracks") List<Track> tracks
+	) {
 		this.url = url;
 		this.contentType = contentType;
 		this.duration = duration;
 		this.streamType = streamType;
-		this.customData = customData == null ? null : Collections.unmodifiableMap(customData);
-		this.metadata = metadata == null ? null : Collections.unmodifiableMap(metadata);
-		this.textTrackStyle = textTrackStyle == null ? null : Collections.unmodifiableMap(textTrackStyle);
-		this.tracks = tracks == null ? null : Collections.unmodifiableList(tracks);
+		if (customData == null || customData.isEmpty()) {
+			this.customData = Collections.emptyMap();
+		} else {
+			this.customData = Collections.unmodifiableMap(new LinkedHashMap<>(customData));
+		}
+		if (metadata == null || metadata.isEmpty()) {
+			this.metadata = Collections.emptyMap();
+		} else {
+			this.metadata = Collections.unmodifiableMap(new LinkedHashMap<>(metadata));
+		}
+		if (textTrackStyle == null || textTrackStyle.isEmpty()) {
+			this.textTrackStyle = Collections.emptyMap();
+		} else {
+			this.textTrackStyle = Collections.unmodifiableMap(new LinkedHashMap<>(textTrackStyle));
+		}
+		if (tracks == null || tracks.isEmpty()) {
+			this.tracks = Collections.emptyList();
+		} else {
+			this.tracks = Collections.unmodifiableList(new ArrayList<>(tracks));
+		}
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public String getContentType() {
+		return contentType;
+	}
+
+	public Double getDuration() {
+		return duration;
+	}
+
+	public StreamType getStreamType() {
+		return streamType;
+	}
+
+	@Nonnull
+	public Map<String, Object> getCustomData() {
+		return customData;
+	}
+
+	@Nonnull
+	public Map<String, Object> getMetadata() {
+		return metadata;
 	}
 
 	/**
 	 * @return the type defined by the key {@link #METADATA_TYPE}.
 	 */
 	@JsonIgnore
-	public final MetadataType getMetadataType() {
-		if (metadata == null || !metadata.containsKey(METADATA_TYPE)) {
+	public MetadataType getMetadataType() {
+		if (!metadata.containsKey(METADATA_TYPE)) {
 			return GENERIC;
 		}
 
 		Integer ordinal = (Integer) metadata.get(METADATA_TYPE);
 		return ordinal < MetadataType.values().length ? MetadataType.values()[ordinal] : GENERIC;
+	}
+
+	@Nonnull
+	public Map<String, Object> getTextTrackStyle() {
+		return textTrackStyle;
+	}
+
+	@Nonnull
+	public List<Track> getTracks() {
+		return tracks;
 	}
 
 	@Override

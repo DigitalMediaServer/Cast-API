@@ -15,6 +15,7 @@
  */
 package org.digitalmediaserver.chromecast.api;
 
+import javax.annotation.concurrent.Immutable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -24,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *      "https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.Track">
  *      https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.Track</a>
  */
+@Immutable
 public class Track {
 
 	/**
@@ -37,16 +39,24 @@ public class Track {
 		TEXT, AUDIO, VIDEO
 	}
 
-	public final long id;
-	public final TrackType type;
+	private final long trackId;
+	private final TrackType trackType;
 
-	public Track(@JsonProperty("trackId") long id, @JsonProperty("trackType") TrackType type) {
-		this.id = id;
-		this.type = type;
+	public Track(@JsonProperty("trackId") long trackId, @JsonProperty("trackType") TrackType trackType) {
+		this.trackId = trackId;
+		this.trackType = trackType;
+	}
+
+	public long getTrackId() {
+		return trackId;
+	}
+
+	public TrackType getTrackType() {
+		return trackType;
 	}
 
 	@Override
 	public final String toString() {
-		return String.format("Track{id: %d, type: %s}", this.id, this.type);
+		return String.format("Track{id: %d, type: %s}", this.trackId, this.trackType);
 	}
 }

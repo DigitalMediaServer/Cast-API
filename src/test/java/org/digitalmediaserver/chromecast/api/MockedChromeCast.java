@@ -45,7 +45,7 @@ final class MockedChromeCast {
 
 	final ServerSocket socket;
 	final ClientThread clientThread;
-	List<Application> runningApplications = new ArrayList<Application>();
+	List<Application> runningApplications = new ArrayList<>();
 	CustomHandler customHandler;
 
 	interface CustomHandler {
@@ -132,10 +132,6 @@ final class MockedChromeCast {
 				}
 
 				if (response != null) {
-					if (json.has("requestId")) {
-						response.setRequestId(json.get("requestId").asLong());
-					}
-
 					logger.info("Sending response message: ");
 					logger.info("   sourceId: " + message.getDestinationId());
 					logger.info("   destinationId: " + message.getSourceId());
@@ -163,7 +159,7 @@ final class MockedChromeCast {
 			if (message instanceof StandardMessage.Ping) {
 				return new StandardResponse.PongResponse();
 			} else if (message instanceof StandardRequest.Status) {
-				return new StandardResponse.StatusResponse(status());
+				return new StandardResponse.StatusResponse(((StandardRequest.Status) message).getRequestId(), status());
 			} else if (message instanceof StandardRequest.Launch) {
 				StandardRequest.Launch launch = (StandardRequest.Launch) message;
 				runningApplications.add(new Application(
@@ -177,8 +173,7 @@ final class MockedChromeCast {
 					"",
 					Collections.<Namespace> emptyList()
 				));
-				StandardResponse response = new StandardResponse.StatusResponse(status());
-				response.setRequestId(launch.getRequestId());
+				StandardResponse response = new StandardResponse.StatusResponse(launch.getRequestId(), status());
 				return response;
 			}
 			return null;

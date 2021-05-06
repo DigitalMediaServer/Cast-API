@@ -15,21 +15,29 @@
  */
 package org.digitalmediaserver.chromecast.api;
 
+import javax.annotation.concurrent.Immutable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * A custom event sent by a receiver app.
+ * A custom event sent by a receiver application.
  */
+@Immutable
 public class AppEvent {
 
-	@JsonProperty
-	public final String namespace;
-	@JsonProperty
-	public final String message;
+	private final String namespace;
+	private final String message;
 
-	AppEvent(String namespace, String message) {
+	AppEvent(@JsonProperty("namespace") String namespace, @JsonProperty("message")String message) {
 		this.namespace = namespace;
 		this.message = message;
+	}
+
+	public String getNamespace() {
+		return namespace;
+	}
+
+	public String getMessage() {
+		return message;
 	}
 
 	@Override

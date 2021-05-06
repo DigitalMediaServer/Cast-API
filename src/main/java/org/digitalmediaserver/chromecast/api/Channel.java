@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -336,7 +337,6 @@ public class Channel implements Closeable {
 			}
 			read += nowRead;
 		}
-
 		return CastMessage.parseFrom(buf);
 	}
 
@@ -590,7 +590,7 @@ public class Channel implements Closeable {
 //									LOGGER.warn(CHROMECAST_API_MARKER, " <-- Received empty message. Ignore."); //TODO: (Nad) Log
 									continue;
 								}
-								//TODO: (Nad) Log received package
+								//TODO: (Nad) Log received package (json)
 								jsonMessage = jsonMessage.replaceFirst("\"type\"", "\"responseType\"");
 								try {
 									parsedMessage = jsonMapper.readTree(jsonMessage);

@@ -15,15 +15,18 @@
  */
 package org.digitalmediaserver.chromecast.api;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Parent class for transport object representing messages received FROM
@@ -45,52 +48,81 @@ import javax.annotation.Nonnull;
 	@JsonSubTypes.Type(name = "DEVICE_UPDATED", value = StandardResponse.DeviceUpdatedResponse.class),
 	@JsonSubTypes.Type(name = "DEVICE_REMOVED", value = StandardResponse.DeviceRemovedResponse.class)
 })
+@Immutable
 public abstract class StandardResponse implements Response {
 
-	private long requestId;
+	private final long requestId;
 
-	@Override
-	public final long getRequestId() {
-		return requestId;
+	protected StandardResponse(@JsonProperty("requestId") long requestId) {
+		this.requestId = requestId;
 	}
 
 	@Override
-	public final void setRequestId(long requestId) { //TODO: (Nad) Damn, make immutable
-		this.requestId = requestId;
+	@JsonProperty
+	public long getRequestId() {
+		return requestId;
 	}
 
 	/**
 	 * Request to send 'Pong' message in reply.
 	 */
+	@Immutable
 	public static class PingResponse extends StandardResponse {
+
+		protected PingResponse(@JsonProperty("requestId") long requestId) {
+			super(requestId);
+		}
 	}
 
 	/**
 	 * Response in reply to 'Ping' message.
 	 */
+	@Immutable
 	public static class PongResponse extends StandardResponse {
+
+		protected PongResponse() {
+			super(0);
+		}
+
+		@Override
+		@JsonIgnore
+		public long getRequestId() {
+			return super.getRequestId();
+		}
 	}
 
 	/**
 	 * Request to 'Close' connection.
 	 */
+	@Immutable
 	public static class CloseResponse extends StandardResponse {
+
+		protected CloseResponse(@JsonProperty("requestId") long requestId) {
+			super(requestId);
+		}
 	}
 
 	/**
 	 * Identifies that loading of media has failed.
 	 */
+	@Immutable
 	public static class LoadFailedResponse extends StandardResponse {
+
+		protected LoadFailedResponse(@JsonProperty("requestId") long requestId) {
+			super(requestId);
+		}
 	}
 
 	/**
 	 * Request was invalid for some <code>reason</code>.
 	 */
+	@Immutable
 	public static class InvalidResponse extends StandardResponse {
 
 		private final String reason;
 
-		public InvalidResponse(@JsonProperty("reason") String reason) {
+		public InvalidResponse(@JsonProperty("requestId") long requestId, @JsonProperty("reason") String reason) {
+			super(requestId);
 			this.reason = reason;
 		}
 
@@ -102,11 +134,13 @@ public abstract class StandardResponse implements Response {
 	/**
 	 * Application cannot be launched for some <code>reason</code>.
 	 */
+	@Immutable
 	public static class LaunchErrorResponse extends StandardResponse {
 
 		private final String reason;
 
-		public LaunchErrorResponse(@JsonProperty("reason") String reason) {
+		public LaunchErrorResponse(@JsonProperty("requestId") long requestId, @JsonProperty("reason") String reason) {
+			super(requestId);
 			this.reason = reason;
 		}
 
@@ -118,11 +152,13 @@ public abstract class StandardResponse implements Response {
 	/**
 	 * Response to "Status" request.
 	 */
+	@Immutable
 	public static class StatusResponse extends StandardResponse {
 
 		private final Status status;
 
-		public StatusResponse(@JsonProperty("status") Status status) {
+		public StatusResponse(@JsonProperty("requestId") long requestId, @JsonProperty("status") Status status) {
+			super(requestId);
 			this.status = status;
 		}
 
@@ -134,11 +170,16 @@ public abstract class StandardResponse implements Response {
 	/**
 	 * Response to "MediaStatus" request.
 	 */
-	public static class MediaStatusResponse extends StandardResponse {
+	@Immutable
+	public static class MediaStatusResponse extends StandardResponse { //TODO: (Nad) Make sure all subclasses are immutable
 
 		private final List<MediaStatus> statuses;
 
-		public MediaStatusResponse(@JsonProperty("status") MediaStatus... statuses) {
+		public MediaStatusResponse(
+			@JsonProperty("requestId") long requestId,
+			@JsonProperty("status") MediaStatus... statuses
+		) {
+			super(requestId);
 			if (statuses == null || statuses.length == 0) {
 				this.statuses = Collections.emptyList();
 			} else {
@@ -155,14 +196,25 @@ public abstract class StandardResponse implements Response {
 	/**
 	 * Response to "AppAvailability" request.
 	 */
+	@Immutable
 	public static class AppAvailabilityResponse extends StandardResponse {
 
+		@Nonnull
 		private final Map<String, String> availability;
 
-		public AppAvailabilityResponse(@JsonProperty("availability") Map<String, String> availability) {
-			this.availability = Collections.unmodifiableMap(availability);
+		public AppAvailabilityResponse(
+			@JsonProperty("requestId") long requestId,
+			@JsonProperty("availability") Map<String, String> availability
+		) {
+			super(requestId);
+			if (availability == null || availability.isEmpty()) {
+				this.availability = Collections.emptyMap();
+			} else {
+				this.availability = Collections.unmodifiableMap(new LinkedHashMap<>(availability));
+			}
 		}
 
+		@Nonnull
 		public Map<String, String> getAvailability() {
 			return availability;
 		}
@@ -172,11 +224,16 @@ public abstract class StandardResponse implements Response {
 	 * Multi-Zone status for the case when there are multiple ChromeCast devices
 	 * in different zones (rooms).
 	 */
+	@Immutable
 	public static class MultizoneStatusResponse extends StandardResponse {
 
 		private final MultizoneStatus status;
 
-		public MultizoneStatusResponse(@JsonProperty("status") MultizoneStatus status) {
+		public MultizoneStatusResponse(
+			@JsonProperty("requestId") long requestId,
+			@JsonProperty("status") MultizoneStatus status
+		) {
+			super(requestId);
 			this.status = status;
 		}
 
@@ -188,11 +245,13 @@ public abstract class StandardResponse implements Response {
 	/**
 	 * Received when power is cycled on ChromeCast Audio device in a group.
 	 */
+	@Immutable
 	public static class DeviceAddedResponse extends StandardResponse {
 
 		private final Device device;
 
-		public DeviceAddedResponse(@JsonProperty("device") Device device) {
+		public DeviceAddedResponse(@JsonProperty("requestId") long requestId, @JsonProperty("device") Device device) {
+			super(requestId);
 			this.device = device;
 		}
 
@@ -204,11 +263,13 @@ public abstract class StandardResponse implements Response {
 	/**
 	 * Received when volume is changed in ChromeCast Audio group.
 	 */
+	@Immutable
 	public static class DeviceUpdatedResponse extends StandardResponse {
 
 		private final Device device;
 
-		public DeviceUpdatedResponse(@JsonProperty("device") Device device) {
+		public DeviceUpdatedResponse(@JsonProperty("requestId") long requestId, @JsonProperty("device") Device device) {
+			super(requestId);
 			this.device = device;
 		}
 
@@ -220,11 +281,16 @@ public abstract class StandardResponse implements Response {
 	/**
 	 * Received when power is cycled on ChromeCast Audio device in a group.
 	 */
+	@Immutable
 	public static class DeviceRemovedResponse extends StandardResponse {
 
 		private final String deviceId;
 
-		public DeviceRemovedResponse(@JsonProperty("deviceId") String deviceId) {
+		public DeviceRemovedResponse(
+			@JsonProperty("requestId") long requestId,
+			@JsonProperty("deviceId") String deviceId
+		) {
+			super(requestId);
 			this.deviceId = deviceId;
 		}
 

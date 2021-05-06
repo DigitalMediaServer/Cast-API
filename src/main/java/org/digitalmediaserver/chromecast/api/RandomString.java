@@ -20,7 +20,7 @@ import java.util.Random;
 /**
  * Utility class for generating random strings of human-readable characters.
  */
-class RandomString {
+class RandomString { //TODO: (Nad) Remove?
 
 	private static char[] symbols;
 

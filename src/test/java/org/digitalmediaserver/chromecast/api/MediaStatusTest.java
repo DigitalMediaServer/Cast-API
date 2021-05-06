@@ -27,6 +27,7 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class MediaStatusTest {
 
@@ -38,7 +39,7 @@ public class MediaStatusTest {
 			.readValue(getClass().getResourceAsStream("/mediaStatus-with-idleReason.json"), StandardResponse.class);
 		assertEquals(1, response.getStatuses().size());
 		MediaStatus mediaStatus = response.getStatuses().get(0);
-		assertEquals(MediaStatus.IdleReason.ERROR, mediaStatus.idleReason);
+		assertEquals(MediaStatus.IdleReason.ERROR, mediaStatus.getIdleReason());
 	}
 
 	@Test
@@ -47,7 +48,7 @@ public class MediaStatusTest {
 			.readValue(getClass().getResourceAsStream("/mediaStatus-without-idleReason.json"), StandardResponse.class);
 		assertEquals(1, response.getStatuses().size());
 		MediaStatus mediaStatus = response.getStatuses().get(0);
-		assertNull(mediaStatus.idleReason);
+		assertNull(mediaStatus.getIdleReason());
 	}
 
 	@Test
@@ -57,8 +58,8 @@ public class MediaStatusTest {
 		final StandardResponse.MediaStatusResponse response = (StandardResponse.MediaStatusResponse) jsonMapper.readValue(jsonMSG, StandardResponse.class);
 		assertEquals(1, response.getStatuses().size());
 		final MediaStatus mediaStatus = response.getStatuses().get(0);
-		assertEquals((Integer) 1, mediaStatus.currentItemId);
-		assertEquals(0f, mediaStatus.currentTime, 0f);
+		assertEquals((Integer) 1, mediaStatus.getCurrentItemId());
+		assertEquals(0f, mediaStatus.getCurrentTime(), 0f);
 
 		final Media media = new Media("http://192.168.1.6:8192/audio-123-mp3", "audio/mpeg", 389.355102d, Media.StreamType.BUFFERED);
 
@@ -67,17 +68,17 @@ public class MediaStatusTest {
 		payload.put("title", "Example Track Title");
 		final Map<String, Object> customData = new HashMap<>();
 		customData.put("payload", payload);
-		assertEquals(Collections.singletonList(new Item(true, customData, 1, media)), mediaStatus.items);
+		assertEquals(Collections.singletonList(new Item(true, customData, 1, media)), mediaStatus.getItems());
 
-		assertEquals(media, mediaStatus.media);
+		assertEquals(media, mediaStatus.getMedia());
 		assertEquals(Media.MetadataType.GENERIC, media.getMetadataType());
-		assertEquals(1, mediaStatus.mediaSessionId);
-		assertEquals(1, mediaStatus.playbackRate, 0f);
-		assertEquals(PlayerState.BUFFERING, mediaStatus.playerState);
-		assertEquals(RepeatMode.REPEAT_OFF, mediaStatus.repeatMode);
-		assertEquals(15, mediaStatus.supportedMediaCommands);
+		assertEquals(1, mediaStatus.getMediaSessionId());
+		assertEquals(1, mediaStatus.getPlaybackRate(), 0f);
+		assertEquals(PlayerState.BUFFERING, mediaStatus.getPlayerState());
+		assertEquals(RepeatMode.REPEAT_OFF, mediaStatus.getRepeatMode());
+		assertEquals(15, mediaStatus.getSupportedMediaCommands());
 		assertEquals(new Volume(1f, false, Volume.DEFAULT_INCREMENT, Volume.DEFAULT_INCREMENT.doubleValue(), Volume.DEFAULT_CONTROL_TYPE),
-			mediaStatus.volume);
+			mediaStatus.getVolume());
 	}
 
 	@Test
@@ -87,30 +88,30 @@ public class MediaStatusTest {
 
 		assertEquals(1, response.getStatuses().size());
 		final MediaStatus mediaStatus = response.getStatuses().get(0);
-		assertNull(mediaStatus.currentItemId);
-		assertEquals(16d, mediaStatus.currentTime, 0.1);
-		assertEquals(7, mediaStatus.mediaSessionId);
-		assertEquals(1, mediaStatus.playbackRate, 0f);
-		assertEquals(PlayerState.PLAYING, mediaStatus.playerState);
-		assertNull(mediaStatus.customData);
-		assertNull(mediaStatus.items);
-		assertNull(mediaStatus.preloadedItemId);
+		assertNull(mediaStatus.getCurrentItemId());
+		assertEquals(16d, mediaStatus.getCurrentTime(), 0.1);
+		assertEquals(7, mediaStatus.getMediaSessionId());
+		assertEquals(1, mediaStatus.getPlaybackRate(), 0f);
+		assertEquals(PlayerState.PLAYING, mediaStatus.getPlayerState());
+		assertTrue(mediaStatus.getCustomData().isEmpty());
+		assertTrue(mediaStatus.getItems().isEmpty());
+		assertNull(mediaStatus.getPreloadedItemId());
 
-		assertEquals(new Volume(0.6999999f, false, 0.05f, null, null), mediaStatus.volume);
+		assertEquals(new Volume(0.6999999f, false, 0.05f, null, null), mediaStatus.getVolume());
 
-		assertNotNull(mediaStatus.media);
-		Media media = mediaStatus.media;
-		assertEquals(7, media.metadata.size());
+		assertNotNull(mediaStatus.getMedia());
+		Media media = mediaStatus.getMedia();
+		assertEquals(7, media.getMetadata().size());
 		assertEquals(Media.MetadataType.MUSIC_TRACK, media.getMetadataType());
-		assertEquals("http://audioURL", media.url);
-		assertEquals(246d, media.duration, 0.1);
-		assertEquals(Media.StreamType.BUFFERED, media.streamType);
-		assertEquals("BUFFERED", media.contentType);
-		assertNull(media.textTrackStyle);
-		assertNull(media.tracks);
-		assertEquals(1, media.customData.size());
-		assertNotNull(media.customData.get("status"));
-		Map<?, ?> status = (Map<?, ?>) media.customData.get("status");
+		assertEquals("http://audioURL", media.getUrl());
+		assertEquals(246d, media.getDuration(), 0.1);
+		assertEquals(Media.StreamType.BUFFERED, media.getStreamType());
+		assertEquals("BUFFERED", media.getContentType());
+		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertTrue(media.getTracks().isEmpty());
+		assertEquals(1, media.getCustomData().size());
+		assertNotNull(media.getCustomData().get("status"));
+		Map<?, ?> status = (Map<?, ?>) media.getCustomData().get("status");
 
 		assertEquals(8, status.size());
 		assertEquals(2, status.get("state"));
@@ -122,7 +123,7 @@ public class MediaStatusTest {
 			.readValue(getClass().getResourceAsStream("/mediaStatus-no-metadataType.json"), StandardResponse.class);
 
 		final MediaStatus mediaStatus = response.getStatuses().get(0);
-		Media media = mediaStatus.media;
+		Media media = mediaStatus.getMedia();
 		assertEquals(Media.MetadataType.GENERIC, media.getMetadataType());
 	}
 
@@ -132,7 +133,7 @@ public class MediaStatusTest {
 			.readValue(getClass().getResourceAsStream("/mediaStatus-unknown-metadataType.json"), StandardResponse.class);
 
 		final MediaStatus mediaStatus = response.getStatuses().get(0);
-		Media media = mediaStatus.media;
+		Media media = mediaStatus.getMedia();
 		assertEquals(Media.MetadataType.GENERIC, media.getMetadataType());
 	}
 

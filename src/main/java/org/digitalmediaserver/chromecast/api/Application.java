@@ -16,30 +16,35 @@
 package org.digitalmediaserver.chromecast.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.Nonnull;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Application descriptor.
  */
+@Immutable
 public class Application {
 
-	public final String id;
-	public final String iconUrl;
-	public final String name;
-	public final String sessionId;
-	public final String statusText;
-	public final String transportId;
-	public final boolean isIdleScreen;
-	public final boolean launchedFromCloud;
-	public final List<Namespace> namespaces;
+	private final String appId;
+	private final String iconUrl;
+	private final String displayName;
+	private final String sessionId;
+	private final String statusText;
+	private final String transportId;
+	private final boolean isIdleScreen;
+	private final boolean launchedFromCloud;
+
+	@Nonnull
+	private final List<Namespace> namespaces;
 
 	public Application(
-		@JsonProperty("appId") String id,
+		@JsonProperty("appId") String appId,
 		@JsonProperty("iconUrl") String iconUrl,
-		@JsonProperty("displayName") String name,
+		@JsonProperty("displayName") String displayName,
 		@JsonProperty("sessionId") String sessionId,
 		@JsonProperty("statusText") String statusText,
 		@JsonProperty("isIdleScreen") boolean isIdleScreen,
@@ -47,32 +52,70 @@ public class Application {
 		@JsonProperty("transportId") String transportId,
 		@JsonProperty("namespaces") List<Namespace> namespaces
 	) {
-		this.id = id;
+		this.appId = appId;
 		this.iconUrl = iconUrl;
-		this.name = name;
+		this.displayName = displayName;
 		this.sessionId = sessionId;
 		this.statusText = statusText;
 		this.transportId = transportId;
-		this.namespaces = namespaces == null ? Collections.<Namespace>emptyList() : namespaces;
+		this.namespaces = namespaces == null ?
+			Collections.<Namespace>emptyList() :
+			Collections.unmodifiableList(new ArrayList<>(namespaces));
 		this.isIdleScreen = isIdleScreen;
 		this.launchedFromCloud = launchedFromCloud;
 	}
 
+	public String getAppId() {
+		return appId;
+	}
+
+	public String getIconUrl() {
+		return iconUrl;
+	}
+
+	public String getDisplayName() {
+		return displayName;
+	}
+
+	public String getSessionId() {
+		return sessionId;
+	}
+
+	public String getStatusText() {
+		return statusText;
+	}
+
+	public String getTransportId() {
+		return transportId;
+	}
+
+	@Nonnull
+	public List<Namespace> getNamespaces() {
+		return namespaces;
+	}
+
+	@JsonProperty("isIdleScreen")
+	public boolean isIdleScreen() {
+		return isIdleScreen;
+	}
+
+	public boolean isLaunchedFromCloud() {
+		return launchedFromCloud;
+	}
+
 	@Override
 	public final String toString() {
-		final String namespacesString = this.namespaces == null ? "<null>" : Arrays.toString(this.namespaces.toArray());
-
 		return String.format(
 			"Application{id: %s, name: %s, sessionId: %s, statusText: %s, transportId: %s," +
 			" isIdleScreen: %b, launchedFromCloud: %b, namespaces: %s}",
-			this.id,
-			this.name,
+			this.appId,
+			this.displayName,
 			this.sessionId,
 			this.statusText,
 			this.transportId,
 			this.isIdleScreen,
 			this.launchedFromCloud,
-			namespacesString
+			Arrays.toString(this.namespaces.toArray())
 		);
 	}
 }
