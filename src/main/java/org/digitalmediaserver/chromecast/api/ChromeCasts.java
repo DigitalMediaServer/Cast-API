@@ -36,7 +36,7 @@ public final class ChromeCasts {
 
 	private JmDNS mDNS;
 
-	private final List<ChromeCastsListener> listeners = new ArrayList<ChromeCastsListener>();
+	private final List<ChromeCastsListener> listeners = new ArrayList<>();
 	private final List<ChromeCast> chromeCasts = Collections.synchronizedList(new ArrayList<ChromeCast>());
 
 	private ChromeCasts() {
@@ -48,7 +48,7 @@ public final class ChromeCasts {
 	 * @return a copy of the currently seen chromecast devices.
 	 */
 	public static List<ChromeCast> get() {
-		return new ArrayList<ChromeCast>(INSTANCE.chromeCasts);
+		return new ArrayList<>(INSTANCE.chromeCasts);
 	}
 
 	/**
@@ -60,7 +60,7 @@ public final class ChromeCasts {
 		@Override
 		public void serviceAdded(ServiceEvent se) {
 			if (se.getInfo() != null) {
-				ChromeCast device = new ChromeCast(mDNS, se.getInfo().getName());
+				ChromeCast device = new ChromeCast(mDNS, se.getInfo().getName(), null);
 				chromeCasts.add(device);
 				for (ChromeCastsListener nextListener : listeners) {
 					nextListener.newChromeCastDiscovered(device);
@@ -76,7 +76,7 @@ public final class ChromeCasts {
 				ChromeCast deviceRemoved = null;
 				// Probably better keep a map to better lookup devices
 				for (ChromeCast device : copy) {
-					if (device.getName().equals(se.getInfo().getName())) {
+					if (device.getDNSName().equals(se.getInfo().getName())) {
 						deviceRemoved = device;
 						chromeCasts.remove(device);
 						break;

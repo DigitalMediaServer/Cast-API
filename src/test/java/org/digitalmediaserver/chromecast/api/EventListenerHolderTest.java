@@ -147,14 +147,14 @@ public class EventListenerHolderTest {
 	public void itHandlesPlainAppEvent() throws Exception {
 		final String namespace = "urn:x-cast:com.example.app";
 		final String message = "Sample message";
-		AppEvent appevent = new AppEvent(namespace, message);
+		CustomMessageEvent appevent = new CustomMessageEvent(namespace, message);
 		this.underTest.deliverAppEvent(appevent);
 
 		ChromeCastSpontaneousEvent event = emittedEvents.get(0);
 
 		assertEquals(SpontaneousEventType.APPEVENT, event.getType());
-		assertEquals(namespace, event.getData(AppEvent.class).getNamespace());
-		assertEquals(message, event.getData(AppEvent.class).getMessage());
+		assertEquals(namespace, event.getData(CustomMessageEvent.class).getNamespace());
+		assertEquals(message, event.getData(CustomMessageEvent.class).getStringPayload());
 
 		assertEquals(1, emittedEvents.size());
 	}
@@ -164,16 +164,16 @@ public class EventListenerHolderTest {
 		final String namespace = "urn:x-cast:com.example.app";
 		CustomAppEvent customAppEvent = new CustomAppEvent("MYEVENT", 3, "Sample message");
 		final String message = jsonMapper.writeValueAsString(customAppEvent);
-		AppEvent appevent = new AppEvent(namespace, message);
+		CustomMessageEvent appevent = new CustomMessageEvent(namespace, message);
 		this.underTest.deliverAppEvent(appevent);
 
 		ChromeCastSpontaneousEvent event = emittedEvents.get(0);
 
 		assertEquals(SpontaneousEventType.APPEVENT, event.getType());
-		assertEquals(namespace, event.getData(AppEvent.class).getNamespace());
+		assertEquals(namespace, event.getData(CustomMessageEvent.class).getNamespace());
 
 		// Check whether we received the same object
-		CustomAppEvent responseEvent = jsonMapper.readValue(event.getData(AppEvent.class).getMessage(), CustomAppEvent.class);
+		CustomAppEvent responseEvent = jsonMapper.readValue(event.getData(CustomMessageEvent.class).getStringPayload(), CustomAppEvent.class);
 		assertEquals(customAppEvent, responseEvent);
 
 		assertEquals(1, emittedEvents.size());

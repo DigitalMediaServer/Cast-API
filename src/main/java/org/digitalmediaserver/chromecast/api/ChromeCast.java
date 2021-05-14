@@ -21,8 +21,15 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
 
@@ -33,95 +40,213 @@ public class ChromeCast {
 
 	public static final String SERVICE_TYPE = "_googlecast._tcp.local.";
 
-	private final EventListenerHolder eventListenerHolder = new EventListenerHolder();
+	protected final EventListenerHolder eventListenerHolder = new EventListenerHolder();
 
-	private String name;
-	private final String address;
-	private final int port;
-	private String appsURL;
-	private String application;
-	private Channel channel;
-	private boolean autoReconnect = true;
+	@Nonnull
+	protected final String dnsName;
 
-	private String title;
-	private String appTitle;
-	private String model;
+	@Nonnull
+	protected final String address;
+	protected final int port;
 
-	public ChromeCast(JmDNS mDNS, String name) {
-		this.name = name;
-		ServiceInfo serviceInfo = mDNS.getServiceInfo(SERVICE_TYPE, name);
-		this.address = serviceInfo.getInet4Addresses()[0].getHostAddress();
+	@Nullable
+	protected final String applicationsURL;
+
+	@Nullable
+	protected final String serviceName;
+
+	@Nullable
+	protected final String uniqueId;
+
+	@Nonnull
+	protected final Set<CastDeviceCapability> capabilities;
+
+	@Nullable
+	protected final String friendlyName;
+
+	@Nullable
+	protected final String applicationTitle;
+
+	@Nullable
+	protected final String modelName;
+
+	protected final int protocolVersion;
+
+	@Nullable
+	protected final String iconPath;
+
+	@Nonnull
+	protected final String displayName;
+
+	@Nonnull
+	protected final String senderId;
+
+	protected Channel channel; //TODO: (Nad) Sync..
+	protected boolean autoReconnect = true;
+
+	public ChromeCast(@Nonnull JmDNS mDNS, @Nonnull String dnsName, @Nullable String senderId) {
+		this(mDNS.getServiceInfo(SERVICE_TYPE, dnsName), senderId);
+	}
+
+	public ChromeCast(@Nonnull ServiceInfo serviceInfo, @Nullable String senderId) {
+		this.dnsName = serviceInfo.getName();
+		if (serviceInfo.getInet4Addresses().length > 0) {
+			this.address = serviceInfo.getInet4Addresses()[0].getHostAddress();
+		} else if (serviceInfo.getInet6Addresses().length > 0) {
+			this.address = serviceInfo.getInet6Addresses()[0].getHostAddress();
+		} else {
+			throw new IllegalArgumentException("No address found for cast device");
+		}
 		this.port = serviceInfo.getPort();
-		this.appsURL = serviceInfo.getURLs().length == 0 ? null : serviceInfo.getURLs()[0];
-		this.application = serviceInfo.getApplication();
-
-		this.title = serviceInfo.getPropertyString("fn");
-		this.appTitle = serviceInfo.getPropertyString("rs");
-		this.model = serviceInfo.getPropertyString("md");
+		this.applicationsURL = serviceInfo.getURLs().length == 0 ? null : serviceInfo.getURLs()[0];
+		this.serviceName = serviceInfo.getApplication();
+		this.uniqueId = serviceInfo.getPropertyString("id");
+		String s = serviceInfo.getPropertyString("ca");
+		if (Util.isBlank(s)) {
+			this.capabilities = Collections.unmodifiableSet(CastDeviceCapability.getCastDeviceCapabilities(0));
+		} else {
+			int value;
+			try {
+				value = Integer.parseInt(s);
+			} catch (NumberFormatException e) {
+				value = 0;
+			}
+			this.capabilities = Collections.unmodifiableSet(CastDeviceCapability.getCastDeviceCapabilities(value));
+		}
+		this.friendlyName = serviceInfo.getPropertyString("fn");
+		this.applicationTitle = serviceInfo.getPropertyString("rs");
+		this.modelName = serviceInfo.getPropertyString("md");
+		s = serviceInfo.getPropertyString("ve");
+		if (Util.isBlank(s)) {
+			this.protocolVersion = -1;
+		} else {
+			int value;
+			try {
+				value = Integer.parseInt(s);
+			} catch (NumberFormatException e) {
+				value = -1;
+			}
+			this.protocolVersion = value;
+		}
+		this.iconPath = serviceInfo.getPropertyString("ic");
+		this.displayName = generateDisplayName();
+		this.senderId = Util.isBlank(senderId) ? "sender-" + new RandomString(10).nextString() : senderId;
 	}
 
-	public ChromeCast(String address) {
-		this(address, 8009);
+	public ChromeCast(
+		@Nonnull String dnsName,
+		@Nonnull String address,
+		@Nullable String applicationsURL,
+		@Nullable String serviceName,
+		@Nullable String uniqueId,
+		@Nullable Set<CastDeviceCapability> capabilities,
+		@Nullable String friendlyName,
+		@Nullable String applicationTitle,
+		@Nullable String modelName,
+		int protocolVersion,
+		@Nullable String iconPath,
+		@Nullable String senderId
+	) {
+		this(
+			dnsName,
+			address,
+			8009,
+			applicationsURL,
+			serviceName,
+			uniqueId,
+			capabilities,
+			friendlyName,
+			applicationTitle,
+			modelName,
+			protocolVersion,
+			iconPath,
+			senderId
+		);
 	}
 
-	public ChromeCast(String address, int port) {
+	public ChromeCast(
+		@Nonnull String dnsName,
+		@Nonnull String address,
+		int port,
+		@Nullable String applicationsURL,
+		@Nullable String serviceName,
+		@Nullable String uniqueId,
+		@Nullable Set<CastDeviceCapability> capabilities,
+		@Nullable String friendlyName,
+		@Nullable String applicationTitle,
+		@Nullable String modelName,
+		int protocolVersion,
+		@Nullable String iconPath,
+		@Nullable String senderId
+	) {
+		if (Util.isBlank(dnsName)) {
+			throw new IllegalArgumentException("dnsName cannot be blank");
+		}
+		if (Util.isBlank(address)) {
+			throw new IllegalArgumentException("address cannot be blank");
+		}
+		this.dnsName = dnsName;
 		this.address = address;
 		this.port = port;
+		this.applicationsURL = applicationsURL;
+		this.serviceName = serviceName;
+		this.uniqueId = uniqueId;
+		this.capabilities = capabilities == null || capabilities.isEmpty() ?
+			Collections.singleton(CastDeviceCapability.NONE) :
+			Collections.unmodifiableSet(EnumSet.copyOf(capabilities));
+		this.friendlyName = friendlyName;
+		this.applicationTitle = applicationTitle;
+		this.modelName = modelName;
+		this.protocolVersion = protocolVersion;
+		this.iconPath = iconPath;
+		this.displayName = generateDisplayName();
+		this.senderId = Util.isBlank(senderId) ? "sender-" + new RandomString(10).nextString() : senderId;
 	}
 
 	/**
-	 * @return The technical name of the device. Usually something like
-	 *         Chromecast-e28835678bc02247abcdef112341278f.
+	 * @return The DNS name of the device. Usually something like
+	 *         {@code Chromecast-e28835678bc02247abcdef112341278f}.
 	 */
-	public final String getName() {
-		return name;
-	}
-
-	public final void setName(String name) {
-		this.name = name;
+	@Nonnull
+	public String getDNSName() {
+		return dnsName;
 	}
 
 	/**
-	 * @return The IP address of the device.
+	 * @return The IP address or host name of the device.
 	 */
-	public final String getAddress() {
+	@Nonnull
+	public String getAddress() {
 		return address;
 	}
 
 	/**
 	 * @return The TCP port number that the device is listening to.
 	 */
-	public final int getPort() {
+	public int getPort() {
 		return port;
 	}
 
-	public final String getAppsURL() {
-		return appsURL;
-	}
-
-	public final void setAppsURL(String appsURL) {
-		this.appsURL = appsURL;
+	@Nullable
+	public String getApplicationsURL() {
+		return applicationsURL;
 	}
 
 	/**
-	 * @return The mDNS service name. Usually "googlecast".
-	 *
-	 * @see #getRunningApp()
+	 * @return The {@code DNS-SD} service name. Usually "googlecast".
 	 */
-	public final String getApplication() {
-		return application;
-	}
-
-	public final void setApplication(String application) {
-		this.application = application;
+	@Nullable
+	public String getServiceName() {
+		return serviceName;
 	}
 
 	/**
 	 * @return The name of the device as entered by the person who installed it.
 	 *         Usually something like "Living Room Chromecast".
 	 */
-	public final String getTitle() {
-		return title;
+	@Nullable
+	public String getFriendlyName() {
+		return friendlyName;
 	}
 
 	/**
@@ -130,16 +255,59 @@ public class ChromeCast {
 	 *         "Spotify", but could also be, say, the URL of a web page being
 	 *         mirrored.
 	 */
-	public final String getAppTitle() {
-		return appTitle;
+	@Nullable
+	public String getApplicationTitle() {
+		return applicationTitle;
 	}
 
 	/**
-	 * @return The model of the device. Usually "Chromecast" or, if Chromecast
-	 *         is built into your TV, the model of your TV.
+	 * Returns the model name of the device. Example values are:
+	 * <ul>
+	 * <li>{@code Chromecast}</li>
+	 * <li>{@code Chromecast Audio}</li>
+	 * <li>{@code Chromecast Ultra}</li>
+	 * <li>{@code Google Home}</li>
+	 * <li>{@code Google Cast Group}</li>
+	 * <li>{@code SHIELD Android TV}</li>
+	 * </ul>
+	 *
+	 * @return The model name of the device.
 	 */
-	public final String getModel() {
-		return model;
+	@Nullable
+	public String getModelName() {
+		return modelName;
+	}
+
+	/**
+	 * @return A {@link Set} of {@link CastDeviceCapability} announced by the
+	 *         device.
+	 */
+	@Nonnull
+	public Set<CastDeviceCapability> getCapabilities() {
+		return capabilities;
+	}
+
+	@Nullable
+	public String getUniqueId() {
+		return uniqueId;
+	}
+
+	public int getProtocolVersion() {
+		return protocolVersion;
+	}
+
+	/**
+	 * @return The "path" part of the URL to the device icon.
+	 */
+	public String getIconPath() {
+		return iconPath;
+	}
+
+	/**
+	 * @return A generated name intended to be suitable to present to the user.
+	 */
+	public String getDisplayName() {
+		return displayName;
 	}
 
 	/**
@@ -164,14 +332,14 @@ public class ChromeCast {
 		return runningApp.getTransportId() == null ? runningApp.getSessionId() : runningApp.getTransportId();
 	}
 
-	public final synchronized void connect() throws IOException, KeyManagementException, NoSuchAlgorithmException {
+	public synchronized void connect() throws IOException, KeyManagementException, NoSuchAlgorithmException { //TODO: (Nad) Look into sync
 		if (channel == null || channel.isClosed()) {
-			channel = new Channel(this.address, this.port, this.eventListenerHolder);
-			channel.open();
+			channel = new Channel(address, port, displayName, senderId, eventListenerHolder);
+			channel.connect();
 		}
 	}
 
-	public final synchronized void disconnect() throws IOException {
+	public synchronized void disconnect() throws IOException {
 		if (channel == null) {
 			return;
 		}
@@ -180,7 +348,7 @@ public class ChromeCast {
 		channel = null;
 	}
 
-	public final boolean isConnected() {
+	public boolean isConnected() {
 		return channel != null && !channel.isClosed();
 	}
 
@@ -226,7 +394,7 @@ public class ChromeCast {
 	 * @return current chromecast status - volume, running applications, etc.
 	 * @throws IOException
 	 */
-	public final Status getStatus() throws IOException {
+	public Status getStatus() throws IOException {
 		return channel().getStatus();
 	}
 
@@ -234,7 +402,7 @@ public class ChromeCast {
 	 * @return descriptor of currently running application
 	 * @throws IOException
 	 */
-	public final Application getRunningApp() throws IOException {
+	public Application getRunningApplication() throws IOException {
 		Status status = getStatus();
 		return status.getRunningApp();
 	}
@@ -245,7 +413,7 @@ public class ChromeCast {
 	 *         otherwise
 	 * @throws IOException
 	 */
-	public final boolean isAppAvailable(String appId) throws IOException {
+	public boolean isApplicationAvailable(String appId) throws IOException {
 		return channel().isAppAvailable(appId);
 	}
 
@@ -254,7 +422,7 @@ public class ChromeCast {
 	 * @return true if application with specified identifier is running now
 	 * @throws IOException
 	 */
-	public final boolean isAppRunning(String appId) throws IOException {
+	public boolean isApplicationRunning(String appId) throws IOException {
 		Status status = getStatus();
 		return status.getRunningApp() != null && appId.equals(status.getRunningApp().getAppId());
 	}
@@ -265,7 +433,7 @@ public class ChromeCast {
 	 *         otherwise
 	 * @throws IOException
 	 */
-	public final Application launchApp(String appId) throws IOException {
+	public Application launchApp(String appId) throws IOException {
 		Status status = channel().launch(appId);
 		return status == null ? null : status.getRunningApp();
 	}
@@ -281,8 +449,8 @@ public class ChromeCast {
 	 *
 	 * @throws IOException
 	 */
-	public final void stopApp() throws IOException {
-		Application runningApp = getRunningApp();
+	public void stopApplication() throws IOException {
+		Application runningApp = getRunningApplication();
 		if (runningApp == null) {
 			throw new ChromeCastException("No application is running in ChromeCast");
 		}
@@ -297,14 +465,14 @@ public class ChromeCast {
 	 * @param sessionId session identifier
 	 * @throws IOException
 	 */
-	public final void stopSession(String sessionId) throws IOException {
+	public void stopSession(String sessionId) throws IOException {
 		channel().stop(sessionId);
 	}
 
 	/**
 	 * @param level volume level from 0 to 1 to set
 	 */
-	public final void setVolume(float level) throws IOException {
+	public void setVolume(float level) throws IOException {
 		channel().setVolume(new Volume(
 			level,
 			false,
@@ -323,7 +491,7 @@ public class ChromeCast {
 	 * @see <a href=
 	 *      "https://developers.google.com/cast/docs/design_checklist/sender#sender-control-volume">sender</a>
 	 */
-	public final void setVolumeByIncrement(float level) throws IOException {
+	public void setVolumeByIncrement(float level) throws IOException {
 		Volume volume = this.getStatus().getVolume();
 		float total = volume.getLevel();
 
@@ -352,7 +520,7 @@ public class ChromeCast {
 	/**
 	 * @param muted is to mute or not
 	 */
-	public final void setMuted(boolean muted) throws IOException {
+	public void setMuted(boolean muted) throws IOException {
 		channel().setVolume(new Volume(
 			null,
 			muted,
@@ -370,8 +538,8 @@ public class ChromeCast {
 	 * @return current media status, state, time, playback rate, etc.
 	 * @throws IOException
 	 */
-	public final MediaStatus getMediaStatus() throws IOException {
-		Application runningApp = getRunningApp();
+	public MediaStatus getMediaStatus() throws IOException {
+		Application runningApp = getRunningApplication();
 		if (runningApp == null) {
 			throw new ChromeCastException("No application is running in ChromeCast");
 		}
@@ -389,7 +557,7 @@ public class ChromeCast {
 	 *
 	 * @throws IOException
 	 */
-	public final void play() throws IOException {
+	public void play() throws IOException {
 		Status status = getStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
@@ -413,7 +581,7 @@ public class ChromeCast {
 	 *
 	 * @throws IOException
 	 */
-	public final void pause() throws IOException {
+	public void pause() throws IOException {
 		Status status = getStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
@@ -438,7 +606,7 @@ public class ChromeCast {
 	 * @param time time point between zero and media duration
 	 * @throws IOException
 	 */
-	public final void seek(double time) throws IOException {
+	public void seek(double time) throws IOException {
 		Status status = getStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
@@ -464,7 +632,7 @@ public class ChromeCast {
 	 * @return The new media status that resulted from loading the media.
 	 * @throws IOException
 	 */
-	public final MediaStatus load(String url) throws IOException {
+	public MediaStatus load(String url) throws IOException {
 		return load(getMediaTitle(url), null, url, getContentType(url));
 	}
 
@@ -485,7 +653,7 @@ public class ChromeCast {
 	 * @return The new media status that resulted from loading the media.
 	 * @throws IOException
 	 */
-	public final MediaStatus load(String mediaTitle, String thumb, String url, String contentType) throws IOException {
+	public MediaStatus load(String mediaTitle, String thumb, String url, String contentType) throws IOException {
 		Status status = getStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
@@ -529,7 +697,7 @@ public class ChromeCast {
 	 * @return The new media status that resulted from loading the media.
 	 * @throws IOException
 	 */
-	public final MediaStatus load(final Media media) throws IOException {
+	public MediaStatus load(final Media media) throws IOException {
 		Status status = getStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
@@ -569,7 +737,7 @@ public class ChromeCast {
 	 * @return deserialized response
 	 * @throws IOException
 	 */
-	public final <T extends Response> T send(String namespace, Request request, Class<T> responseClass) throws IOException {
+	public <T extends Response> T send(String namespace, Request request, Class<T> responseClass) throws IOException {
 		Status status = getStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
@@ -592,35 +760,63 @@ public class ChromeCast {
 	 * @param request request object
 	 * @throws IOException
 	 */
-	public final void send(String namespace, Request request) throws IOException {
+	public void send(String namespace, Request request) throws IOException {
 		send(namespace, request, null);
 	}
 
-	public final void registerListener(ChromeCastSpontaneousEventListener listener) {
+	public void registerListener(ChromeCastSpontaneousEventListener listener) {
 		eventListenerHolder.registerListener(listener);
 	}
 
-	public final void unregisterListener(ChromeCastSpontaneousEventListener listener) {
+	public void unregisterListener(ChromeCastSpontaneousEventListener listener) {
 		eventListenerHolder.unregisterListener(listener);
 	}
 
-	public final void registerConnectionListener(ChromeCastConnectionEventListener listener) {
+	public void registerConnectionListener(ChromeCastConnectionEventListener listener) {
 		eventListenerHolder.registerConnectionListener(listener);
 	}
 
-	public final void unregisterConnectionListener(ChromeCastConnectionEventListener listener) {
+	public void unregisterConnectionListener(ChromeCastConnectionEventListener listener) {
 		eventListenerHolder.unregisterConnectionListener(listener);
 	}
 
 	@Override
-	public final String toString() {
+	public String toString() {
 		return String.format(
 			"ChromeCast{name: %s, title: %s, model: %s, address: %s, port: %d}",
-			this.name,
-			this.title,
-			this.model,
+			this.dnsName,
+			this.friendlyName,
+			this.modelName,
 			this.address,
 			this.port
 		);
+	}
+
+	/**
+	 * Tries to generate a suitable "display name" from the available device
+	 * information.
+	 *
+	 * @return The generated display name.
+	 */
+	@Nonnull
+	protected String generateDisplayName() {
+		StringBuilder sb = new StringBuilder();
+		if (!Util.isBlank(friendlyName)) {
+			sb.append(friendlyName);
+		} else if (!Util.isBlank(dnsName)) {
+			Pattern pattern = Pattern.compile("\\s*([^\\s-]+)-[A-Fa-f0-9]*\\s*");
+			Matcher matcher = pattern.matcher(dnsName);
+			if (matcher.find()) {
+				sb.append(matcher.group(1));
+			}
+		}
+		if (sb.length() == 0) {
+			sb.append("Unidentified cast device");
+		}
+
+		if (!Util.isBlank(modelName) && !modelName.equals(sb.toString())) {
+			sb.append(" (").append(modelName).append(')');
+		}
+		return sb.toString();
 	}
 }
