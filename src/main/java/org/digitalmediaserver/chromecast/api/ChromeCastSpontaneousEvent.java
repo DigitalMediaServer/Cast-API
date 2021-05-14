@@ -49,7 +49,7 @@ public class ChromeCastSpontaneousEvent {
 		/**
 		 * Data type will be {@link AppEvent}.
 		 */
-		APPEVENT(AppEvent.class),
+		APPEVENT(CustomMessageEvent.class),
 
 		/**
 		 * Special event usually received when session is stopped.

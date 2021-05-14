@@ -95,7 +95,7 @@ class EventListenerHolder implements ChromeCastSpontaneousEventListener, ChromeC
 		}
 	}
 
-	public void deliverAppEvent(AppEvent event) {
+	public void deliverAppEvent(CustomMessageEvent event) {
 		spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.APPEVENT, event));
 	}
 

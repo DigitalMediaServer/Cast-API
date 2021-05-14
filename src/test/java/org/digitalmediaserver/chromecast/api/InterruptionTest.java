@@ -41,7 +41,20 @@ public class InterruptionTest {
 	public ExpectedException thrown = ExpectedException.none();
 
 	MockedChromeCast chromeCastStub;
-	ChromeCast cast = new ChromeCast("localhost");
+	ChromeCast cast = new ChromeCast(
+		"Mock",
+		"localhost",
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		1,
+		null,
+		null
+	);
 	CyclicBarrier barrier = new CyclicBarrier(2);
 
 	public static class Custom implements Request, Response {

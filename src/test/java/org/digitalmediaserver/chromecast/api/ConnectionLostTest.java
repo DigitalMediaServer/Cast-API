@@ -29,7 +29,20 @@ import static org.junit.Assert.assertTrue;
 public class ConnectionLostTest {
 
 	MockedChromeCast chromeCastStub;
-	ChromeCast cast = new ChromeCast("localhost");
+	ChromeCast cast = new ChromeCast(
+		"Mock",
+		"localhost",
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		1,
+		null,
+		null
+	);
 
 	@Before
 	public void initMockedCast() throws Exception {
