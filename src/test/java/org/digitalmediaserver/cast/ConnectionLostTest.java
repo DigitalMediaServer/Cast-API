@@ -29,7 +29,19 @@ import static org.junit.Assert.assertTrue;
 public class ConnectionLostTest {
 
 	MockedChromeCast chromeCastStub;
-	CastDevice cast = new CastDevice("localhost", "sender");
+	CastDevice cast = new CastDevice(
+		"Mock",
+		"localhost",
+		null,
+		null,
+		null,
+		null,
+		"Mocked ChromeCast",
+		null,
+		1,
+		null,
+		true
+	);
 
 	@Before
 	public void initMockedCast() throws Exception {
@@ -46,13 +58,13 @@ public class ConnectionLostTest {
 
 	@Test(expected = ConnectException.class)
 	public void testDisconnect() throws Exception {
-		assertNull(cast.getStatus());
+		assertNull(cast.getReceiverStatus());
 	}
 
 	@Test
 	public void testReconnect() throws Exception {
 		chromeCastStub = new MockedChromeCast();
-		assertNotNull(cast.getStatus());
+		assertNotNull(cast.getReceiverStatus());
 	}
 
 	@After

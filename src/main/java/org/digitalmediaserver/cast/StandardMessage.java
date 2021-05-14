@@ -15,6 +15,9 @@
  */
 package org.digitalmediaserver.cast;
 
+import javax.annotation.Nullable;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -28,8 +31,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 	@JsonSubTypes.Type(name = "PING", value = StandardMessage.Ping.class),
 	@JsonSubTypes.Type(name = "PONG", value = StandardMessage.Pong.class),
 	@JsonSubTypes.Type(name = "CONNECT", value = StandardMessage.Connect.class),
-	@JsonSubTypes.Type(name = "GET_STATUS", value = StandardRequest.Status.class),
-	@JsonSubTypes.Type(name = "GET_APP_AVAILABILITY", value = StandardRequest.AppAvailability.class),
+	@JsonSubTypes.Type(name = "CLOSE", value = StandardMessage.CloseConnection.class),
+	@JsonSubTypes.Type(name = "GET_STATUS", value = StandardRequest.GetStatus.class),
+	@JsonSubTypes.Type(name = "GET_APP_AVAILABILITY", value = StandardRequest.GetAppAvailability.class),
 	@JsonSubTypes.Type(name = "LAUNCH", value = StandardRequest.Launch.class),
 	@JsonSubTypes.Type(name = "STOP", value = StandardRequest.Stop.class),
 	@JsonSubTypes.Type(name = "LOAD", value = StandardRequest.Load.class),
@@ -38,6 +42,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 	@JsonSubTypes.Type(name = "SET_VOLUME", value = StandardRequest.SetVolume.class),
 	@JsonSubTypes.Type(name = "SEEK", value = StandardRequest.Seek.class)
 })
+
 public abstract class StandardMessage implements Message {
 
 	/**
@@ -60,12 +65,39 @@ public abstract class StandardMessage implements Message {
 	}
 
 	/**
-	 * Used to initiate connection with the ChromeCast device.
+	 * Establishes a virtual connection with either a cast device or an
+	 * application.
 	 */
 	public static class Connect extends StandardMessage {
 
 		@JsonProperty
+		@JsonInclude(JsonInclude.Include.NON_NULL)
+		private final String userAgent;
+
+		@JsonProperty
+		@JsonInclude(JsonInclude.Include.NON_NULL)
+		private final VirtualConnectionType connType;
+
+		@JsonProperty
 		protected final Origin origin = new Origin();
+
+		@JsonCreator
+		public Connect(
+			@JsonProperty("userAgent") @Nullable String userAgent,
+			@JsonProperty("connType") @Nullable VirtualConnectionType connectionType) {
+			this.userAgent = userAgent;
+			this.connType = connectionType;
+		}
+	}
+
+	/**
+	 * Closes a virtual connection with an application.
+	 */
+	public static class CloseConnection extends StandardMessage {
+
+		@JsonProperty
+		private final Integer reasonCode = Integer.valueOf(5); // Closed gracefully by sender
+
 	}
 
 	public static Ping ping() {
@@ -76,7 +108,11 @@ public abstract class StandardMessage implements Message {
 		return new Pong();
 	}
 
-	public static Connect connect() {
-		return new Connect();
+	public static Connect connect(@Nullable String userAgent, @Nullable VirtualConnectionType connectionType) {
+		return new Connect(userAgent, connectionType);
+	}
+
+	public static CloseConnection closeConnection() {
+		return new CloseConnection();
 	}
 }

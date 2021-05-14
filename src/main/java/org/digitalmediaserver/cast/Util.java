@@ -18,9 +18,6 @@ package org.digitalmediaserver.cast;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -86,42 +83,6 @@ final class Util {
 			result |= (read & 0xff) << i;
 		}
 		return result;
-	}
-
-	public static String getContentType(String url) {
-		HttpURLConnection connection = null;
-		try {
-			connection = (HttpURLConnection) new URL(url).openConnection();
-			connection.connect();
-			return connection.getContentType();
-		} catch (IOException e) {
-		} finally {
-			if (connection != null) {
-				connection.disconnect();
-			}
-		}
-		return null;
-	}
-
-	public static String getMediaTitle(String url) {
-		try {
-			URL urlObj = new URL(url);
-			String mediaTitle;
-			String path = urlObj.getPath();
-			int lastIndexOfSlash = path.lastIndexOf('/');
-			if (lastIndexOfSlash >= 0 && lastIndexOfSlash + 1 < url.length()) {
-				mediaTitle = path.substring(lastIndexOfSlash + 1);
-				int lastIndexOfDot = mediaTitle.lastIndexOf('.');
-				if (lastIndexOfDot > 0) {
-					mediaTitle = mediaTitle.substring(0, lastIndexOfDot);
-				}
-			} else {
-				mediaTitle = path;
-			}
-			return mediaTitle.isEmpty() ? url : mediaTitle;
-		} catch (MalformedURLException mfu) {
-			return url;
-		}
 	}
 
 	/**

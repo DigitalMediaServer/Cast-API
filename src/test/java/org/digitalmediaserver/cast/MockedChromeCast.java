@@ -38,6 +38,7 @@ import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 public class MockedChromeCast {
 
@@ -49,7 +50,6 @@ public class MockedChromeCast {
 	public CustomHandler customHandler;
 
 	public interface CustomHandler {
-
 		Response handle(JsonNode json);
 	}
 
@@ -71,15 +71,15 @@ public class MockedChromeCast {
 	public class ClientThread extends Thread {
 
 		public volatile boolean stop;
-		public Socket clientSocket;
-		public ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
+		public final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 
 		@Override
 		public void run() {
+			Socket clientSocket = null;
 			try {
 				clientSocket = socket.accept();
 				while (!stop) {
-					handle(read(clientSocket));
+					handle(clientSocket, read(clientSocket));
 				}
 			} catch (IOException ioex) {
 				logger.warn("Error while handling: {}", ioex.toString());
@@ -94,7 +94,7 @@ public class MockedChromeCast {
 			}
 		}
 
-		public void handle(CastMessage message) throws IOException {
+		public void handle(Socket socket, CastMessage message) throws IOException {
 			logger.info("Received message: ");
 			logger.info("   sourceId: " + message.getSourceId());
 			logger.info("   destinationId: " + message.getDestinationId());
@@ -111,7 +111,7 @@ public class MockedChromeCast {
 				logger.info("   destinationId: " + message.getSourceId());
 				logger.info("   namespace: " + message.getNamespace());
 				logger.info("   payloadType: " + PayloadType.BINARY);
-				write(clientSocket,
+				write(socket,
 					CastMessage.newBuilder()
 						.setProtocolVersion(message.getProtocolVersion())
 						.setSourceId(message.getDestinationId())
@@ -138,7 +138,7 @@ public class MockedChromeCast {
 					logger.info("   namespace: " + message.getNamespace());
 					logger.info("   payloadType: " + CastMessage.PayloadType.STRING);
 					logger.info("   payload: " + jsonMapper.writeValueAsString(response));
-					write(clientSocket,
+					write(socket,
 						CastMessage.newBuilder()
 							.setProtocolVersion(message.getProtocolVersion())
 							.setSourceId(message.getDestinationId())
@@ -158,19 +158,20 @@ public class MockedChromeCast {
 		public Response handleJSON(Message message) {
 			if (message instanceof StandardMessage.Ping) {
 				return new StandardResponse.PongResponse();
-			} else if (message instanceof StandardRequest.Status) {
-				return new StandardResponse.ReceiverStatusResponse(((StandardRequest.Status) message).getRequestId(), status());
+			} else if (message instanceof StandardRequest.GetStatus) {
+				return new StandardResponse.ReceiverStatusResponse(((StandardRequest.GetStatus) message).getRequestId(), status());
 			} else if (message instanceof StandardRequest.Launch) {
 				StandardRequest.Launch launch = (StandardRequest.Launch) message;
+				String transportId = UUID.randomUUID().toString();
 				runningApplications.add(new Application(
 					launch.appId,
 					"iconUrl",
-					launch.appId,
-					"SESSION_ID",
+					"Mocked",
+					transportId,
 					"",
 					false,
 					false,
-					"",
+					transportId,
 					Collections.<Namespace> emptyList()
 				));
 				StandardResponse response = new StandardResponse.ReceiverStatusResponse(launch.getRequestId(), status());

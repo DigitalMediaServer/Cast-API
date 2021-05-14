@@ -59,7 +59,7 @@ public final class CastDeviceMonitor {
 		@Override
 		public void serviceAdded(ServiceEvent se) {
 			if (se.getInfo() != null) {
-				CastDevice device = new CastDevice(mDNS, se.getInfo().getName(), null);
+				CastDevice device = new CastDevice(mDNS, se.getInfo().getName(), true);
 				chromeCasts.add(device);
 				for (DeviceDiscoveryListener nextListener : listeners) {
 					nextListener.deviceDiscovered(device);
@@ -75,7 +75,7 @@ public final class CastDeviceMonitor {
 				CastDevice deviceRemoved = null;
 				// Probably better keep a map to better lookup devices
 				for (CastDevice device : copy) {
-					if (device.getName().equals(se.getInfo().getName())) {
+					if (device.getDNSName().equals(se.getInfo().getName())) {
 						deviceRemoved = device;
 						chromeCasts.remove(device);
 						break;

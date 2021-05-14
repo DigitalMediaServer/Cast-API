@@ -24,8 +24,10 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.security.KeyManagementException;
@@ -33,6 +35,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -50,8 +53,20 @@ import org.digitalmediaserver.cast.CastChannel.CastMessage.PayloadType;
 import org.digitalmediaserver.cast.CastEvent.CastEventListenerList;
 import org.digitalmediaserver.cast.CastEvent.CastEventType;
 import org.digitalmediaserver.cast.CastEvent.DefaultCastEvent;
+import org.digitalmediaserver.cast.Session.SessionClosedListener;
+import org.digitalmediaserver.cast.StandardMessage.CloseConnection;
+import org.digitalmediaserver.cast.StandardMessage.Connect;
 import org.digitalmediaserver.cast.StandardMessage.Ping;
 import org.digitalmediaserver.cast.StandardMessage.Pong;
+import org.digitalmediaserver.cast.StandardRequest.GetAppAvailability;
+import org.digitalmediaserver.cast.StandardRequest.GetStatus;
+import org.digitalmediaserver.cast.StandardRequest.Launch;
+import org.digitalmediaserver.cast.StandardRequest.Load;
+import org.digitalmediaserver.cast.StandardRequest.Pause;
+import org.digitalmediaserver.cast.StandardRequest.Play;
+import org.digitalmediaserver.cast.StandardRequest.Seek;
+import org.digitalmediaserver.cast.StandardRequest.SetVolume;
+import org.digitalmediaserver.cast.StandardRequest.Stop;
 import org.digitalmediaserver.cast.StandardResponse.AppAvailabilityResponse;
 import org.digitalmediaserver.cast.StandardResponse.InvalidResponse;
 import org.digitalmediaserver.cast.StandardResponse.LaunchErrorResponse;
@@ -67,6 +82,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 
 /**
@@ -132,12 +148,6 @@ public class Channel implements Closeable {
 	@Nonnull
 	protected final String remoteName;
 
-	/**
-	 * The sender id used in this channel
-	 */
-	@Nonnull
-	protected final String sourceId;
-
 	/** {@link Timer} for PING requests */
 	@GuardedBy("socketLock")
 	protected Timer pingTimer;
@@ -173,11 +183,11 @@ public class Channel implements Closeable {
 	protected final Object sessionsLock = new Object();
 
 	/**
-	 * The currently known sessions belonging to this {@link Channel}
+	 * The currently known {@link Session}s belonging to this {@link Channel}
 	 */
 	@Nonnull
 	@GuardedBy("sessionsLock")
-	protected final Set<String> sessions = new HashSet<>();
+	protected final Set<Session> sessions = new HashSet<>();
 
 	/**
 	 * How much time to wait until request is processed
@@ -188,29 +198,108 @@ public class Channel implements Closeable {
 		CAST_API_HEARTBEAT_MARKER.add(CAST_API_MARKER);
 	}
 
+	/**
+	 * Creates a new channel using the specified parameters and the standard
+	 * port.
+	 *
+	 * @param host the host IP address or hostname of the cast device.
+	 * @param remoteName the name to use for the cast device in logging.
+	 * @param listeners the {@link CastEventListenerList} to use when sending
+	 *            events.
+	 */
 	public Channel(
 		@Nonnull String host,
 		@Nonnull String remoteName,
-		@Nullable String sourceId,
 		@Nonnull CastEventListenerList listeners
 	) {
-		this(host, STANDARD_DEVICE_PORT, remoteName, sourceId, listeners);
+		this(host, STANDARD_DEVICE_PORT, remoteName, listeners);
 	}
 
+	/**
+	 * Creates a new channel using the specified parameters.
+	 *
+	 * @param host the host IP address or hostname of the cast device.
+	 * @param port the port of the cast device.
+	 * @param remoteName the name to use for the cast device in logging.
+	 * @param listeners the {@link CastEventListenerList} to use when sending
+	 *            events.
+	 */
 	public Channel(
 		@Nonnull String host,
 		int port,
 		@Nonnull String remoteName,
-		@Nullable String sourceId,
 		@Nonnull CastEventListenerList listeners
 	) {
 		requireNotBlank(host, "host");
 		requireNotBlank(remoteName, "remoteName");
-		requireNotBlank(sourceId, "sourceId");
 		requireNotNull(listeners, "listeners");
 		this.address = new InetSocketAddress(host, port);
 		this.remoteName = remoteName;
-		this.sourceId = sourceId;
+		this.listeners = listeners;
+	}
+
+	/**
+	 * Creates a new channel using the specified parameters and the standard
+	 * port.
+	 *
+	 * @param address the IP address of the cast device.
+	 * @param remoteName the name to use for the cast device in logging.
+	 * @param listeners the {@link CastEventListenerList} to use when sending
+	 *            events.
+	 * @throws IllegalArgumentException If {@code listeners} is {@code null} or
+	 *             if {@code remoteName} is blank.
+	 */
+	public Channel(
+		@Nonnull InetAddress address,
+		@Nonnull String remoteName,
+		@Nonnull CastEventListenerList listeners
+	) {
+		this(address == null ? null : new InetSocketAddress(address, STANDARD_DEVICE_PORT), remoteName, listeners);
+	}
+
+	/**
+	 * Creates a new channel using the specified parameters.
+	 *
+	 * @param address the IP address of the cast device.
+	 * @param port the port of the cast device.
+	 * @param remoteName the name to use for the cast device in logging.
+	 * @param listeners the {@link CastEventListenerList} to use when sending
+	 *            events.
+	 * @throws IllegalArgumentException If {@code listeners} is {@code null}, if
+	 *             {@code address} or {@code remoteName} is blank or if
+	 *             {@code port} is outside the range of valid port numbers.
+	 */
+	@SuppressFBWarnings("NP_NULL_PARAM_DEREF")
+	public Channel(
+		@Nonnull InetAddress address,
+		int port,
+		@Nonnull String remoteName,
+		@Nonnull CastEventListenerList listeners
+	) {
+		this(address == null || port == 0 ? null : new InetSocketAddress(address, port), remoteName, listeners);
+	}
+
+	/**
+	 * Creates a new channel using the specified parameters.
+	 *
+	 * @param socketAddress the {@link SocketAddress} of the cast device.
+	 * @param remoteName the name to use for the cast device in logging.
+	 * @param listeners the {@link CastEventListenerList} to use when sending
+	 *            events.
+	 * @throws IllegalArgumentException If {@code socketAddress} or
+	 *             {@code listeners} is {@code null} or if {@code remoteName} is
+	 *             blank.
+	 */
+	public Channel(
+		@Nonnull InetSocketAddress socketAddress,
+		@Nonnull String remoteName,
+		@Nonnull CastEventListenerList listeners
+	) {
+		requireNotNull(socketAddress, "socketAddress");
+		requireNotBlank(remoteName, "remoteName");
+		requireNotNull(listeners, "listeners");
+		this.address = socketAddress;
+		this.remoteName = remoteName;
 		this.listeners = listeners;
 	}
 
@@ -273,7 +362,8 @@ public class Channel implements Closeable {
 			// Send 'CONNECT' message to start session
 			write(
 				"urn:x-cast:com.google.cast.tp.connection",
-				StandardMessage.connect(),
+				new Connect(null, VirtualConnectionType.STRONG),
+				PLATFORM_SENDER_ID,
 				PLATFORM_RECEIVER_ID
 			);
 
@@ -296,6 +386,7 @@ public class Channel implements Closeable {
 	 */
 	@Override
 	public void close() throws IOException {
+		Set<Session> closedSessions = null;
 		synchronized (sessionsLock) {
 			synchronized (socketLock) {
 				if (socket == null || socket.isClosed() || !socket.isConnected()) {
@@ -304,6 +395,7 @@ public class Channel implements Closeable {
 				}
 
 				if (!sessions.isEmpty()) {
+					closedSessions = new HashSet<>(sessions);
 					sessions.clear();
 				}
 
@@ -322,6 +414,16 @@ public class Channel implements Closeable {
 			}
 		}
 
+		if (closedSessions != null) {
+			SessionClosedListener closedListener;
+			for (Session session : closedSessions) {
+				closedListener = session.getSessionClosedListener();
+				if (closedListener != null) {
+					closedListener.closed(session);
+				}
+			}
+		}
+
 		// Send disconnect event
 		listeners.fire(new DefaultCastEvent<>(CastEventType.CONNECTED, Boolean.FALSE));
 	}
@@ -336,41 +438,76 @@ public class Channel implements Closeable {
 		}
 	}
 
+	/**
+	 * Sends the specified {@link Request} to the specified destination using
+	 * the specified parameters.
+	 *
+	 * @param <T> the class of the {@link Response} object.
+	 * @param session if {@code responseClass} is non-{@code null} and the
+	 *            destination is an application, this must be the
+	 *            {@link Session} that has been established with said
+	 *            application. This makes sure that the waiting for the response
+	 *            will be terminated if the {@link Session} is terminated. If
+	 *            {@code responseClass} is {@code null} or the request is
+	 *            destined to the cast device itself, this should be
+	 *            {@code null}.
+	 * @param namespace the namespace to use.
+	 * @param message the {@link Request} to send.
+	 * @param sourceId the source ID to use.
+	 * @param destinationId the destination ID to use.
+	 * @param responseClass the class of the expected response for synchronous
+	 *            (blocking) behavior, or {@code null} for asynchronous behavior
+	 *            that returns {@code null} immediately.
+	 * @return The {@link Response} object of the specified type if
+	 *         {@code responseClass} is non-{@code null}, {@code null} if
+	 *         {@code responseClass} is {@code null}.
+	 * @throws IllegalArgumentException If {@code namespace} is {@code null} or
+	 *             invalid (see {@link #validateNamespace(String)} for
+	 *             constraints).
+	 * @throws IOException If {@code responseClass} is non-{@code null} and the
+	 *             response from the cast device is a different type than what
+	 *             was expected, or if an error occurs during the operation.
+	 */
 	public <T extends Response> T send(
+		@Nullable Session session,
 		String namespace,
 		Request message,
+		String sourceId,
 		String destinationId,
 		Class<T> responseClass
 	) throws IOException {
+		validateNamespace(namespace);
 		Long requestId = requestCounter.getAndIncrement();
 		message.setRequestId(requestId);
-		if (!requestId.equals(message.getRequestId())) {
-			throw new IllegalStateException("Request Id getter/setter contract violation");
-		}
 
 		if (responseClass == null) {
-			write(namespace, message, destinationId);
+			write(namespace, message, sourceId, destinationId);
 			return null;
 		}
 
-		ResultProcessor<T> rp = new ResultProcessor<>(responseClass);
+		ResultProcessor<T> rp = new ResultProcessor<>(session, responseClass);
 		synchronized (requests) {
 			requests.put(requestId, rp);
 		}
 
-		write(namespace, message, destinationId);
+		write(namespace, message, sourceId, destinationId);
 		try {
-			T response = rp.get();
-			if (response instanceof InvalidResponse) {
-				InvalidResponse invalid = (InvalidResponse) response;
+			ResultProcessorResult<T> response = rp.get();
+			if (response.typedResult != null) {
+				return response.typedResult;
+			}
+			if (response.untypedResult instanceof InvalidResponse) {
+				InvalidResponse invalid = (InvalidResponse) response.untypedResult;
 				throw new CastException("Invalid request: " + invalid.getReason());
-			} else if (response instanceof LoadFailedResponse) {
+			} else if (response.untypedResult instanceof LoadFailedResponse) {
 				throw new CastException("Unable to load media");
-			} else if (response instanceof LaunchErrorResponse) {
-				LaunchErrorResponse launchError = (LaunchErrorResponse) response;
+			} else if (response.untypedResult instanceof LaunchErrorResponse) {
+				LaunchErrorResponse launchError = (LaunchErrorResponse) response.untypedResult;
 				throw new CastException("Application launch error: " + launchError.getReason());
 			}
-			return response;
+			throw new CastException(
+				"Failed to deserialize response to " + responseClass.getSimpleName()
+			);
 		} catch (InterruptedException e) {
 			throw new CastException("Interrupted while waiting for response", e);
 		} catch (TimeoutException e) {
@@ -382,10 +519,21 @@ public class Channel implements Closeable {
 		}
 	}
 
+	/**
+	 * Request a {@link ReceiverStatus} from the cast device, using
+	 * {@value #DEFAULT_RESPONSE_TIMEOUT} as the timeout value.
+	 *
+	 * @return The resulting {@link ReceiverStatus}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
 	public ReceiverStatus getReceiverStatus() throws IOException {
 		ReceiverStatusResponse status = send(
+			null,
 			"urn:x-cast:com.google.cast.receiver",
-			StandardRequest.status(),
+			new GetStatus(),
+			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
 			ReceiverStatusResponse.class
 		);
@@ -405,40 +553,189 @@ public class Channel implements Closeable {
 	 */
 	public boolean isApplicationAvailable(String applicationId) throws IOException {
 		AppAvailabilityResponse availability = send(
+			null,
 			"urn:x-cast:com.google.cast.receiver",
-			StandardRequest.getAppAvailability(applicationId),
+			new GetAppAvailability(applicationId),
+			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
 			AppAvailabilityResponse.class
 		);
 		return availability != null && "APP_AVAILABLE".equals(availability.getAvailability().get(applicationId));
 	}
 
+	/**
+	 * Asks the cast device to launch the application represented by the
+	 * specified application ID, using {@value #DEFAULT_RESPONSE_TIMEOUT} as the
+	 * timeout value.
+	 *
+	 * @param applicationId the application ID for the application to launch.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @return The resulting {@link ReceiverStatus} or {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
 	@Nullable
-	public ReceiverStatus launch(String applicationId) throws IOException {
+	public ReceiverStatus launch(String applicationId, boolean synchronous) throws IOException {
 		ReceiverStatusResponse status = send(
+			null,
 			"urn:x-cast:com.google.cast.receiver",
-			StandardRequest.launch(applicationId),
+			new Launch(applicationId),
+			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			ReceiverStatusResponse.class
+			synchronous ? ReceiverStatusResponse.class : null
 		);
 		return status == null ? null : status.getStatus();
 	}
 
-	public ReceiverStatus stop(@Nonnull String sessionId) throws IOException {
+	/**
+	 * Asks the cast device to stop the specified {@link Application}, using
+	 * {@value #DEFAULT_RESPONSE_TIMEOUT} as the timeout value.
+	 *
+	 * @param application the {@link Application} to stop.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @return The resulting {@link ReceiverStatus} or {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	public ReceiverStatus stopApplication(@Nonnull Application application, boolean synchronous) throws IOException {
 		ReceiverStatusResponse status = send(
+			null,
 			"urn:x-cast:com.google.cast.receiver",
-			StandardRequest.stop(sessionId),
+			new Stop(application.getSessionId()),
+			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			ReceiverStatusResponse.class
+			synchronous ? ReceiverStatusResponse.class : null
 		);
 		return status == null ? null : status.getStatus();
 	}
 
-	protected void startSession(String destinationId) throws IOException {
-		if (!sessions.contains(destinationId)) {
-			write("urn:x-cast:com.google.cast.tp.connection", StandardMessage.connect(), destinationId);
-			sessions.add(destinationId);
+	/**
+	 * Establishes a {@link Session} with the specified {@link Application}
+	 * unless one already exists, in which case the existing {@link Session} is
+	 * returned.
+	 *
+	 * @param sourceId the source ID to use.
+	 * @param application the {@link Application} to connect to.
+	 * @param userAgent the user-agent String or {@code null}. It's not entirely
+	 *            clear what this is used for other than reporting to Google, so
+	 *            it might be that it's better left {@code null}.
+	 * @param connectionType The {@link VirtualConnectionType} to use. Please
+	 *            note that only {@link VirtualConnectionType#STRONG} and
+	 *            {@link VirtualConnectionType#INVISIBLE} are allowed.
+	 * @return The existing or new {@link Session}.
+	 * @throws IOException If an error occurs during the operation.
+	 */
+	@Nonnull
+	public Session startSession(
+		@Nonnull String sourceId,
+		@Nonnull Application application,
+		@Nullable String userAgent,
+		@Nonnull VirtualConnectionType connectionType
+	) throws IOException {
+		requireNotBlank(sourceId, "sourceId");
+		requireNotNull(application, "application");
+		String sessionId = application.getSessionId();
+		requireNotBlank(sessionId, "application.getSessionId()");
+		String destinationId = application.getTransportId();
+		requireNotBlank(destinationId, "application.getTransportId()");
+		Session result = null;
+		synchronized (sessionsLock) {
+			for (Session session : sessions) {
+				if (
+					sessionId.equals(session.getId()) &&
+					destinationId.equals(session.getDestinationId()) &&
+					sourceId.equals(session.getSourceId())
+				) {
+					return session;
+				}
+			}
+			write(
+				"urn:x-cast:com.google.cast.tp.connection",
+				new Connect(userAgent, connectionType),
+				sourceId,
+				destinationId
+			);
+			result = new Session(sourceId, sessionId, destinationId, this);
+			sessions.add(result);
 		}
+		return result;
+	}
+
+	/**
+	 * Closes the specified {@link Session} unless it's already closed, in which
+	 * case nothing is done.
+	 *
+	 * @param session the {@link Session} to close.
+	 * @return {@code true} if the {@link Session} was closed, {@code false} if
+	 *         it was closed already.
+	 * @throws IOException If an error occurs during the operation.
+	 */
+	public boolean closeSession(@Nullable Session session) throws IOException {
+		if (session == null) {
+			return false;
+		}
+		synchronized (sessionsLock) {
+			if (!sessions.remove(session)) {
+				return false;
+			}
+		}
+		SessionClosedListener listener = session.getSessionClosedListener();
+		if (listener != null) {
+			listener.closed(session);
+		}
+		write(
+			"urn:x-cast:com.google.cast.tp.connection",
+			new CloseConnection(),
+			session.getSourceId(),
+			session.getDestinationId()
+		);
+		return true;
+	}
+
+	/**
+	 * Checks whether or not the specified {@link Session} is closed.
+	 *
+	 * @param session the Session to check.
+	 * @return {@code true} if the specified {@link Session} is closed,
+	 *         {@code false} if it's connected.
+	 */
+	public boolean isSessionClosed(@Nullable Session session) {
+		if (session == null) {
+			return true;
+		}
+		synchronized (sessionsLock) {
+			return !sessions.contains(session);
+		}
+	}
+
+	/**
+	 * Request a {@link MediaStatus} from the application with the specified
+	 * {@link Session}, using {@value #DEFAULT_RESPONSE_TIMEOUT} as the timeout
+	 * value.
+	 *
+	 * @param session the {@link Session} to use.
+	 * @return The resulting {@link MediaStatus}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public MediaStatus getMediaStatus(@Nonnull Session session) throws IOException {
+		requireNotNull(session, "session");
+		MediaStatusResponse status = send(
+			session,
+			"urn:x-cast:com.google.cast.media",
+			new GetStatus(),
+			session.sourceId,
+			session.destinationId,
+			MediaStatusResponse.class
+		);
+		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
 	/**
@@ -448,8 +745,7 @@ public class Channel implements Closeable {
 	 * This can only succeed if the remote application supports the
 	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
-	 * @param destinationId the destination ID to use.
-	 * @param sessionId the session ID to use.
+	 * @param session the {@link Session} to use.
 	 * @param media the {@link Media} to load.
 	 * @param autoplay {@code true} to ask the remote application to start
 	 *            playback as soon as the {@link Media} has been loaded,
@@ -457,26 +753,41 @@ public class Channel implements Closeable {
 	 *            loading.
 	 * @param currentTime the position in seconds where playback are to be
 	 *            started in the loaded {@link Media}.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
 	 * @param customData the custom application data to send to the remote
 	 *            application with the load command.
-	 * @return The resulting {@link MediaStatus}.
-	 * @throws IOException If an error occurs during the operation.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IllegalArgumentException If {@code session} is {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
 	 */
 	@Nullable
 	public MediaStatus load(
-		@Nonnull String destinationId,
-		@Nonnull String sessionId,
+		@Nonnull Session session,
 		Media media,
 		boolean autoplay,
 		double currentTime,
+		boolean synchronous,
 		@Nullable Map<String, String> customData
 	) throws IOException {
-		startSession(destinationId);
+		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
+			session,
 			"urn:x-cast:com.google.cast.media",
-			StandardRequest.load(sessionId, media, autoplay, currentTime, customData),
-			destinationId,
-			MediaStatusResponse.class
+			new Load(
+				session.id,
+				media,
+				autoplay,
+				currentTime,
+				customData
+			),
+			session.sourceId,
+			session.destinationId,
+			synchronous ? MediaStatusResponse.class : null
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
@@ -489,25 +800,33 @@ public class Channel implements Closeable {
 	 * This can only succeed if the remote application supports the
 	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
-	 * @param destinationId the destination ID to use.
-	 * @param sessionId the session ID to use.
+	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the play request
 	 *            applies.
-	 * @return The resulting {@link MediaStatus}.
-	 * @throws IOException If an error occurs during the operation.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IllegalArgumentException If {@code session} is {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
 	 */
 	@Nullable
 	public MediaStatus play(
-		@Nonnull String destinationId,
-		@Nonnull String sessionId,
-		long mediaSessionId
+		@Nonnull Session session,
+		int mediaSessionId,
+		boolean synchronous
 	) throws IOException {
-		startSession(destinationId);
+		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
+			session,
 			"urn:x-cast:com.google.cast.media",
-			StandardRequest.play(sessionId, mediaSessionId),
-			destinationId,
-			MediaStatusResponse.class
+			new Play(mediaSessionId, session.id),
+			session.sourceId,
+			session.destinationId,
+			synchronous ? MediaStatusResponse.class : null
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
@@ -520,92 +839,156 @@ public class Channel implements Closeable {
 	 * This can only succeed if the remote application supports the
 	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
-	 * @param destinationId the destination ID to use.
-	 * @param sessionId the session ID to use.
+	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the pause request
 	 *            applies.
-	 * @return The resulting {@link MediaStatus}.
-	 * @throws IOException If an error occurs during the operation.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IllegalArgumentException If {@code session} is {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
 	 */
 	@Nullable
 	public MediaStatus pause(
-		@Nonnull String destinationId,
-		@Nonnull String sessionId,
-		long mediaSessionId
+		@Nonnull Session session,
+		int mediaSessionId,
+		boolean synchronous
 	) throws IOException {
-		startSession(destinationId);
+		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
+			session,
 			"urn:x-cast:com.google.cast.media",
-			StandardRequest.pause(sessionId, mediaSessionId),
-			destinationId,
-			MediaStatusResponse.class
+			new Pause(mediaSessionId, session.id),
+			session.sourceId,
+			session.destinationId,
+			synchronous ? MediaStatusResponse.class : null
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
 	/**
 	 * Asks the remote application to move the playback position of the media
-	 * referenced by the specified media session ID to the specified position.
+	 * referenced by the specified media session ID to the specified position,
+	 * using {@value #DEFAULT_RESPONSE_TIMEOUT} as the timeout value.
 	 * <p>
 	 * This can only succeed if the remote application supports the
 	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
-	 * @param destinationId the destination ID to use.
-	 * @param sessionId the session ID to use.
+	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the pause request
 	 *            applies.
 	 * @param currentTime the new playback position in seconds.
-	 * @return The resulting {@link MediaStatus}.
-	 * @throws IOException If an error occurs during the operation.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IllegalArgumentException If {@code session} is {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
 	 */
 	@Nullable
 	public MediaStatus seek(
-		@Nonnull String destinationId,
-		@Nonnull String sessionId,
-		long mediaSessionId,
-		double currentTime
+		@Nonnull Session session,
+		int mediaSessionId,
+		double currentTime,
+		boolean synchronous
 	) throws IOException {
-		startSession(destinationId);
+		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
+			session,
 			"urn:x-cast:com.google.cast.media",
-			StandardRequest.seek(sessionId, mediaSessionId, currentTime),
-			destinationId,
-			MediaStatusResponse.class
+			new Seek(mediaSessionId, session.id, currentTime),
+			session.sourceId,
+			session.destinationId,
+			synchronous ? MediaStatusResponse.class : null
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
 	@Nullable
-	public ReceiverStatus setVolume(Volume volume) throws IOException {
+	public ReceiverStatus setVolume(Volume volume, boolean synchronous) throws IOException {
 		ReceiverStatusResponse status = send(
+			null,
 			"urn:x-cast:com.google.cast.receiver",
-			StandardRequest.setVolume(volume),
+			new SetVolume(volume),
+			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			ReceiverStatusResponse.class
+			synchronous ? ReceiverStatusResponse.class : null
 		);
 		return status == null ? null : status.getStatus();
 	}
 
-	@Nullable
-	public MediaStatus getMediaStatus(@Nonnull String destinationId) throws IOException {
-		startSession(destinationId);
-		MediaStatusResponse status = send(
-			"urn:x-cast:com.google.cast.media",
-			StandardRequest.status(),
-			destinationId,
-			MediaStatusResponse.class
+	/**
+	 * Sends the specified {@link Request} with the specified namespace using
+	 * the specified {@link Session} and {@value #DEFAULT_RESPONSE_TIMEOUT} as
+	 * the timeout value.
+	 *
+	 * @param <T> the class of the {@link Response} object.
+	 * @param session the {@link Session} to use.
+	 * @param namespace the namespace to use.
+	 * @param request the {@link Request} to send.
+	 * @param responseClass the response class to to block and wait for a
+	 *            response or {@code null} to return immediately.
+	 * @return The {@link Response} if the response is received in time, or
+	 *         {@code null} if the {@code responseClass} is {@code null} or a
+	 *         timeout occurs.
+	 * @throws IllegalArgumentException If {@link Session} is {@code null} or if
+	 *             {@code namespace} is {@code null} or invalid (see
+	 *             {@link #validateNamespace(String)} for constraints).
+	 * @throws IOException If an error occurs during the operation.
+	 */
+	public <T extends Response> T sendGenericRequest(
+		@Nonnull Session session,
+		@Nonnull String namespace,
+		Request request,
+		Class<T> responseClass
+	) throws IOException {
+		requireNotNull(session, "session");
+		return send(
+			session,
+			namespace,
+			request,
+			session.sourceId,
+			session.destinationId,
+			responseClass
 		);
-		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
+	/**
+	 * Sends the specified {@link Request} with the specified namespace using
+	 * the specified source and destination IDs and
+	 * {@value #DEFAULT_RESPONSE_TIMEOUT} as the timeout value. This is for
+	 * requests that aren't associated with a {@link Session}.
+	 *
+	 * @param <T> the class of the {@link Response} object.
+	 * @param sourceId the source ID to use.
+	 * @param destinationId the destination ID to use.
+	 * @param namespace the namespace to use.
+	 * @param request the {@link Request} to send.
+	 * @param responseClass the response class to to block and wait for a
+	 *            response or {@code null} to return immediately.
+	 * @return The {@link Response} if the response is received in time, or
+	 *         {@code null} if the {@code responseClass} is {@code null} or a
+	 *         timeout occurs.
+	 * @throws IllegalArgumentException If {@code namespace} is {@code null} or
+	 *             invalid (see {@link #validateNamespace(String)} for
+	 *             constraints).
+	 * @throws IOException If an error occurs during the operation.
+	 */
 	public <T extends Response> T sendGenericRequest(
+		@Nonnull String sourceId,
 		@Nonnull String destinationId,
 		@Nonnull String namespace,
 		Request request,
 		Class<T> responseClass
 	) throws IOException {
-		startSession(destinationId);
-		return send(namespace, request, destinationId, responseClass);
+		return send(null, namespace, request, sourceId, destinationId, responseClass);
 	}
 
 	public void setRequestTimeout(long requestTimeout) {
@@ -637,11 +1020,12 @@ public class Channel implements Closeable {
 	 *
 	 * @param namespace the namespace to use.
 	 * @param message the {@link Message} to write.
+	 * @param sourceId the source ID to use.
 	 * @param destinationId the destination ID to use.
 	 * @throws IOException If an error occurs during the operation.
 	 */
-	protected void write(String namespace, Message message, String destinationId) throws IOException {
-		write(namespace, jsonMapper.writeValueAsString(message), destinationId);
+	protected void write(String namespace, Message message, String sourceId, String destinationId) throws IOException {
+		write(namespace, jsonMapper.writeValueAsString(message), sourceId, destinationId);
 	}
 
 	/**
@@ -650,10 +1034,11 @@ public class Channel implements Closeable {
 	 *
 	 * @param namespace the namespace to use.
 	 * @param message the message content to write.
+	 * @param sourceId the source ID to use.
 	 * @param destinationId the destination ID to use.
 	 * @throws IOException If an error occurs during the operation.
 	 */
-	protected void write(String namespace, String message, String destinationId) throws IOException {
+	protected void write(String namespace, String message, String sourceId, String destinationId) throws IOException {
 		LOGGER.debug(
 			CAST_API_MARKER,
 			"Sending message to {} with namespace '{}': \"{}\"",
@@ -1033,20 +1418,55 @@ public class Channel implements Closeable {
 						)
 					));
 				} else if ("CLOSE".equals(responseType)) {
-					try {
-						close();
-					} catch (IOException e) {
-						LOGGER.debug(
-							CAST_API_MARKER,
-							"An error occurred while closing {} socket: {}",
-							remoteName,
-							e.getMessage()
-						);
+					if (PLATFORM_RECEIVER_ID.equals(message.getSourceId())) {
+						try {
+							close();
+						} catch (IOException e) {
+							LOGGER.debug(
+								CAST_API_MARKER,
+								"An error occurred while closing {} socket: {}",
+								remoteName,
+								e.getMessage()
+							);
+						}
+					} else {
+						String peerId = message.getSourceId();
+						if (!isBlank(peerId)) {
+							Session session;
+							Set<Session> closedNow = new HashSet<>();
+							synchronized (sessionsLock) {
+								for (Iterator<Session> iterator = sessions.iterator(); iterator.hasNext();) {
+									session = iterator.next();
+									if (peerId.equals(session.getDestinationId())) {
+										closedNow.add(session);
+										iterator.remove();
+									}
+								}
+							}
+							if (!closedNow.isEmpty()) {
+								SessionClosedListener closedListener;
+								for (Session tmpSession : closedNow) {
+									closedListener = tmpSession.getSessionClosedListener();
+									if (closedListener != null) {
+										closedListener.closed(tmpSession);
+									}
+								}
+							} else {
+								// Didn't match any "known" session, pass it on to listeners
+								if (!listeners.isEmpty()) {
+									listeners.fire(new DefaultCastEvent<>(
+										CastEventType.CLOSE,
+										new CloseMessageEvent(
+											message.getSourceId(),
+											message.getDestinationId(),
+											message.getNamespace()
+										)
+									));
+								}
+							}
+						}
 					}
-					if (!listeners.isEmpty()) {
-						listeners.fire(new DefaultCastEvent<>(CastEventType.CLOSE, jsonMapper.treeToValue(parsedMessage, StandardResponse.class)));
-					}
-				} else if (!listeners.isEmpty()) {
+				} else {
 					StandardResponse response;
 					if (!isBlank(responseType)) {
 						try {
@@ -1097,15 +1517,42 @@ public class Channel implements Closeable {
 	 */
 	protected class ResultProcessor<T extends Response> {
 
+		/** The {@link Session} if one applies */
+		@Nullable
+		protected final Session session;
+
 		/** The expected response {@link Class} */
 		protected final Class<T> responseClass;
-		protected T result;
 
-		protected ResultProcessor(Class<T> responseClass) {
-			if (responseClass == null) {
-				throw new NullPointerException();
-			}
+		/** Whether the associated {@link Session} has been closed */
+		@GuardedBy("this")
+		protected boolean closed;
+
+		/** The {@link ResultProcessorResult} */
+		@GuardedBy("this")
+		protected ResultProcessorResult<T> result;
+
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param session the {@link Session} if one applies to the request.
+		 * @param responseClass the expected response class.
+		 */
+		public ResultProcessor(@Nullable Session session, @Nonnull Class<T> responseClass) {
+			requireNotNull(responseClass, "responseClass");
+			this.session = session;
 			this.responseClass = responseClass;
+		}
+
+		/**
+		 * Called if the {@link Session} linked to this {@link ResultProcessor}
+		 * is closed.
+		 */
+		public void sessionClosed() {
+			synchronized (this) {
+				closed = true;
+				this.notifyAll();
+			}
 		}
 
 		/**
@@ -1116,24 +1563,107 @@ public class Channel implements Closeable {
 		 * @throws JsonMappingException If the JSON mapping fails.
 		 * @throws JsonProcessingException If the JSON can't be processed.
 		 */
+		@SuppressWarnings("unchecked")
 		public void process(String jsonMSG) throws JsonMappingException, JsonProcessingException {
+			Class<?> deserializeTo;
+			if (StandardResponse.class.isAssignableFrom(responseClass)) {
+				deserializeTo = StandardResponse.class;
+			} else {
+				deserializeTo = responseClass;
+			}
+			Object object;
+			try {
+				object = jsonMapper.readValue(jsonMSG, deserializeTo);
+			} catch (IllegalArgumentException e) {
+				synchronized (this) {
+					this.result = new ResultProcessorResult<>(null, null, jsonMSG);
+					this.notify();
+					return;
+				}
+			}
 			synchronized (this) {
-				this.result = jsonMapper.readValue(jsonMSG, responseClass);
-				this.notify();
+				if (responseClass.isInstance(object)) {
+					this.result = new ResultProcessorResult<>((T) object, null, null);
+				} else {
+					this.result = new ResultProcessorResult<>(null, (StandardResponse) object, null);
+				}
+				this.notifyAll();
 			}
 		}
 
-		public T get() throws InterruptedException, TimeoutException {
+		/**
+		 * Returns the {@link ResultProcessorResult} when it is due. If the
+		 * response hasn't been received yet, this method will block until it is
+		 * or the timeout expires.
+		 *
+		 * @return The response.
+		 * @throws InterruptedException If the thread is interrupted while
+		 *             waiting for the response.
+		 * @throws TimeoutException If waiting for the response times out.
+		 * @throws CastException If the {@link Session} is closed while waiting
+		 *             for the response.
+		 */
+		@Nonnull
+		public ResultProcessorResult<T> get() throws InterruptedException, TimeoutException, CastException {
 			synchronized (this) {
 				if (result != null) {
 					return result;
 				}
 				this.wait(requestTimeout);
+				if (closed) {
+					throw new CastException("The session was closed by the cast device");
+				}
 				if (result == null) {
 					throw new TimeoutException();
 				}
 				return result;
 			}
+		}
+
+		/**
+		 * @return The {@link Session} tied to this {@link ResultProcessor}, if
+		 *         any.
+		 */
+		@Nullable
+		public Session getSession() {
+			return session;
+		}
+	}
+
+	/**
+	 * A holder for the resulting {@link Response}.
+	 *
+	 * @param <T> the response type.
+	 */
+	protected class ResultProcessorResult<T extends Response> {
+
+		/** The {@link Response} as the expected type */
+		@Nullable
+		protected final T typedResult;
+
+		/** The {@link Response} as an unexpected type */
+		@Nullable
+		protected final StandardResponse untypedResult;
+
+		/** The response as JSON */
+		@Nullable
+		protected final String unprocessedResult;
+
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param typedResult the {@link Response} as the expected type.
+		 * @param untypedResult the {@link Response} as an unexpected type.
+		 * @param unprocessedResult the response as a JSON.
+		 */
+		public ResultProcessorResult(
+			@Nullable T typedResult,
+			@Nullable StandardResponse untypedResult,
+			@Nullable String unprocessedResult
+		) {
+			this.typedResult = typedResult;
+			this.untypedResult = untypedResult;
+			this.unprocessedResult = unprocessedResult;
 		}
 	}
 }

@@ -41,6 +41,7 @@ import org.digitalmediaserver.cast.StandardResponse.DeviceRemovedResponse;
 import org.digitalmediaserver.cast.StandardResponse.DeviceUpdatedResponse;
 import org.digitalmediaserver.cast.StandardResponse.InvalidResponse;
 import org.digitalmediaserver.cast.StandardResponse.LaunchErrorResponse;
+import org.digitalmediaserver.cast.StandardResponse.LoadCancelledResponse;
 import org.digitalmediaserver.cast.StandardResponse.LoadFailedResponse;
 import org.digitalmediaserver.cast.StandardResponse.MediaStatusResponse;
 import org.digitalmediaserver.cast.StandardResponse.MultizoneStatusResponse;
@@ -671,6 +672,8 @@ public interface CastEvent<T> {
 		 * received, which shouldn't normally happen
 		 */
 		LAUNCH_ERROR(LaunchErrorResponse.class),
+
+		LOAD_CANCELLED(LoadCancelledResponse.class),
 
 		LOAD_FAILED(LoadFailedResponse.class),
 
