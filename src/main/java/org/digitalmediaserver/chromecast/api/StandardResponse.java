@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,6 +46,7 @@ import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 	@JsonSubTypes.Type(name = "MEDIA_STATUS", value = StandardResponse.MediaStatusResponse.class),
 	@JsonSubTypes.Type(name = "MULTIZONE_STATUS", value = StandardResponse.MultizoneStatusResponse.class),
 	@JsonSubTypes.Type(name = "CLOSE", value = StandardResponse.CloseResponse.class),
+	@JsonSubTypes.Type(name = "LOAD_CANCELLED", value = StandardResponse.LoadCancelledResponse.class),
 	@JsonSubTypes.Type(name = "LOAD_FAILED", value = StandardResponse.LoadFailedResponse.class),
 	@JsonSubTypes.Type(name = "LAUNCH_ERROR", value = StandardResponse.LaunchErrorResponse.class),
 	@JsonSubTypes.Type(name = "DEVICE_ADDED", value = StandardResponse.DeviceAddedResponse.class),
@@ -170,6 +172,38 @@ public abstract class StandardResponse implements Response {
 			return new StringBuilder(getClass().getSimpleName())
 				.append(" [requestId=").append(getRequestId()).append("]")
 				.toString();
+		}
+	}
+
+	@Immutable
+	public static class LoadCancelledResponse extends StandardResponse {
+
+		private final Integer itemId;
+
+		protected LoadCancelledResponse(@JsonProperty("requestId") long requestId, @JsonProperty("itemId") Integer itemId) {
+			super(requestId);
+			this.itemId = itemId;
+		}
+
+		public Integer getItemId() {
+			return itemId;
+		}
+
+		@JsonIgnore
+		@Override
+		public CastEventType getEventType() {
+			return CastEventType.LOAD_CANCELLED;
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+			builder.append(" [").append("requestId=").append(getRequestId());
+			if (itemId != null) {
+				builder.append(", itemId=").append(itemId);
+			}
+			builder.append("]");
+			return builder.toString();
 		}
 	}
 
@@ -332,6 +366,7 @@ public abstract class StandardResponse implements Response {
 	 * Response to "MediaStatus" request.
 	 */
 	@Immutable
+	@JsonDeserialize(using = MediaStatusResponseDeserializer.class)
 	public static class MediaStatusResponse extends StandardResponse {
 
 		/** The {@link List} of {@link MediaStatus}es */

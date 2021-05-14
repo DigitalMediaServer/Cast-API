@@ -40,18 +40,18 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	/**
 	 * Request for current status of ChromeCast device.
 	 */
-	public static class Status extends StandardRequest {
+	public static class GetStatus extends StandardRequest {
 	}
 
 	/**
 	 * Request for availability of applications with specified identifiers.
 	 */
-	public static class AppAvailability extends StandardRequest {
+	public static class GetAppAvailability extends StandardRequest {
 
 		@JsonProperty
 		protected final String[] appId;
 
-		public AppAvailability(String... appId) {
+		public GetAppAvailability(String... appId) {
 			this.appId = appId;
 		}
 	}
@@ -181,16 +181,16 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		}
 	}
 
-	public static Status status() {
-		return new Status();
+	public static GetStatus status() {
+		return new GetStatus();
 	}
 
-	public static AppAvailability getAppAvailability(String... appId) {
-		return new AppAvailability(appId);
+	public static GetAppAvailability getAppAvailability(String... applicationId) {
+		return new GetAppAvailability(applicationId);
 	}
 
-	public static Launch launch(String appId) {
-		return new Launch(appId);
+	public static Launch launch(String applicationId) {
+		return new Launch(applicationId);
 	}
 
 	public static Stop stop(String sessionId) {

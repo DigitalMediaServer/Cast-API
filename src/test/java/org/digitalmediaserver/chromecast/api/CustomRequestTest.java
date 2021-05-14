@@ -30,7 +30,19 @@ import static org.junit.Assert.assertNotNull;
 public class CustomRequestTest {
 
 	MockedChromeCast chromeCastStub;
-	CastDevice cast = new CastDevice("localhost", "sender");
+	CastDevice cast = new CastDevice(
+		"Mock",
+		"localhost",
+		null,
+		null,
+		null,
+		null,
+		"Mocked ChromeCast",
+		null,
+		1,
+		null,
+		true
+	);
 
 	private static class KioskStatusRequest implements Request {
 
@@ -89,7 +101,7 @@ public class CustomRequestTest {
 	public void init() throws IOException, GeneralSecurityException {
 		chromeCastStub = new MockedChromeCast();
 		cast.connect();
-		cast.launchApp("KIOSK");
+		cast.launchApplication("KIOSK", true);
 	}
 
 	@After
@@ -117,9 +129,12 @@ public class CustomRequestTest {
 				return response;
 			}
 		};
-		KioskStatusResponse response = cast.send(
+		KioskStatusResponse response = cast.channel().send(
+			null,
 			"urn:x-cast:de.michaelkuerbis.kiosk",
 			new KioskStatusRequest(),
+			"sender-0",
+			"receiver-0",
 			KioskStatusResponse.class
 		);
 		assertNotNull(response);
