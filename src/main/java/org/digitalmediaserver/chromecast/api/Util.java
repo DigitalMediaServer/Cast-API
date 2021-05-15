@@ -143,4 +143,24 @@ final class Util {
 		}
 		return true;
 	}
+
+	/**
+	 * Asserts that the specified {@link Object} is non-{@code null} by throwing
+	 * an {@link IllegalArgumentException} if it is.
+	 *
+	 * @param object the {@link Object} to assert that isn't {@code null}.
+	 * @param objectName the identifier name to be used in the thrown
+	 *            {@link IllegalArgumentException}.
+	 *
+	 * @throws IllegalArgumentException If {@code object} is {@code null}.
+	 * @throws AssertionError If {@code objectName} is {@code null}.
+	 */
+	public static void requireNotNull(@Nullable Object object, @Nonnull String objectName) {
+		if (objectName == null) {
+			throw new AssertionError("Invalid use of requireNotNull, objectName must be specified");
+		}
+		if (object == null) {
+			throw new IllegalArgumentException(objectName + " cannot be null");
+		}
+	}
 }

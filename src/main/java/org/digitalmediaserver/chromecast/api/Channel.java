@@ -51,6 +51,13 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import org.digitalmediaserver.chromecast.api.CastChannel.CastMessage;
 import org.digitalmediaserver.chromecast.api.CastChannel.CastMessage.PayloadType;
+import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListenerList;
+import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
+import org.digitalmediaserver.chromecast.api.CastEvent.DefaultCastEvent;
+import org.digitalmediaserver.chromecast.api.CastEvent.SimpleCastEventListenerList;
+import org.digitalmediaserver.chromecast.api.StandardResponse.CloseResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.MediaStatusResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.ReceiverStatusResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -87,6 +94,8 @@ public class Channel implements Closeable {
 
 	@Nonnull
 	protected static final Executor EXECUTOR = createExecutor();
+
+	protected final SimpleCastEventListenerList<CastEvent<?>, ?> listeners = new SimpleCastEventListenerList(); //TODO: (Nad) Temp test
 
 	protected final EventListenerHolder eventListener;
 
@@ -469,8 +478,8 @@ public class Channel implements Closeable {
 		}
 	}
 
-	public Status getStatus() throws IOException {
-		StandardResponse.StatusResponse status = sendStandard(
+	public ReceiverStatus getStatus() throws IOException {
+		StandardResponse.ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.status(),
 			DEFAULT_RECEIVER_ID
@@ -487,8 +496,8 @@ public class Channel implements Closeable {
 		return availability != null && "APP_AVAILABLE".equals(availability.getAvailability().get(appId));
 	}
 
-	public Status launch(String appId) throws IOException {
-		StandardResponse.StatusResponse status = sendStandard(
+	public ReceiverStatus launch(String appId) throws IOException {
+		StandardResponse.ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.launch(appId),
 			DEFAULT_RECEIVER_ID
@@ -496,8 +505,8 @@ public class Channel implements Closeable {
 		return status == null ? null : status.getStatus();
 	}
 
-	public Status stop(String sessionId) throws IOException {
-		StandardResponse.StatusResponse status = sendStandard(
+	public ReceiverStatus stop(String sessionId) throws IOException {
+		StandardResponse.ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.stop(sessionId),
 			DEFAULT_RECEIVER_ID
@@ -553,8 +562,8 @@ public class Channel implements Closeable {
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
-	public Status setVolume(Volume volume) throws IOException {
-		StandardResponse.StatusResponse status = sendStandard(
+	public ReceiverStatus setVolume(Volume volume) throws IOException {
+		StandardResponse.ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.setVolume(volume),
 			DEFAULT_RECEIVER_ID
@@ -907,9 +916,50 @@ public class Channel implements Closeable {
 							e.getMessage()
 						);
 					}
-				} else if ("MEDIA_STATUS".equals(responseType)) {
-					notifyListenersOfSpontaneousEvent(parsedMessage); //TODO: (Nad) Fix event
 				} else { //TODO: (Nad) Figure out "CLOSE" message
+					StandardResponse resp;
+					if (!Util.isBlank(responseType)) {
+						try {
+							resp = jsonMapper.treeToValue(parsedMessage, StandardResponse.class);
+						} catch (JsonMappingException jme) {
+							resp = null;
+						}
+					} else {
+						resp = null;
+					}
+
+					if (resp instanceof MediaStatusResponse) {
+						MediaStatusResponse mediaStatusResponse = (MediaStatusResponse) resp;
+						// It may be a single media status event
+						if (mediaStatusResponse.getStatuses().isEmpty()) {
+							if (parsedMessage.has("media")) {
+								try {
+									listeners.fire(new DefaultCastEvent<>(
+										CastEventType.MEDIA_STATUS,
+										jsonMapper.treeToValue(parsedMessage, MediaStatus.class)
+									));
+								} catch (JsonMappingException jme) {
+									// TODO: (Nad) Log
+								}
+							}
+						} else {
+							for (MediaStatus mediaStatus : mediaStatusResponse.getStatuses()) {
+								listeners.fire(new DefaultCastEvent<>(CastEventType.MEDIA_STATUS, mediaStatus));
+							}
+						}
+					} else if (resp instanceof ReceiverStatusResponse) {
+						listeners.fire(new DefaultCastEvent<>(
+							CastEventType.RECEIVER_STATUS,
+							((ReceiverStatusResponse) resp).getStatus()
+						));
+					} else if (resp instanceof CloseResponse) { //TODO: (Nad) Investigate
+						listeners.fire(new DefaultCastEvent<>(CastEventType.CLOSE, null));
+					} else {
+						listeners.fire(new DefaultCastEvent<>(CastEventType.UNKNOWN, parsedMessage)); //TODO: (Nad) How to make immutable?
+					}
+
+
+
 					notifyListenersOfSpontaneousEvent(parsedMessage); //TODO: (Nad) Handle event
 				}
 			} catch (JsonProcessingException e) {

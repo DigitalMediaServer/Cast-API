@@ -36,7 +36,7 @@ import javax.annotation.concurrent.Immutable;
 @JsonSubTypes({
 	@JsonSubTypes.Type(name = "PING", value = StandardResponse.PingResponse.class),
 	@JsonSubTypes.Type(name = "PONG", value = StandardResponse.PongResponse.class),
-	@JsonSubTypes.Type(name = "RECEIVER_STATUS", value = StandardResponse.StatusResponse.class),
+	@JsonSubTypes.Type(name = "RECEIVER_STATUS", value = StandardResponse.ReceiverStatusResponse.class),
 	@JsonSubTypes.Type(name = "GET_APP_AVAILABILITY", value = StandardResponse.AppAvailabilityResponse.class),
 	@JsonSubTypes.Type(name = "INVALID_REQUEST", value = StandardResponse.InvalidResponse.class),
 	@JsonSubTypes.Type(name = "MEDIA_STATUS", value = StandardResponse.MediaStatusResponse.class),
@@ -150,19 +150,19 @@ public abstract class StandardResponse implements Response {
 	}
 
 	/**
-	 * Response to "Status" request.
+	 * Response to "ReceiverStatus" request.
 	 */
 	@Immutable
-	public static class StatusResponse extends StandardResponse {
+	public static class ReceiverStatusResponse extends StandardResponse {
 
-		private final Status status;
+		private final ReceiverStatus status;
 
-		public StatusResponse(@JsonProperty("requestId") long requestId, @JsonProperty("status") Status status) {
+		public ReceiverStatusResponse(@JsonProperty("requestId") long requestId, @JsonProperty("status") ReceiverStatus status) {
 			super(requestId);
 			this.status = status;
 		}
 
-		public Status getStatus() {
+		public ReceiverStatus getStatus() {
 			return status;
 		}
 	}

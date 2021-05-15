@@ -394,7 +394,7 @@ public class ChromeCast {
 	 * @return current chromecast status - volume, running applications, etc.
 	 * @throws IOException
 	 */
-	public Status getStatus() throws IOException {
+	public ReceiverStatus getStatus() throws IOException {
 		return channel().getStatus();
 	}
 
@@ -403,7 +403,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public Application getRunningApplication() throws IOException {
-		Status status = getStatus();
+		ReceiverStatus status = getStatus();
 		return status.getRunningApp();
 	}
 
@@ -423,7 +423,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public boolean isApplicationRunning(String appId) throws IOException {
-		Status status = getStatus();
+		ReceiverStatus status = getStatus();
 		return status.getRunningApp() != null && appId.equals(status.getRunningApp().getAppId());
 	}
 
@@ -434,7 +434,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public Application launchApp(String appId) throws IOException {
-		Status status = channel().launch(appId);
+		ReceiverStatus status = channel().launch(appId);
 		return status == null ? null : status.getRunningApp();
 	}
 
@@ -558,7 +558,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public void play() throws IOException {
-		Status status = getStatus();
+		ReceiverStatus status = getStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
 			throw new ChromeCastException("No application is running in ChromeCast");
@@ -582,7 +582,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public void pause() throws IOException {
-		Status status = getStatus();
+		ReceiverStatus status = getStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
 			throw new ChromeCastException("No application is running in ChromeCast");
@@ -607,7 +607,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public void seek(double time) throws IOException {
-		Status status = getStatus();
+		ReceiverStatus status = getStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
 			throw new ChromeCastException("No application is running in ChromeCast");
@@ -654,7 +654,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public MediaStatus load(String mediaTitle, String thumb, String url, String contentType) throws IOException {
-		Status status = getStatus();
+		ReceiverStatus status = getStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
 			throw new ChromeCastException("No application is running in ChromeCast");
@@ -698,7 +698,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public MediaStatus load(final Media media) throws IOException {
-		Status status = getStatus();
+		ReceiverStatus status = getStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
 			throw new ChromeCastException("No application is running in ChromeCast");
@@ -738,7 +738,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public <T extends Response> T send(String namespace, Request request, Class<T> responseClass) throws IOException {
-		Status status = getStatus();
+		ReceiverStatus status = getStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
 			throw new ChromeCastException("No application is running in ChromeCast");

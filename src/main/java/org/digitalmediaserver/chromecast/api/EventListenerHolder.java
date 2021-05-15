@@ -48,9 +48,9 @@ class EventListenerHolder implements ChromeCastSpontaneousEventListener, ChromeC
 	}
 
 	public void deliverEvent(JsonNode json) throws JsonProcessingException {
-		if (json == null || this.eventListeners.isEmpty()) {
-			return;
-		}
+//		if (json == null || this.eventListeners.isEmpty()) { //TODO: (Nad) Temp disabled
+//			return;
+//		}
 
 		StandardResponse resp;
 		if (json.has("responseType")) {
@@ -86,8 +86,8 @@ class EventListenerHolder implements ChromeCastSpontaneousEventListener, ChromeC
 					spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.MEDIA_STATUS, ms));
 				}
 			}
-		} else if (resp instanceof StandardResponse.StatusResponse) {
-			spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.STATUS, ((StandardResponse.StatusResponse) resp).getStatus()));
+		} else if (resp instanceof StandardResponse.ReceiverStatusResponse) {
+			spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.STATUS, ((StandardResponse.ReceiverStatusResponse) resp).getStatus()));
 		} else if (resp instanceof StandardResponse.CloseResponse) {
 			spontaneousEventReceived(new ChromeCastSpontaneousEvent(SpontaneousEventType.CLOSE, new Object()));
 		} else {
