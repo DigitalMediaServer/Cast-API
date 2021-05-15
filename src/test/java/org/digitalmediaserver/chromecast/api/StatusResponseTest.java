@@ -2,7 +2,7 @@ package org.digitalmediaserver.chromecast.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.digitalmediaserver.chromecast.api.StandardResponse.StatusResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.ReceiverStatusResponse;
 import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,11 +22,11 @@ public class StatusResponseTest {
 		nameSpaces.add(new Namespace("some.other.name.space"));
 		List<Application> applications = new ArrayList<>();
 		applications.add(new Application("appId", "iconURL", "appName", "jkl34d", "single", true, false, "55", nameSpaces));
-		Status status = new Status(new Volume(0.55f, true, 0.2f, 0.01, "wild"), applications, false, true);
-		StatusResponse source = new StatusResponse(3591L, status);
+		ReceiverStatus status = new ReceiverStatus(new Volume(0.55f, true, 0.2f, 0.01, "wild"), applications, false, true);
+		ReceiverStatusResponse source = new ReceiverStatusResponse(3591L, status);
 
 		String json = jsonMapper.writeValueAsString(source);
-		StatusResponse response = (StatusResponse) jsonMapper.readValue(json, StandardResponse.class);
+		ReceiverStatusResponse response = (ReceiverStatusResponse) jsonMapper.readValue(json, StandardResponse.class);
 		assertEquals(3591L, response.getRequestId());
 		status = response.getStatus();
 		Volume volume = status.getVolume();

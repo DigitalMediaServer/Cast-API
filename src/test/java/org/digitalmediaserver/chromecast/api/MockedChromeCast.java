@@ -159,7 +159,7 @@ final class MockedChromeCast {
 			if (message instanceof StandardMessage.Ping) {
 				return new StandardResponse.PongResponse();
 			} else if (message instanceof StandardRequest.Status) {
-				return new StandardResponse.StatusResponse(((StandardRequest.Status) message).getRequestId(), status());
+				return new StandardResponse.ReceiverStatusResponse(((StandardRequest.Status) message).getRequestId(), status());
 			} else if (message instanceof StandardRequest.Launch) {
 				StandardRequest.Launch launch = (StandardRequest.Launch) message;
 				runningApplications.add(new Application(
@@ -173,14 +173,14 @@ final class MockedChromeCast {
 					"",
 					Collections.<Namespace> emptyList()
 				));
-				StandardResponse response = new StandardResponse.StatusResponse(launch.getRequestId(), status());
+				StandardResponse response = new StandardResponse.ReceiverStatusResponse(launch.getRequestId(), status());
 				return response;
 			}
 			return null;
 		}
 
-		Status status() {
-			return new Status(
+		ReceiverStatus status() {
+			return new ReceiverStatus(
 				new Volume(
 					1f,
 					false,

@@ -29,7 +29,7 @@ import javax.annotation.concurrent.Immutable;
  * Current ChromeCast device status.
  */
 @Immutable
-public class Status {
+public class ReceiverStatus {
 
 	private final Volume volume;
 
@@ -38,7 +38,7 @@ public class Status {
 	private final boolean activeInput;
 	private final boolean standBy;
 
-	public Status(
+	public ReceiverStatus(
 		@JsonProperty("volume") Volume volume,
 		@JsonProperty("applications") List<Application> applications,
 		@JsonProperty("isActiveInput") boolean activeInput,
