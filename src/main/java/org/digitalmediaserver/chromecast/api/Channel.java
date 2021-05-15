@@ -23,6 +23,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
@@ -59,7 +60,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.protobuf.InvalidProtocolBufferException;
 
 /**
  * Internal class for low-level communication with ChromeCast device. Should
@@ -90,18 +90,15 @@ public class Channel implements Closeable {
 
 	protected final EventListenerHolder eventListener;
 
-	private static void warn(String message, Exception ex) { //TODO: (Nad) Remove
-		LOGGER.warn(CHROMECAST_API_MARKER, "{}, caused by {}", message, ex.toString());
-	}
-
 	@Nonnull
 	protected final Object socketLock = new Object();
 
 	/**
-	 * Single socket instance for transfers
+	 * The {@link Socket} instance use to communicate with the remote device.
 	 */
+	@Nullable
 	@GuardedBy("socketLock")
-	protected Socket socket; //TODO: (Nad) Must be sync'ed
+	protected Socket socket;
 
 	/**
 	 * Address of ChromeCast
@@ -134,35 +131,30 @@ public class Channel implements Closeable {
 	/**
 	 * Counter for producing request numbers
 	 */
-	private final AtomicLong requestCounter = new AtomicLong(new Random().nextInt(65536) + 1L);
+	@Nonnull
+	protected final AtomicLong requestCounter = new AtomicLong(new Random().nextInt(65536) + 1L);
 
 	/**
 	 * Processors of requests by their identifiers
 	 */
-	private final Map<Long, ResultProcessor<? extends Response>> requests = new ConcurrentHashMap<>(); //TODO: (Nad) This
+	@Nonnull
+	protected final Map<Long, ResultProcessor<? extends Response>> requests = new ConcurrentHashMap<>(); //TODO: (Nad) This - sync?
 
 	/**
 	 * Single mapper object for marshalling JSON
 	 */
 	@Nonnull
-	private final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
+	protected final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 
 	/**
 	 * Destination ids of sessions opened within this channel
 	 */
-	private Set<String> sessions = new HashSet<>();
-
-//	/**
-//	 * Indicates that this channel was closed (explicitly, by remote host or for
-//	 * some connectivity issue)
-//	 */
-//	private volatile boolean closed = true;
-//	private final Object closedSync = new Object(); //TODO: (Nad) Problemo
+	private Set<String> sessions = new HashSet<>(); //TODO: (Nad) Check
 
 	/**
 	 * How much time to wait until request is processed
 	 */
-	private volatile long requestTimeout = DEFAULT_REQUEST_TIMEOUT;
+	private volatile long requestTimeout = DEFAULT_REQUEST_TIMEOUT; //TODO: (Nad) Check - can it be final?
 
 	public Channel(
 		@Nonnull String host,
@@ -273,7 +265,7 @@ public class Channel implements Closeable {
 		}
 		notifyListenerOfConnectionEvent(false); //TODO: (Nad) Executor..?
 
-//		synchronized (closedSync) {
+//		synchronized (closedSync) { //TODO: (Nad) Remove
 //			if (closed) {
 //				throw new ChromeCastException("Channel already closed.");
 //			} else {
@@ -416,12 +408,12 @@ public class Channel implements Closeable {
 		}
 	}
 
-	private void write(String namespace, Message message, String destinationId) throws IOException {
+	protected void write(String namespace, Message message, String destinationId) throws IOException {
 		write(namespace, jsonMapper.writeValueAsString(message), destinationId);
 	}
 
-	private void write(String namespace, String message, String destinationId) throws IOException {
-		LOGGER.debug(CHROMECAST_API_MARKER, " s-> {}", message);
+	protected void write(String namespace, String message, String destinationId) throws IOException {
+		LOGGER.trace(CHROMECAST_API_MARKER, "Sending message to {}; \"{}\"", remoteName, message);
 		CastMessage msg = CastMessage.newBuilder()
 			.setProtocolVersion(CastMessage.ProtocolVersion.CASTV2_1_0)
 			.setSourceId(senderId)
@@ -434,7 +426,13 @@ public class Channel implements Closeable {
 	}
 
 	private void write(CastMessage message) throws IOException {
-		OutputStream os = socket.getOutputStream();
+		OutputStream os;
+		synchronized (socketLock) {
+			if (socket == null) {
+				throw new SocketException("Socket is null");
+			}
+			os = socket.getOutputStream();
+		}
 		writeB32Int(message.getSerializedSize(), os);
 		message.writeTo(os);
 	}
@@ -700,10 +698,11 @@ public class Channel implements Closeable {
 		@Override
 		public void run() {
 			String jsonMessage;
-			CastMessage message;
+			CastMessage message = null;
 			PayloadType payloadType;
 			try {
 				while (running) { //TODO: (Nad) Figure out
+					message = null;
 					try {
 						message = readMessage(is);
 					} catch (SocketTimeoutException e) {
@@ -801,6 +800,31 @@ public class Channel implements Closeable {
 			} catch (IOException e) {
 				if (running) {
 					LOGGER.error(CHROMECAST_API_MARKER, "{} InputHandler exception, terminating handler: ", remoteName, e.getMessage());
+					if (message != null && LOGGER.isDebugEnabled(CHROMECAST_API_MARKER)) {
+						StringBuilder sb = new StringBuilder();
+						if (message.hasNamespace()) {
+							sb.append("namespace: ").append(message.getNamespace());
+						}
+						if (message.hasProtocolVersion() && message.getProtocolVersion() != null) {
+							if (sb.length() > 0) {
+								sb.append(", ");
+							}
+							sb.append("protocol version: ").append(message.getProtocolVersion().getNumber());
+						}
+						if (message.hasPayloadUtf8()) {
+							if (sb.length() > 0) {
+								sb.append(", ");
+							}
+							sb.append("string payload: ").append(message.getPayloadUtf8());
+						}
+						if (message.hasPayloadBinary()) {
+							if (sb.length() > 0) {
+								sb.append(", ");
+							}
+							sb.append("binary payload: ").append(message.getPayloadBinary());
+						}
+						LOGGER.debug(CHROMECAST_API_MARKER, "Triggering (potentially partial) message: {}", sb.toString());
+					}
 					LOGGER.trace(CHROMECAST_API_MARKER, "", e);
 					running = false;
 				} else {
@@ -814,7 +838,12 @@ public class Channel implements Closeable {
 				try {
 					close();
 				} catch (IOException ioe) {
-					LOGGER.trace(CHROMECAST_API_MARKER, "An error occurred while closing socket: {}", e.getMessage());
+					LOGGER.debug(
+						CHROMECAST_API_MARKER,
+						"An error occurred while closing {} socket: {}",
+						remoteName,
+						e.getMessage()
+					);
 				}
 			}
 		}
@@ -866,6 +895,18 @@ public class Channel implements Closeable {
 					//TODO: (Nad) Send "custom" event
 					CustomMessageEvent event = new CustomMessageEvent(message.getNamespace(), message.getPayloadUtf8());
 					notifyListenersCustomMessageEvent(event);
+				} else if ("CLOSE".equals(responseType)) { //TODO: (Nad) Reevaluate - which "connection" does it apply to?
+					notifyListenersOfSpontaneousEvent(parsedMessage);
+					try {
+						close();
+					} catch (IOException e) {
+						LOGGER.debug(
+							CHROMECAST_API_MARKER,
+							"An error occurred while closing {} socket: {}",
+							remoteName,
+							e.getMessage()
+						);
+					}
 				} else if ("MEDIA_STATUS".equals(responseType)) {
 					notifyListenersOfSpontaneousEvent(parsedMessage); //TODO: (Nad) Fix event
 				} else { //TODO: (Nad) Figure out "CLOSE" message
@@ -879,93 +920,6 @@ public class Channel implements Closeable {
 					e.getMessage()
 				);
 				LOGGER.trace(CHROMECAST_API_MARKER, "", e);
-			}
-		}
-	}
-
-	protected class ReadThread extends Thread { //TODO: (Nad) Remove
-
-		private volatile boolean stop;
-
-		@Override
-		public void run() {
-			while (!stop) {
-				JsonNode parsed = null;
-				String jsonMSG = null;
-				CastMessage message = null;
-
-				try {
-					message = readMessage(socket.getInputStream());
-					if (message.getPayloadType() == CastMessage.PayloadType.STRING) {
-						LOGGER.debug(CHROMECAST_API_MARKER, " <-- {}", message.getPayloadUtf8());
-						jsonMSG = message.getPayloadUtf8().replaceFirst("\"type\"", "\"responseType\"");
-						if (jsonMSG == null || jsonMSG.isEmpty()) {
-							LOGGER.warn(CHROMECAST_API_MARKER, " <-- Received empty message. Ignore.");
-							continue;
-						}
-
-						// Determine whether the message belongs to cast
-						// protocol or is a custom
-						// message from the receiver app
-						parsed = jsonMapper.readTree(jsonMSG);
-					} else {
-						LOGGER.warn(CHROMECAST_API_MARKER, "Received unexpected {} message", message.getPayloadType());
-					}
-				} catch (InvalidProtocolBufferException e) {
-					warn("Error while processing protobuf", e);
-				} catch (JsonProcessingException e) {
-					warn("Error while processing json", e);
-				} catch (IOException e) {
-					if (stop) {
-						LOGGER.debug(CHROMECAST_API_MARKER, "Got IOException while reading due to stream being closed (stop=true)", e);
-						continue;
-					}
-					warn("Error while reading", e);
-					String temp;
-					if (message != null && message.getPayloadUtf8() != null) { //TODO: (Nad) Implement similar logic..?
-						temp = message.getPayloadUtf8();
-					} else {
-						temp = " null payload in message ";
-					}
-					LOGGER.warn(CHROMECAST_API_MARKER, " <-- {}", temp);
-					try {
-						close();
-					} catch (IOException ex) {
-						warn("Error while closing channel", ex);
-					}
-				} catch (Exception e) {
-					warn("Unknown error while reading", e);
-					continue;
-				}
-
-				try {
-					if (message == null) {
-						continue;
-					}
-
-					if (parsed == null || isCustomMessage(parsed)) {
-						CustomMessageEvent event = new CustomMessageEvent(message.getNamespace(), message.getPayloadUtf8());
-						notifyListenersCustomMessageEvent(event);
-					} else {
-						if (parsed.has("requestId")) {
-							Long requestId = parsed.get("requestId").asLong();
-							final ResultProcessor<? extends Response> rp = requests.remove(requestId);
-							if (rp != null) {
-								rp.process(jsonMSG);
-							} else {
-								notifyListenersOfSpontaneousEvent(parsed);
-							}
-						} else if (parsed.has("responseType") && parsed.get("responseType").asText().equals("MEDIA_STATUS")) {
-							notifyListenersOfSpontaneousEvent(parsed);
-						} else if (parsed.has("responseType") && parsed.get("responseType").asText().equals("PING")) {
-							write("urn:x-cast:com.google.cast.tp.heartbeat", StandardMessage.pong(), DEFAULT_RECEIVER_ID);
-						} else if (parsed.has("responseType") && parsed.get("responseType").asText().equals("CLOSE")) {
-							notifyListenersOfSpontaneousEvent(parsed);
-						}
-					}
-				} catch (Exception e) {
-					warn("Error while handling", e);
-				}
 			}
 		}
 	}
