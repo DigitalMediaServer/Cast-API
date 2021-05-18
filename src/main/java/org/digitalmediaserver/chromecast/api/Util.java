@@ -163,4 +163,25 @@ final class Util {
 			throw new IllegalArgumentException(objectName + " cannot be null");
 		}
 	}
+
+	/**
+	 * Asserts that the specified {@link CharSequence} isn't blank by throwing
+	 * an {@link IllegalArgumentException} if it is.
+	 *
+	 * @param charSequence the {@link CharSequence} to assert that isn't blank.
+	 * @param charSequenceName the identifier name to be used in the thrown
+	 *            {@link IllegalArgumentException}.
+	 *
+	 * @throws IllegalArgumentException If {@code charSequence} is {@code null}
+	 *             or blank.
+	 * @throws AssertionError If {@code charSequenceName} is {@code null}.
+	 */
+	public static void requireNotBlank(@Nullable CharSequence charSequence, @Nonnull String charSequenceName) {
+		if (charSequenceName == null) {
+			throw new AssertionError("Invalid use of requireNotBlank, charSequenceName must be specified");
+		}
+		if (charSequence == null || isBlank(charSequence)) {
+			throw new IllegalArgumentException(charSequenceName + " cannot be null or blank");
+		}
+	}
 }

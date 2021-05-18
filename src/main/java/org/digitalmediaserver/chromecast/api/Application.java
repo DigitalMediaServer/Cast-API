@@ -17,7 +17,6 @@ package org.digitalmediaserver.chromecast.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -104,18 +103,33 @@ public class Application {
 	}
 
 	@Override
-	public final String toString() {
-		return String.format(
-			"Application{id: %s, name: %s, sessionId: %s, statusText: %s, transportId: %s," +
-			" isIdleScreen: %b, launchedFromCloud: %b, namespaces: %s}",
-			this.appId,
-			this.displayName,
-			this.sessionId,
-			this.statusText,
-			this.transportId,
-			this.isIdleScreen,
-			this.launchedFromCloud,
-			Arrays.toString(this.namespaces.toArray())
-		);
+	public String toString() {
+		StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+		builder.append(" [");
+		if (appId != null) {
+			builder.append("appId=").append(appId).append(", ");
+		}
+		if (iconUrl != null) {
+			builder.append("iconUrl=").append(iconUrl).append(", ");
+		}
+		if (displayName != null) {
+			builder.append("displayName=").append(displayName).append(", ");
+		}
+		if (sessionId != null) {
+			builder.append("sessionId=").append(sessionId).append(", ");
+		}
+		if (statusText != null) {
+			builder.append("statusText=").append(statusText).append(", ");
+		}
+		if (transportId != null) {
+			builder.append("transportId=").append(transportId).append(", ");
+		}
+		builder.append("isIdleScreen=").append(isIdleScreen)
+			.append(", launchedFromCloud=").append(launchedFromCloud);
+		if (namespaces != null) {
+			builder.append(", ").append("namespaces=").append(namespaces);
+		}
+		builder.append("]");
+		return builder.toString();
 	}
 }

@@ -56,4 +56,22 @@ public class Device {
 	public Volume getVolume() {
 		return volume;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+		builder.append(" [");
+		if (name != null) {
+			builder.append("name=").append(name).append(", ");
+		}
+		builder.append("capabilities=").append(capabilities).append(", ");
+		if (deviceId != null) {
+			builder.append("deviceId=").append(deviceId).append(", ");
+		}
+		if (volume != null) {
+			builder.append("volume=").append(volume);
+		}
+		builder.append("]");
+		return builder.toString();
+	}
 }

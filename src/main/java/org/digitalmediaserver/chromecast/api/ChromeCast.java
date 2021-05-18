@@ -32,6 +32,10 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
+import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListener;
+import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListenerList;
+import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
+import org.digitalmediaserver.chromecast.api.CastEvent.SimpleCastEventListenerList;
 
 /**
  * ChromeCast device - main object used for interaction with ChromeCast dongle.
@@ -40,7 +44,8 @@ public class ChromeCast {
 
 	public static final String SERVICE_TYPE = "_googlecast._tcp.local.";
 
-	protected final EventListenerHolder eventListenerHolder = new EventListenerHolder();
+	@Nonnull
+	protected final CastEventListenerList listeners = new SimpleCastEventListenerList();
 
 	@Nonnull
 	protected final String dnsName;
@@ -334,7 +339,7 @@ public class ChromeCast {
 
 	public synchronized void connect() throws IOException, KeyManagementException, NoSuchAlgorithmException { //TODO: (Nad) Look into sync
 		if (channel == null || channel.isClosed()) {
-			channel = new Channel(address, port, displayName, senderId, eventListenerHolder);
+			channel = new Channel(address, port, displayName, senderId, listeners);
 			channel.connect();
 		}
 	}
@@ -764,20 +769,12 @@ public class ChromeCast {
 		send(namespace, request, null);
 	}
 
-	public void registerListener(ChromeCastSpontaneousEventListener listener) {
-		eventListenerHolder.registerListener(listener);
+	public boolean addEventListener(@Nullable CastEventListener listener, CastEventType... eventTypes) {
+		return listeners.add(listener, eventTypes);
 	}
 
-	public void unregisterListener(ChromeCastSpontaneousEventListener listener) {
-		eventListenerHolder.unregisterListener(listener);
-	}
-
-	public void registerConnectionListener(ChromeCastConnectionEventListener listener) {
-		eventListenerHolder.registerConnectionListener(listener);
-	}
-
-	public void unregisterConnectionListener(ChromeCastConnectionEventListener listener) {
-		eventListenerHolder.unregisterConnectionListener(listener);
+	public boolean removeEventListener(@Nullable CastEventListener listener) {
+		return listeners.remove(listener);
 	}
 
 	@Override

@@ -26,7 +26,7 @@ import org.digitalmediaserver.chromecast.api.ChromeCastSpontaneousEvent.Spontane
 /**
  * Helper class for delivering spontaneous events to their listeners.
  */
-class EventListenerHolder implements ChromeCastSpontaneousEventListener, ChromeCastConnectionEventListener {
+class EventListenerHolder implements ChromeCastSpontaneousEventListener, ChromeCastConnectionEventListener { //TODO: (Nad) Remove
 
 	private final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 	private final Set<ChromeCastSpontaneousEventListener> eventListeners = new CopyOnWriteArraySet<>();

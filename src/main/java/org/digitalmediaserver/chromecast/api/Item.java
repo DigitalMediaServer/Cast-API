@@ -99,7 +99,16 @@ public class Item {
 	}
 
 	@Override
-	public final String toString() {
-		return String.format("Item{id: %s, media: %s}", this.itemId, this.media);
+	public String toString() {
+		StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+		builder.append(" [autoplay=").append(autoplay).append(", ");
+		if (customData != null) {
+			builder.append("customData=").append(customData).append(", ");
+		}
+		if (media != null) {
+			builder.append("media=").append(media).append(", ");
+		}
+		builder.append("itemId=").append(itemId).append("]");
+		return builder.toString();
 	}
 }

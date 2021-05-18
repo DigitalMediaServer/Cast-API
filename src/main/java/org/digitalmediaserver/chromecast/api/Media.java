@@ -247,7 +247,34 @@ public class Media {
 	}
 
 	@Override
-	public final String toString() {
-		return String.format("Media{url: %s, contentType: %s, duration: %s}", url, contentType, duration);
+	public String toString() {
+		StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+		builder.append(" [");
+		if (metadata != null) {
+			builder.append("metadata=").append(metadata).append(", ");
+		}
+		if (url != null) {
+			builder.append("url=").append(url).append(", ");
+		}
+		if (duration != null) {
+			builder.append("duration=").append(duration).append(", ");
+		}
+		if (streamType != null) {
+			builder.append("streamType=").append(streamType).append(", ");
+		}
+		if (contentType != null) {
+			builder.append("contentType=").append(contentType).append(", ");
+		}
+		if (customData != null) {
+			builder.append("customData=").append(customData).append(", ");
+		}
+		if (textTrackStyle != null) {
+			builder.append("textTrackStyle=").append(textTrackStyle).append(", ");
+		}
+		if (tracks != null) {
+			builder.append("tracks=").append(tracks);
+		}
+		builder.append("]");
+		return builder.toString();
 	}
 }

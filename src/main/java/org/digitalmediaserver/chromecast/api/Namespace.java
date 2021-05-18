@@ -35,7 +35,13 @@ public class Namespace {
 	}
 
 	@Override
-	public final String toString() {
-		return String.format("Namespace{%s}", this.name);
+	public String toString() {
+		StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+		builder.append(" [");
+		if (name != null) {
+			builder.append("name=").append(name);
+		}
+		builder.append("]");
+		return builder.toString();
 	}
 }

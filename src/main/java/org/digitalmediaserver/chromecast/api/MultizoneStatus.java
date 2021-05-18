@@ -55,4 +55,15 @@ public class MultizoneStatus {
 	public boolean isMultichannel() {
 		return isMultichannel;
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+		builder.append(" [");
+		if (devices != null) {
+			builder.append("devices=").append(devices).append(", ");
+		}
+		builder.append("isMultichannel=").append(isMultichannel).append("]");
+		return builder.toString();
+	}
 }

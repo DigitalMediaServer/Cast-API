@@ -18,7 +18,6 @@ package org.digitalmediaserver.chromecast.api;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -82,12 +81,15 @@ public class ReceiverStatus {
 
 	@Override
 	public String toString() {
-		return String.format(
-			"Media{volume: %s, applications: %s, activeInput: %b, standBy; %b}",
-			volume,
-			Arrays.toString(applications.toArray()),
-			activeInput,
-			standBy
-		);
+		StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+		builder.append(" [");
+		if (volume != null) {
+			builder.append("volume=").append(volume).append(", ");
+		}
+		if (applications != null) {
+			builder.append("applications=").append(applications).append(", ");
+		}
+		builder.append("activeInput=").append(activeInput).append(", standBy=").append(standBy).append("]");
+		return builder.toString();
 	}
 }

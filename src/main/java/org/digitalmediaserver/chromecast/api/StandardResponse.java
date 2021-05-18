@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -26,7 +27,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 
 /**
  * Parent class for transport object representing messages received FROM
@@ -63,6 +66,14 @@ public abstract class StandardResponse implements Response {
 		return requestId;
 	}
 
+//	/**
+//	 * @return The {@link CastEventType} to use when receiving this
+//	 *         {@link StandardResponse}.
+//	 */
+//	@Nullable
+//	@JsonIgnore
+//	public abstract CastEventType getEventType();
+
 	/**
 	 * Request to send 'Pong' message in reply.
 	 */
@@ -71,6 +82,19 @@ public abstract class StandardResponse implements Response {
 
 		protected PingResponse(@JsonProperty("requestId") long requestId) {
 			super(requestId);
+		}
+
+//		@JsonIgnore
+//		@Override
+//		public CastEventType getEventType() {
+//			return null;
+//		}
+
+		@Override
+		public String toString() {
+			return new StringBuilder(getClass().getSimpleName())
+				.append(" [requestId=").append(getRequestId()).append("]")
+				.toString();
 		}
 	}
 
@@ -89,6 +113,19 @@ public abstract class StandardResponse implements Response {
 		public long getRequestId() {
 			return super.getRequestId();
 		}
+
+//		@JsonIgnore
+//		@Override
+//		public CastEventType getEventType() {
+//			return null;
+//		}
+
+		@Override
+		public String toString() {
+			return new StringBuilder(getClass().getSimpleName())
+				.append(" [requestId=").append(getRequestId()).append("]")
+				.toString();
+		}
 	}
 
 	/**
@@ -100,6 +137,19 @@ public abstract class StandardResponse implements Response {
 		protected CloseResponse(@JsonProperty("requestId") long requestId) {
 			super(requestId);
 		}
+
+//		@JsonIgnore
+//		@Override
+//		public CastEventType getEventType() {
+//			return CastEventType.CLOSE;
+//		}
+
+		@Override
+		public String toString() {
+			return new StringBuilder(getClass().getSimpleName())
+				.append(" [requestId=").append(getRequestId()).append("]")
+				.toString();
+		}
 	}
 
 	/**
@@ -110,6 +160,19 @@ public abstract class StandardResponse implements Response {
 
 		protected LoadFailedResponse(@JsonProperty("requestId") long requestId) {
 			super(requestId);
+		}
+
+//		@JsonIgnore
+//		@Override
+//		public CastEventType getEventType() {
+//			return CastEventType.;
+//		}
+
+		@Override
+		public String toString() {
+			return new StringBuilder(getClass().getSimpleName())
+				.append(" [requestId=").append(getRequestId()).append("]")
+				.toString();
 		}
 	}
 
@@ -129,6 +192,17 @@ public abstract class StandardResponse implements Response {
 		public String getReason() {
 			return reason;
 		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+			builder.append(" [").append("requestId=").append(getRequestId());
+			if (reason != null) {
+				builder.append(", reason=").append(reason);
+			}
+			builder.append("]");
+			return builder.toString();
+		}
 	}
 
 	/**
@@ -146,6 +220,17 @@ public abstract class StandardResponse implements Response {
 
 		public String getReason() {
 			return reason;
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+			builder.append(" [").append("requestId=").append(getRequestId());
+			if (reason != null) {
+				builder.append(", reason=").append(reason);
+			}
+			builder.append("]");
+			return builder.toString();
 		}
 	}
 
@@ -165,13 +250,25 @@ public abstract class StandardResponse implements Response {
 		public ReceiverStatus getStatus() {
 			return status;
 		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+			builder.append(" [").append("requestId=").append(getRequestId());
+			if (status != null) {
+				builder.append(", status=").append(status);
+			}
+			builder.append("]");
+			return builder.toString();
+		}
 	}
 
 	/**
 	 * Response to "MediaStatus" request.
 	 */
 	@Immutable
-	public static class MediaStatusResponse extends StandardResponse { //TODO: (Nad) Make sure all subclasses are immutable
+	@JsonDeserialize(using = MediaStatusResponseDeserializer.class)
+	public static class MediaStatusResponse extends StandardResponse {
 
 		private final List<MediaStatus> statuses;
 
@@ -190,6 +287,17 @@ public abstract class StandardResponse implements Response {
 		@Nonnull
 		public List<MediaStatus> getStatuses() {
 			return statuses;
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+			builder.append(" [").append("requestId=").append(getRequestId());
+			if (statuses != null) {
+				builder.append(", statuses=").append(statuses);
+			}
+			builder.append("]");
+			return builder.toString();
 		}
 	}
 
@@ -218,6 +326,17 @@ public abstract class StandardResponse implements Response {
 		public Map<String, String> getAvailability() {
 			return availability;
 		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+			builder.append(" [").append("requestId=").append(getRequestId());
+			if (availability != null) {
+				builder.append(", availability=").append(availability);
+			}
+			builder.append("]");
+			return builder.toString();
+		}
 	}
 
 	/**
@@ -240,6 +359,17 @@ public abstract class StandardResponse implements Response {
 		public MultizoneStatus getStatus() {
 			return status;
 		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+			builder.append(" [").append("requestId=").append(getRequestId());
+			if (status != null) {
+				builder.append(", status=").append(status);
+			}
+			builder.append("]");
+			return builder.toString();
+		}
 	}
 
 	/**
@@ -258,10 +388,21 @@ public abstract class StandardResponse implements Response {
 		public Device getDevice() {
 			return device;
 		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+			builder.append(" [").append("requestId=").append(getRequestId());
+			if (device != null) {
+				builder.append(", device=").append(device);
+			}
+			builder.append("]");
+			return builder.toString();
+		}
 	}
 
 	/**
-	 * Received when volume is changed in ChromeCast Audio group.
+	 * Received when volume is changed.
 	 */
 	@Immutable
 	public static class DeviceUpdatedResponse extends StandardResponse {
@@ -275,6 +416,17 @@ public abstract class StandardResponse implements Response {
 
 		public Device getDevice() {
 			return device;
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+			builder.append(" [").append("requestId=").append(getRequestId());
+			if (device != null) {
+				builder.append(", device=").append(device);
+			}
+			builder.append("]");
+			return builder.toString();
 		}
 	}
 
@@ -296,6 +448,17 @@ public abstract class StandardResponse implements Response {
 
 		public String getDeviceId() {
 			return deviceId;
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+			builder.append(" [").append("requestId=").append(getRequestId());
+			if (deviceId != null) {
+				builder.append(", deviceId=").append(deviceId);
+			}
+			builder.append("]");
+			return builder.toString();
 		}
 	}
 }
