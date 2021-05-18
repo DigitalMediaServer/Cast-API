@@ -56,7 +56,13 @@ public class Track {
 	}
 
 	@Override
-	public final String toString() {
-		return String.format("Track{id: %d, type: %s}", this.trackId, this.trackType);
+	public String toString() {
+		StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+		builder.append(" [trackId=").append(trackId).append(", ");
+		if (trackType != null) {
+			builder.append("trackType=").append(trackType);
+		}
+		builder.append("]");
+		return builder.toString();
 	}
 }

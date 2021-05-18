@@ -1,0 +1,61 @@
+{
+	"type": "MEDIA_STATUS",
+	"status": [
+		{
+			"mediaSessionId": 1,
+			"playbackRate": 1,
+			"playerState": "IDLE",
+			"currentTime": 0,
+			"supportedMediaCommands": 15,
+			"volume": {
+				"level": 1,
+				"muted": false
+			},
+			"media": {
+				"contentId": "http://192.168.2.139:9080/audio/99fd6998-aa4d-4764-9b41-c6869dcfc85f.mp3",
+				"contentType": null
+			},
+			"currentItemId": 1,
+			"extendedStatus": {
+				"playerState": "LOADING",
+				"media": {
+					"contentId": "http://192.168.2.139:9080/audio/99fd6998-aa4d-4764-9b41-c6869dcfc85f.mp3",
+					"contentType": null
+				}
+			},
+			"repeatMode": "REPEAT_OFF"
+		},
+		{
+			"currentTime": 16,
+			"playbackRate": 1,
+			"supportedMediaCommands": 29,
+			"playerState": "PLAYING",
+			"media": {
+				"metadata": {
+					"metadataType": 3,
+					"albumName": "The Album",
+					"title": "And We Danced",
+					"albumArtist": "The Artist",
+					"artist": "The Artist",
+					"images": [
+						{
+							"url": "http://lh3.googleusercontent.com/UirYk5XiPVHW2HHRtoVlvHF10_Of8VtYU9DL18qwFsFodXd3hXo60yX1BfV5up5ClCKhgZvLPUY"
+						}
+					],
+					"releaseDate": "1994-11-05T13:15:30Z"
+				},
+				"contentId": "http://audioURL",
+				"duration": 246,
+				"streamType": "BUFFERED",
+				"contentType": "BUFFERED"
+			},
+			"mediaSessionId": 7,
+			"volume": {
+				"level": 0.6999999284744263,
+				"muted": false,
+				"increment": 0.05
+			}
+		}
+	],
+	"requestId": 2395
+}

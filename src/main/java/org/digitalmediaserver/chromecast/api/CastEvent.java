@@ -82,20 +82,20 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 	 *
 	 * @author Nadahar
 	 */
-	public interface CastEventListener<E extends CastEvent<T>, T> extends EventListener {
+	public interface CastEventListener extends EventListener {
 
 		/**
 		 * Called whenever an {@link CastEvent} occurs.
 		 *
 		 * @param event the {@link CastEvent}.
 		 */
-		void onEvent(@Nonnull CastEvent<T> event);
+		void onEvent(@Nonnull CastEvent<?> event);
 	}
 
 	@ThreadSafe
-	public interface CastEventListenerList<E extends CastEvent<T>, T> {
+	public interface CastEventListenerList {
 
-		boolean add(@Nullable CastEventListener<E, T> listener, CastEventType... eventTypes);
+		boolean add(@Nullable CastEventListener listener, CastEventType... eventTypes);
 
 		/**
 		 * Adds the specified {@link CastEventListener}s to this
@@ -107,13 +107,13 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 		 *            to subscribe to all events.
 		 * @return The number of listeners added or modified.
 		 */
-		int addAll(@Nullable Collection<CastEventListener<E, T>> collection, CastEventType... eventTypes);
+		int addAll(@Nullable Collection<CastEventListener> collection, CastEventType... eventTypes);
 
-		boolean remove(@Nullable CastEventListener<E, T> listener);
+		boolean remove(@Nullable CastEventListener listener);
 
-		boolean removeAll(@Nullable Collection<CastEventListener<E, T>> collection);
+		boolean removeAll(@Nullable Collection<CastEventListener> collection);
 
-		boolean contains(@Nullable CastEventListener<E, T> listener);
+		boolean contains(@Nullable CastEventListener listener);
 
 		void clear();
 
@@ -121,28 +121,28 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 		int size();
 
 		//Doc: Unmodifiable snapshot
-		Iterable<CastEventListener<E, T>> listeners();
+		Iterable<CastEventListener> listeners();
 
 		//Doc: Unmodifiable snapshot
-		Iterator<CastEventListener<E, T>> iterator();
+		Iterator<CastEventListener> iterator();
 
-		void fire(@Nullable E event);
+		void fire(@Nullable CastEvent<?> event);
 	}
 
 	@ThreadSafe
-	public static class SimpleCastEventListenerList<E extends CastEvent<T>, T> implements CastEventListenerList<E, T> {
+	public static class SimpleCastEventListenerList implements CastEventListenerList {
 
-		protected final CopyOnWriteArrayList<CastEventListener<E, T>> listeners = new CopyOnWriteArrayList<>();
+		protected final CopyOnWriteArrayList<CastEventListener> listeners = new CopyOnWriteArrayList<>();
 
 		@Nonnull
 		protected final Object filtersLock = new Object();
 
 		@Nonnull
 		@GuardedBy("filtersLock")
-		protected final Map<CastEventListener<E, T>, Set<CastEventType>> filters = new HashMap<>();
+		protected final Map<CastEventListener, Set<CastEventType>> filters = new HashMap<>();
 
 		@Override
-		public boolean add(@Nullable CastEventListener<E, T> listener, CastEventType... eventTypes) {
+		public boolean add(@Nullable CastEventListener listener, CastEventType... eventTypes) {
 			if (listener == null) {
 				return false;
 			}
@@ -169,13 +169,13 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 		}
 
 		@Override
-		public int addAll(@Nullable Collection<CastEventListener<E, T>> collection, CastEventType... eventTypes) {
+		public int addAll(@Nullable Collection<CastEventListener> collection, CastEventType... eventTypes) {
 			if (collection == null || collection.isEmpty()) {
 				return 0;
 			}
 			int result = 0;
 			synchronized (filtersLock) {
-				for (CastEventListener<E, T> listener : collection) {
+				for (CastEventListener listener : collection) {
 					if (add(listener, eventTypes)) {
 						result++;
 					}
@@ -185,7 +185,7 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 		}
 
 		@Override
-		public boolean remove(@Nullable CastEventListener<E, T> listener) {
+		public boolean remove(@Nullable CastEventListener listener) {
 			if (listener == null) {
 				return false;
 			}
@@ -199,13 +199,13 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 		}
 
 		@Override
-		public boolean removeAll(@Nullable Collection<CastEventListener<E, T>> collection) {
+		public boolean removeAll(@Nullable Collection<CastEventListener> collection) {
 			if (collection == null || collection.isEmpty()) {
 				return false;
 			}
 			boolean result = false;
 			synchronized (filtersLock) {
-				for (CastEventListener<E, T> listener : collection) {
+				for (CastEventListener listener : collection) {
 					result |= remove(listener);
 				}
 			}
@@ -213,7 +213,7 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 		}
 
 		@Override
-		public boolean contains(@Nullable CastEventListener<E, T> listener) {
+		public boolean contains(@Nullable CastEventListener listener) {
 			return listener == null ? false : listeners.contains(listener);
 		}
 
@@ -236,11 +236,11 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 		}
 
 		@Override
-		public Iterable<CastEventListener<E, T>> listeners() {
+		public Iterable<CastEventListener> listeners() {
 			// Using Iterable instead of List avoids an extra arraycopy
-			return new Iterable<CastEventListener<E, T>>() {
+			return new Iterable<CastEventListener>() {
 				@Override
-				public Iterator<CastEventListener<E, T>> iterator()
+				public Iterator<CastEventListener> iterator()
 				{
 					return listeners.iterator();
 				}
@@ -248,41 +248,39 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 		}
 
 		@Override
-		public Iterator<CastEventListener<E, T>> iterator() {
+		public Iterator<CastEventListener> iterator() {
 			return listeners.iterator();
 		}
 
 		@Override
-		public void fire(@Nullable E event) {
+		public void fire(@Nullable CastEvent<?> event) {
 			if (event == null || listeners.isEmpty()) {
 				return;
 			}
 
-			Map<CastEventListener<E, T>, Set<CastEventType>> filtersSnapshot;
+			Map<CastEventListener, Set<CastEventType>> filtersSnapshot;
 			synchronized (filtersLock) {
 				filtersSnapshot = new HashMap<>(filters);
 			}
-			CastEventListener<E, T> listener;
+			CastEventListener listener;
 			Set<CastEventType> targetTypes;
-			E tmpEvent;
-			for (Iterator<CastEventListener<E, T>> iterator = listeners.iterator(); iterator.hasNext();) {
+			for (Iterator<CastEventListener> iterator = listeners.iterator(); iterator.hasNext();) {
 				listener = iterator.next();
 				targetTypes = filtersSnapshot.get(listener);
 				if (targetTypes == null || targetTypes.contains(event.getEventType())) {
 					if (event.getEventType() == CastEventType.UNKNOWN && event.getData() instanceof JsonNode) {
 						// Data might be mutable, so make a copy for each listener
-						tmpEvent = new DefaultCastEvent<>(CastEventType.UNKNOWN, ((JsonNode) event.getData()).deepCopy());
+						listener.onEvent(new DefaultCastEvent<>(CastEventType.UNKNOWN, ((JsonNode) event.getData()).deepCopy()));
 					} else {
-						tmpEvent = event;
+						listener.onEvent(event);
 					}
-					listener.onEvent(tmpEvent);
 				}
 			}
 		}
 	}
 
 	@ThreadSafe
-	public static class ThreadedCastEventListenerList<E extends CastEvent<T>, T> extends SimpleCastEventListenerList<E, T> { //TODO: (Nad) Remove if not used..
+	public static class ThreadedCastEventListenerList extends SimpleCastEventListenerList { //TODO: (Nad) Remove if not used..
 
 		private static final Logger LOGGER = LoggerFactory.getLogger(ThreadedCastEventListenerList.class);
 
@@ -300,12 +298,12 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 		}
 
 		@Override
-		public void fire(@Nullable final E event) { //TODO: (Nad) Fix, include filters if keep
+		public void fire(@Nullable final CastEvent<?> event) { //TODO: (Nad) Fix, include filters if keep
 			if (event == null) {
 				return;
 			}
 
-			final Iterator<CastEventListener<E, T>> iterator = listeners.iterator();
+			final Iterator<CastEventListener> iterator = listeners.iterator();
 			try {
 				notifier.execute(new Runnable() {
 

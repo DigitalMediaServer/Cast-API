@@ -126,14 +126,23 @@ public class Volume {
 	}
 
 	@Override
-	public final String toString() {
-		return String.format(
-			"Volume{level: %s, muted: %b, increment: %s, stepInterval: %s, controlType: %s}",
-			level,
-			muted,
-			increment,
-			stepInterval,
-			controlType
-		);
+	public String toString() {
+		StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+		builder.append(" [");
+		if (level != null) {
+			builder.append("level=").append(level).append(", ");
+		}
+		builder.append("muted=").append(muted).append(", ");
+		if (increment != null) {
+			builder.append("increment=").append(increment).append(", ");
+		}
+		if (stepInterval != null) {
+			builder.append("stepInterval=").append(stepInterval).append(", ");
+		}
+		if (controlType != null) {
+			builder.append("controlType=").append(controlType);
+		}
+		builder.append("]");
+		return builder.toString();
 	}
 }

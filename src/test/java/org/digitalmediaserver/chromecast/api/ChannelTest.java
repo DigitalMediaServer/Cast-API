@@ -1,0 +1,712 @@
+package org.digitalmediaserver.chromecast.api;
+
+import static org.junit.Assert.*;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
+import org.digitalmediaserver.chromecast.api.CastChannel.CastMessage;
+import org.digitalmediaserver.chromecast.api.CastChannel.CastMessage.PayloadType;
+import org.digitalmediaserver.chromecast.api.CastChannel.CastMessage.ProtocolVersion;
+import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListener;
+import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListenerList;
+import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
+import org.digitalmediaserver.chromecast.api.CastEvent.SimpleCastEventListenerList;
+import org.digitalmediaserver.chromecast.api.Channel.StringMessageHandler;
+import org.digitalmediaserver.chromecast.api.Media.MetadataType;
+import org.digitalmediaserver.chromecast.api.Media.StreamType;
+import org.digitalmediaserver.chromecast.api.MediaStatus.IdleReason;
+import org.digitalmediaserver.chromecast.api.MediaStatus.PlayerState;
+import org.digitalmediaserver.chromecast.api.MediaStatus.RepeatMode;
+import org.junit.Before;
+import org.junit.Test;
+
+//TODO: (Nad) Rudimentary - header, decide if keep or not etc
+public class ChannelTest {
+
+//	MockedChromeCast chromeCastStub;
+//	ChromeCast cast = new ChromeCast(
+//		"Mock",
+//		"localhost",
+//		null,
+//		null,
+//		null,
+//		null,
+//		null,
+//		null,
+//		null,
+//		1,
+//		null,
+//		null
+//	);
+//
+//	@Before
+//	public void initMockedCast() throws Exception {
+//		chromeCastStub = new MockedChromeCast();
+//		cast.connect();
+//		chromeCastStub.close();
+//		// ensure that chrome cast disconnected
+//		int retry = 0;
+//		while (cast.isConnected() && retry++ < 25) {
+//			Thread.sleep(50);
+//		}
+//		assertTrue("ChromeCast wasn't properly disconnected", retry < 25);
+//	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	public void StringMessageHandlerTest() throws Exception {
+		CastEventListenerList listeners = new SimpleCastEventListenerList();
+		final List<CastEvent<?>> events = new ArrayList<>();
+		listeners.add(new CastEventListener() {
+
+			@Override
+			public void onEvent(CastEvent<?> event) {
+				events.add(event);
+			}
+		});
+		Channel channel = new Channel("localhost", "test", "sender-test", listeners);
+		CastMessage message = CastMessage.newBuilder()
+			.setProtocolVersion(ProtocolVersion.CASTV2_1_0)
+			.setSourceId("receiver-0")
+			.setDestinationId("sender-0")
+			.setNamespace("namespace")
+			.setPayloadType(PayloadType.BINARY)
+			.setPayloadUtf8("payload")
+			.build();
+		String jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-single.json").replaceFirst("\"type\"", "\"responseType\"");
+		StringMessageHandler handler = channel.new StringMessageHandler(message, jsonMessage);
+		handler.run();
+		assertEquals(1, events.size());
+		CastEvent<?> event = events.get(0);
+		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
+//		MediaStatus mediaStatus = event.getData(MediaStatus.class); //TODO: (Nad) Consider this
+		MediaStatus mediaStatus = (MediaStatus) event.getData();
+		assertNotNull(mediaStatus);
+		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
+		assertNull(mediaStatus.getCurrentItemId());
+		assertEquals(0.0, mediaStatus.getCurrentTime(), 0.0);
+		assertTrue(mediaStatus.getCustomData().isEmpty());
+		assertNull(mediaStatus.getIdleReason());
+		assertTrue(mediaStatus.getItems().isEmpty());
+		assertNull(mediaStatus.getLoadingItemId());
+		assertNotNull(mediaStatus.getMedia());
+		assertEquals(0, mediaStatus.getMediaSessionId());
+		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
+		assertEquals(PlayerState.IDLE, mediaStatus.getPlayerState());
+		assertNull(mediaStatus.getPreloadedItemId());
+		assertNull(mediaStatus.getRepeatMode());
+		assertEquals(0, mediaStatus.getSupportedMediaCommands());
+		assertNotNull(mediaStatus.getVolume());
+		Media media = mediaStatus.getMedia();
+		assertEquals("", media.getContentType());
+		assertTrue(media.getCustomData().isEmpty());
+		assertEquals(null, media.getDuration());
+		assertNotNull(media.getMetadata());
+		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertEquals(StreamType.NONE, media.getStreamType());
+		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertTrue(media.getTracks().isEmpty());
+		assertEquals("", media.getUrl());
+		Map<String, Object> metadata = media.getMetadata();
+		assertEquals(3, metadata.size());
+		assertEquals("We Take Your Calls", metadata.get("title"));
+		ArrayList<Map<String, String>> images = (ArrayList<Map<String, String>>) metadata.get("images");
+		assertEquals("", images.get(0).get("url"));
+		Volume volume = mediaStatus.getVolume();
+		assertEquals(null, volume.getControlType());
+		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
+		assertEquals(null, volume.getLevel());
+		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
+		assertFalse(volume.isMuted());
+
+		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-audio-with-extraStatus.json").replaceFirst("\"type\"", "\"responseType\"");
+		handler = channel.new StringMessageHandler(message, jsonMessage);
+		handler.run();
+		assertEquals(2, events.size());
+		event = events.get(1);
+		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
+		mediaStatus = (MediaStatus) event.getData();
+		assertNotNull(mediaStatus);
+		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
+		assertEquals(1, mediaStatus.getCurrentItemId().intValue());
+		assertEquals(0.0, mediaStatus.getCurrentTime(), 0.0);
+		assertTrue(mediaStatus.getCustomData().isEmpty());
+		assertNull(mediaStatus.getIdleReason());
+		assertTrue(mediaStatus.getItems().isEmpty());
+		assertNull(mediaStatus.getLoadingItemId());
+		assertNotNull(mediaStatus.getMedia());
+		assertEquals(1, mediaStatus.getMediaSessionId());
+		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
+		assertEquals(PlayerState.IDLE, mediaStatus.getPlayerState());
+		assertNull(mediaStatus.getPreloadedItemId());
+		assertEquals(RepeatMode.REPEAT_OFF, mediaStatus.getRepeatMode());
+		assertEquals(15, mediaStatus.getSupportedMediaCommands());
+		assertNotNull(mediaStatus.getVolume());
+		media = mediaStatus.getMedia();
+		assertNull(media.getContentType());
+		assertTrue(media.getCustomData().isEmpty());
+		assertEquals(null, media.getDuration());
+		assertNotNull(media.getMetadata());
+		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertNull(media.getStreamType());
+		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertTrue(media.getTracks().isEmpty());
+		assertEquals("http://192.168.2.139:9080/audio/99fd6998-aa4d-4764-9b41-c6869dcfc85f.mp3", media.getUrl());
+		assertTrue(media.getMetadata().isEmpty());
+		volume = mediaStatus.getVolume();
+		assertEquals(null, volume.getControlType());
+		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
+		assertEquals(1f, volume.getLevel().floatValue(), 0f);
+		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
+		assertFalse(volume.isMuted());
+
+		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-chromecast-audio.json").replaceFirst("\"type\"", "\"responseType\"");
+		handler = channel.new StringMessageHandler(message, jsonMessage);
+		handler.run();
+		assertEquals(3, events.size());
+		event = events.get(2);
+		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
+		mediaStatus = (MediaStatus) event.getData();
+		assertNotNull(mediaStatus);
+		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
+		assertEquals(1, mediaStatus.getCurrentItemId().intValue());
+		assertEquals(0.0, mediaStatus.getCurrentTime(), 0.0);
+		assertTrue(mediaStatus.getCustomData().isEmpty());
+		assertNull(mediaStatus.getIdleReason());
+		List<Item> items = mediaStatus.getItems();
+		assertEquals(1, items.size());
+		assertTrue(items.get(0).isAutoplay());
+		Map<String, Object> data = items.get(0).getCustomData();
+		assertEquals(1, data.size());
+		data = (Map<String, Object>) data.get("payload");
+		assertNull(data.get("thumb"));
+		assertEquals(null, data.get("title"));
+		assertEquals(1L, items.get(0).getItemId());
+		media = items.get(0).getMedia();
+		assertEquals("audio/mpeg", media.getContentType());
+		assertTrue(media.getCustomData().isEmpty());
+		assertEquals(389.355102, media.getDuration().doubleValue(), 0.0);
+		assertTrue(media.getMetadata().isEmpty());
+		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertEquals(StreamType.buffered, media.getStreamType());
+		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertTrue(media.getTracks().isEmpty());
+		assertEquals("http://192.168.1.6:8192/audio-123-mp3", media.getUrl());
+		assertNull(mediaStatus.getLoadingItemId());
+		media=mediaStatus.getMedia();
+		assertEquals("audio/mpeg", media.getContentType());
+		assertTrue(media.getCustomData().isEmpty());
+		assertEquals(389.355102, media.getDuration().doubleValue(), 0.0);
+		assertTrue(media.getMetadata().isEmpty());
+		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertEquals(StreamType.buffered, media.getStreamType());
+		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertTrue(media.getTracks().isEmpty());
+		assertEquals("http://192.168.1.6:8192/audio-123-mp3", media.getUrl());
+		assertEquals(1L, mediaStatus.getMediaSessionId());
+		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
+		assertEquals(PlayerState.BUFFERING, mediaStatus.getPlayerState());
+		assertNull(mediaStatus.getPreloadedItemId());
+		assertEquals(RepeatMode.REPEAT_OFF, mediaStatus.getRepeatMode());
+		assertEquals(15, mediaStatus.getSupportedMediaCommands());
+		assertNotNull(mediaStatus.getVolume());
+		volume = mediaStatus.getVolume();
+		assertEquals("attenuation", volume.getControlType());
+		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
+		assertEquals(1f, volume.getLevel(), 0f);
+		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
+		assertFalse(volume.isMuted());
+
+		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-no-metadataType.json").replaceFirst("\"type\"", "\"responseType\"");
+		handler = channel.new StringMessageHandler(message, jsonMessage);
+		handler.run();
+		assertEquals(4, events.size());
+		event = events.get(3);
+		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
+		mediaStatus = (MediaStatus) event.getData();
+		assertNotNull(mediaStatus);
+		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
+		assertNull(mediaStatus.getCurrentItemId());
+		assertEquals(16.0, mediaStatus.getCurrentTime(), 0.0);
+		assertTrue(mediaStatus.getCustomData().isEmpty());
+		assertNull(mediaStatus.getIdleReason());
+		assertTrue(mediaStatus.getItems().isEmpty());
+		assertNull(mediaStatus.getLoadingItemId());
+		assertNotNull(mediaStatus.getMedia());
+		assertEquals(7L, mediaStatus.getMediaSessionId());
+		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
+		assertEquals(PlayerState.PLAYING, mediaStatus.getPlayerState());
+		assertNull(mediaStatus.getPreloadedItemId());
+		assertNull(mediaStatus.getRepeatMode());
+		assertEquals(29, mediaStatus.getSupportedMediaCommands());
+		assertNotNull(mediaStatus.getVolume());
+		media = mediaStatus.getMedia();
+		assertEquals("BUFFERED", media.getContentType());
+		Map<String, Object> customData = media.getCustomData();
+		data = (Map<String, Object>) customData.get("status");
+		assertEquals(2, data.get("state"));
+		assertEquals("2308730880869724752", data.get("content_id"));
+		assertEquals(16, data.get("position"));
+		assertEquals(16, data.get("current_time"));
+		assertEquals(16, data.get("current"));
+		assertEquals(246, data.get("duration"));
+		data = (Map<String, Object>) data.get("content_info");
+		assertEquals("Macklemore & Ryan Lewis Radio", data.get("stationName"));
+		assertEquals("2308730880869724752", data.get("stationId"));
+		assertEquals("2308730880869724752", data.get("stationToken"));
+		assertEquals(Boolean.FALSE, data.get("isQuickMix"));
+		assertEquals(Boolean.TRUE, data.get("supportImpressionTargeting"));
+		assertEquals(Boolean.FALSE, data.get("onePlaylist"));
+		assertEquals("70709840", data.get("userId"));
+		assertEquals("Steven Feldman", data.get("casterName"));
+		assertEquals("And We Danced", data.get("songName"));
+		assertEquals("Macklemore", data.get("artistName"));
+		assertEquals("The Unplanned Mixtape", data.get("albumName"));
+		assertEquals("http://art.jpg", data.get("artUrl"));
+		assertEquals("ttt", data.get("trackToken"));
+		assertEquals(0, data.get("songRating"));
+		assertEquals("http://songDetail", data.get("songDetailUrl"));
+		assertEquals(Boolean.TRUE, data.get("allowFeedback"));
+		assertEquals("http://artist", data.get("artistExplorerUrl"));
+		assertEquals("http://audio", ((Map<String, Object>) ((Map<String, Object>) data.get("audioUrlMap")).get("highQuality")).get("audioUrl"));
+		data = ((Map<String, Object>) ((Map<String, Object>) customData.get("status")).get("volume"));
+		assertEquals(0.6999999284744263, ((Double) data.get("level")).doubleValue(), 0.000001);
+		assertEquals(Boolean.FALSE, data.get("muted"));
+		assertEquals(0.05, ((Double) data.get("increment")).doubleValue(), 0.0);
+		assertEquals(246d, media.getDuration().doubleValue(), 0.0);
+		metadata = media.getMetadata();
+		assertEquals("The Album", metadata.get("albumName"));
+		assertEquals("And We Danced", metadata.get("title"));
+		assertEquals("The Artist", metadata.get("albumArtist"));
+		assertEquals("The Artist", metadata.get("artist"));
+		assertEquals("1994-11-05T13:15:30Z", metadata.get("releaseDate"));
+		images = (ArrayList<Map<String, String>>) metadata.get("images");
+		assertEquals("http://lh3.googleusercontent.com/UirYk5XiPVHW2HHRtoVlvHF10_Of8VtYU9DL18qwFsFodXd3hXo60yX1BfV5up5ClCKhgZvLPUY", images.get(0).get("url"));
+		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertEquals(StreamType.BUFFERED, media.getStreamType());
+		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertTrue(media.getTracks().isEmpty());
+		assertEquals("http://audioURL", media.getUrl());
+		volume = mediaStatus.getVolume();
+		assertEquals(null, volume.getControlType());
+		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
+		assertEquals(0.69999999f, volume.getLevel().floatValue(), 0.000001f);
+		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
+		assertFalse(volume.isMuted());
+
+		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-pandora.json").replaceFirst("\"type\"", "\"responseType\"");
+		handler = channel.new StringMessageHandler(message, jsonMessage);
+		handler.run();
+		assertEquals(5, events.size());
+		event = events.get(4);
+		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
+		mediaStatus = (MediaStatus) event.getData();
+		assertNotNull(mediaStatus);
+		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
+		assertNull(mediaStatus.getCurrentItemId());
+		assertEquals(16.0, mediaStatus.getCurrentTime(), 0.0);
+		assertTrue(mediaStatus.getCustomData().isEmpty());
+		assertNull(mediaStatus.getIdleReason());
+		assertTrue(mediaStatus.getItems().isEmpty());
+		assertNull(mediaStatus.getLoadingItemId());
+		assertNotNull(mediaStatus.getMedia());
+		assertEquals(7L, mediaStatus.getMediaSessionId());
+		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
+		assertEquals(PlayerState.PLAYING, mediaStatus.getPlayerState());
+		assertNull(mediaStatus.getPreloadedItemId());
+		assertNull(mediaStatus.getRepeatMode());
+		assertEquals(29, mediaStatus.getSupportedMediaCommands());
+		assertNotNull(mediaStatus.getVolume());
+		media = mediaStatus.getMedia();
+		assertEquals("BUFFERED", media.getContentType());
+		customData = media.getCustomData();
+		data = (Map<String, Object>) customData.get("status");
+		assertEquals(2, data.get("state"));
+		assertEquals("2308730880869724752", data.get("content_id"));
+		assertEquals(16, data.get("position"));
+		assertEquals(16, data.get("current_time"));
+		assertEquals(16, data.get("current"));
+		assertEquals(246, data.get("duration"));
+		data = (Map<String, Object>) data.get("content_info");
+		assertEquals("Macklemore & Ryan Lewis Radio", data.get("stationName"));
+		assertEquals("2308730880869724752", data.get("stationId"));
+		assertEquals("2308730880869724752", data.get("stationToken"));
+		assertEquals(Boolean.FALSE, data.get("isQuickMix"));
+		assertEquals(Boolean.TRUE, data.get("supportImpressionTargeting"));
+		assertEquals(Boolean.FALSE, data.get("onePlaylist"));
+		assertEquals("70709840", data.get("userId"));
+		assertEquals("Steven Feldman", data.get("casterName"));
+		assertEquals("And We Danced", data.get("songName"));
+		assertEquals("Macklemore", data.get("artistName"));
+		assertEquals("The Unplanned Mixtape", data.get("albumName"));
+		assertEquals("http://art.jpg", data.get("artUrl"));
+		assertEquals("ttt", data.get("trackToken"));
+		assertEquals(0, data.get("songRating"));
+		assertEquals("http://songDetail", data.get("songDetailUrl"));
+		assertEquals(Boolean.TRUE, data.get("allowFeedback"));
+		assertEquals("http://artist", data.get("artistExplorerUrl"));
+		assertEquals("http://audio", ((Map<String, Object>) ((Map<String, Object>) data.get("audioUrlMap")).get("highQuality")).get("audioUrl"));
+		data = ((Map<String, Object>) ((Map<String, Object>) customData.get("status")).get("volume"));
+		assertEquals(0.6999999284744263, ((Double) data.get("level")).doubleValue(), 0.000001);
+		assertEquals(Boolean.FALSE, data.get("muted"));
+		assertEquals(0.05, ((Double) data.get("increment")).doubleValue(), 0.0);
+		assertEquals(246d, media.getDuration().doubleValue(), 0.0);
+		metadata = media.getMetadata();
+		assertEquals("The Album", metadata.get("albumName"));
+		assertEquals("And We Danced", metadata.get("title"));
+		assertEquals("The Artist", metadata.get("albumArtist"));
+		assertEquals("The Artist", metadata.get("artist"));
+		assertEquals("1994-11-05T13:15:30Z", metadata.get("releaseDate"));
+		images = (ArrayList<Map<String, String>>) metadata.get("images");
+		assertEquals("http://lh3.googleusercontent.com/UirYk5XiPVHW2HHRtoVlvHF10_Of8VtYU9DL18qwFsFodXd3hXo60yX1BfV5up5ClCKhgZvLPUY", images.get(0).get("url"));
+		assertEquals(MetadataType.MUSIC_TRACK, media.getMetadataType());
+		assertEquals(StreamType.BUFFERED, media.getStreamType());
+		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertTrue(media.getTracks().isEmpty());
+		assertEquals("http://audioURL", media.getUrl());
+		volume = mediaStatus.getVolume();
+		assertEquals(null, volume.getControlType());
+		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
+		assertEquals(0.69999999f, volume.getLevel().floatValue(), 0.000001f);
+		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
+		assertFalse(volume.isMuted());
+
+		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-unknown-metadataType.json").replaceFirst("\"type\"", "\"responseType\"");
+		handler = channel.new StringMessageHandler(message, jsonMessage);
+		handler.run();
+		assertEquals(6, events.size());
+		event = events.get(5);
+		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
+		mediaStatus = (MediaStatus) event.getData();
+		assertNotNull(mediaStatus);
+		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
+		assertNull(mediaStatus.getCurrentItemId());
+		assertEquals(16.0, mediaStatus.getCurrentTime(), 0.0);
+		assertTrue(mediaStatus.getCustomData().isEmpty());
+		assertNull(mediaStatus.getIdleReason());
+		assertTrue(mediaStatus.getItems().isEmpty());
+		assertNull(mediaStatus.getLoadingItemId());
+		assertNotNull(mediaStatus.getMedia());
+		assertEquals(7L, mediaStatus.getMediaSessionId());
+		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
+		assertEquals(PlayerState.PLAYING, mediaStatus.getPlayerState());
+		assertNull(mediaStatus.getPreloadedItemId());
+		assertNull(mediaStatus.getRepeatMode());
+		assertEquals(29, mediaStatus.getSupportedMediaCommands());
+		assertNotNull(mediaStatus.getVolume());
+		media = mediaStatus.getMedia();
+		assertEquals("BUFFERED", media.getContentType());
+		customData = media.getCustomData();
+		data = (Map<String, Object>) customData.get("status");
+		assertEquals(2, data.get("state"));
+		assertEquals("2308730880869724752", data.get("content_id"));
+		assertEquals(16, data.get("position"));
+		assertEquals(16, data.get("current_time"));
+		assertEquals(16, data.get("current"));
+		assertEquals(246, data.get("duration"));
+		data = (Map<String, Object>) data.get("content_info");
+		assertEquals("Macklemore & Ryan Lewis Radio", data.get("stationName"));
+		assertEquals("2308730880869724752", data.get("stationId"));
+		assertEquals("2308730880869724752", data.get("stationToken"));
+		assertEquals(Boolean.FALSE, data.get("isQuickMix"));
+		assertEquals(Boolean.TRUE, data.get("supportImpressionTargeting"));
+		assertEquals(Boolean.FALSE, data.get("onePlaylist"));
+		assertEquals("70709840", data.get("userId"));
+		assertEquals("Steven Feldman", data.get("casterName"));
+		assertEquals("And We Danced", data.get("songName"));
+		assertEquals("Macklemore", data.get("artistName"));
+		assertEquals("The Unplanned Mixtape", data.get("albumName"));
+		assertEquals("http://art.jpg", data.get("artUrl"));
+		assertEquals("ttt", data.get("trackToken"));
+		assertEquals(0, data.get("songRating"));
+		assertEquals("http://songDetail", data.get("songDetailUrl"));
+		assertEquals(Boolean.TRUE, data.get("allowFeedback"));
+		assertEquals("http://artist", data.get("artistExplorerUrl"));
+		assertEquals("http://audio", ((Map<String, Object>) ((Map<String, Object>) data.get("audioUrlMap")).get("highQuality")).get("audioUrl"));
+		data = ((Map<String, Object>) ((Map<String, Object>) customData.get("status")).get("volume"));
+		assertEquals(0.6999999284744263, ((Double) data.get("level")).doubleValue(), 0.000001);
+		assertEquals(Boolean.FALSE, data.get("muted"));
+		assertEquals(0.05, ((Double) data.get("increment")).doubleValue(), 0.0);
+		assertEquals(246d, media.getDuration().doubleValue(), 0.0);
+		metadata = media.getMetadata();
+		assertEquals("The Album", metadata.get("albumName"));
+		assertEquals("And We Danced", metadata.get("title"));
+		assertEquals("The Artist", metadata.get("albumArtist"));
+		assertEquals("The Artist", metadata.get("artist"));
+		assertEquals("1994-11-05T13:15:30Z", metadata.get("releaseDate"));
+		images = (ArrayList<Map<String, String>>) metadata.get("images");
+		assertEquals("http://lh3.googleusercontent.com/UirYk5XiPVHW2HHRtoVlvHF10_Of8VtYU9DL18qwFsFodXd3hXo60yX1BfV5up5ClCKhgZvLPUY", images.get(0).get("url"));
+		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertEquals(StreamType.BUFFERED, media.getStreamType());
+		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertTrue(media.getTracks().isEmpty());
+		assertEquals("http://audioURL", media.getUrl());
+		volume = mediaStatus.getVolume();
+		assertEquals(null, volume.getControlType());
+		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
+		assertEquals(0.69999999f, volume.getLevel().floatValue(), 0.000001f);
+		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
+		assertFalse(volume.isMuted());
+
+		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-with-idleReason.json").replaceFirst("\"type\"", "\"responseType\"");
+		handler = channel.new StringMessageHandler(message, jsonMessage);
+		handler.run();
+		assertEquals(7, events.size());
+		event = events.get(6);
+		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
+		mediaStatus = (MediaStatus) event.getData();
+		assertNotNull(mediaStatus);
+		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
+		assertNull(mediaStatus.getCurrentItemId());
+		assertEquals(0.0, mediaStatus.getCurrentTime(), 0.0);
+		assertTrue(mediaStatus.getCustomData().isEmpty());
+		assertEquals(IdleReason.ERROR, mediaStatus.getIdleReason());
+		assertTrue(mediaStatus.getItems().isEmpty());
+		assertNull(mediaStatus.getLoadingItemId());
+		assertNotNull(mediaStatus.getMedia());
+		assertEquals(1L, mediaStatus.getMediaSessionId());
+		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
+		assertEquals(PlayerState.IDLE, mediaStatus.getPlayerState());
+		assertNull(mediaStatus.getPreloadedItemId());
+		assertNull(mediaStatus.getRepeatMode());
+		assertEquals(15, mediaStatus.getSupportedMediaCommands());
+		assertNotNull(mediaStatus.getVolume());
+		media = mediaStatus.getMedia();
+		assertEquals("video/transcode", media.getContentType());
+		assertTrue(media.getCustomData().isEmpty());
+		assertNull(media.getDuration());
+		assertTrue(media.getMetadata().isEmpty());
+		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertEquals(StreamType.buffered, media.getStreamType());
+		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertTrue(media.getTracks().isEmpty());
+		assertEquals("/public/Videos/Movies/FileB.mp4", media.getUrl());
+		volume = mediaStatus.getVolume();
+		assertEquals(null, volume.getControlType());
+		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
+		assertEquals(1f, volume.getLevel().floatValue(), 0.000001f);
+		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
+		assertFalse(volume.isMuted());
+
+		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-without-idleReason.json").replaceFirst("\"type\"", "\"responseType\"");
+		handler = channel.new StringMessageHandler(message, jsonMessage);
+		handler.run();
+		assertEquals(8, events.size());
+		event = events.get(7);
+		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
+		mediaStatus = (MediaStatus) event.getData();
+		assertNotNull(mediaStatus);
+		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
+		assertNull(mediaStatus.getCurrentItemId());
+		assertEquals(0.0, mediaStatus.getCurrentTime(), 0.0);
+		assertTrue(mediaStatus.getCustomData().isEmpty());
+		assertNull(mediaStatus.getIdleReason());
+		assertTrue(mediaStatus.getItems().isEmpty());
+		assertNull(mediaStatus.getLoadingItemId());
+		assertNotNull(mediaStatus.getMedia());
+		assertEquals(1L, mediaStatus.getMediaSessionId());
+		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
+		assertEquals(PlayerState.IDLE, mediaStatus.getPlayerState());
+		assertNull(mediaStatus.getPreloadedItemId());
+		assertNull(mediaStatus.getRepeatMode());
+		assertEquals(15, mediaStatus.getSupportedMediaCommands());
+		assertNotNull(mediaStatus.getVolume());
+		media = mediaStatus.getMedia();
+		assertEquals("video/transcode", media.getContentType());
+		assertTrue(media.getCustomData().isEmpty());
+		assertNull(media.getDuration());
+		assertTrue(media.getMetadata().isEmpty());
+		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertEquals(StreamType.buffered, media.getStreamType());
+		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertTrue(media.getTracks().isEmpty());
+		assertEquals("/public/Videos/Movies/FileB.mp4", media.getUrl());
+		volume = mediaStatus.getVolume();
+		assertEquals(null, volume.getControlType());
+		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
+		assertEquals(1f, volume.getLevel().floatValue(), 0.000001f);
+		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
+		assertFalse(volume.isMuted());
+
+		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-with-videoinfo.json").replaceFirst("\"type\"", "\"responseType\"");
+		handler = channel.new StringMessageHandler(message, jsonMessage);
+		handler.run();
+		assertEquals(9, events.size());
+		event = events.get(8);
+		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
+		mediaStatus = (MediaStatus) event.getData();
+		assertNotNull(mediaStatus);
+		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
+		assertEquals(1, mediaStatus.getCurrentItemId().intValue());
+		assertEquals(0.0, mediaStatus.getCurrentTime(), 0.0);
+		assertTrue(mediaStatus.getCustomData().isEmpty());
+		assertNull(mediaStatus.getIdleReason());
+		items = mediaStatus.getItems();
+		assertEquals(1L, items.get(0).getItemId());
+		assertTrue(items.get(0).isAutoplay());
+		media = items.get(0).getMedia();
+		assertEquals("video/mp4", media.getContentType());
+		assertTrue(media.getCustomData().isEmpty());
+		assertEquals(596.474195, media.getDuration().doubleValue(), 0.0);
+		assertTrue(media.getMetadata().isEmpty());
+		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertNull(media.getStreamType());
+		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertTrue(media.getTracks().isEmpty());
+		assertEquals("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", media.getUrl());
+		customData = items.get(0).getCustomData();
+		data = (Map<String, Object>) customData.get("payload");
+		assertEquals("Big Buck Bunny", data.get("title:"));
+		assertEquals("images/BigBuckBunny.jpg", data.get("thumb"));
+		assertNull(mediaStatus.getLoadingItemId());
+		assertNotNull(mediaStatus.getMedia());
+		assertEquals(1L, mediaStatus.getMediaSessionId());
+		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
+		assertEquals(PlayerState.BUFFERING, mediaStatus.getPlayerState());
+		assertNull(mediaStatus.getPreloadedItemId());
+		assertEquals(RepeatMode.REPEAT_OFF, mediaStatus.getRepeatMode());
+		assertEquals(15, mediaStatus.getSupportedMediaCommands());
+		assertNotNull(mediaStatus.getVolume());
+		volume = mediaStatus.getVolume();
+		assertEquals(null, volume.getControlType());
+		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
+		assertEquals(1f, volume.getLevel().floatValue(), 0.000001f);
+		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
+		assertFalse(volume.isMuted());
+
+		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatuses.json").replaceFirst("\"type\"", "\"responseType\"");
+		handler = channel.new StringMessageHandler(message, jsonMessage);
+		handler.run();
+		assertEquals(11, events.size());
+		event = events.get(9);
+		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
+		mediaStatus = (MediaStatus) event.getData();
+		assertNotNull(mediaStatus);
+		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
+		assertEquals(1, mediaStatus.getCurrentItemId().intValue());
+		assertEquals(0.0, mediaStatus.getCurrentTime(), 0.0);
+		assertTrue(mediaStatus.getCustomData().isEmpty());
+		assertNull(mediaStatus.getIdleReason());
+		assertTrue(mediaStatus.getItems().isEmpty());
+		assertNull(mediaStatus.getLoadingItemId());
+		assertNotNull(mediaStatus.getMedia());
+		assertEquals(1, mediaStatus.getMediaSessionId());
+		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
+		assertEquals(PlayerState.IDLE, mediaStatus.getPlayerState());
+		assertNull(mediaStatus.getPreloadedItemId());
+		assertEquals(RepeatMode.REPEAT_OFF, mediaStatus.getRepeatMode());
+		assertEquals(15, mediaStatus.getSupportedMediaCommands());
+		assertNotNull(mediaStatus.getVolume());
+		media = mediaStatus.getMedia();
+		assertNull(media.getContentType());
+		assertTrue(media.getCustomData().isEmpty());
+		assertEquals(null, media.getDuration());
+		assertNotNull(media.getMetadata());
+		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertNull(media.getStreamType());
+		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertTrue(media.getTracks().isEmpty());
+		assertEquals("http://192.168.2.139:9080/audio/99fd6998-aa4d-4764-9b41-c6869dcfc85f.mp3", media.getUrl());
+		assertTrue(media.getMetadata().isEmpty());
+		volume = mediaStatus.getVolume();
+		assertEquals(null, volume.getControlType());
+		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
+		assertEquals(1f, volume.getLevel().floatValue(), 0f);
+		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
+		assertFalse(volume.isMuted());
+		event = events.get(10);
+		mediaStatus = (MediaStatus) event.getData();
+		assertNotNull(mediaStatus);
+		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
+		assertNull(mediaStatus.getCurrentItemId());
+		assertEquals(16.0, mediaStatus.getCurrentTime(), 0.0);
+		assertTrue(mediaStatus.getCustomData().isEmpty());
+		assertNull(mediaStatus.getIdleReason());
+		assertTrue(mediaStatus.getItems().isEmpty());
+		assertNull(mediaStatus.getLoadingItemId());
+		assertNotNull(mediaStatus.getMedia());
+		assertEquals(7L, mediaStatus.getMediaSessionId());
+		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
+		assertEquals(PlayerState.PLAYING, mediaStatus.getPlayerState());
+		assertNull(mediaStatus.getPreloadedItemId());
+		assertNull(mediaStatus.getRepeatMode());
+		assertEquals(29, mediaStatus.getSupportedMediaCommands());
+		assertNotNull(mediaStatus.getVolume());
+		media = mediaStatus.getMedia();
+		assertEquals("BUFFERED", media.getContentType());
+		assertTrue(media.getCustomData().isEmpty());
+		assertEquals(246d, media.getDuration().doubleValue(), 0.0);
+		metadata = media.getMetadata();
+		assertEquals("The Album", metadata.get("albumName"));
+		assertEquals("And We Danced", metadata.get("title"));
+		assertEquals("The Artist", metadata.get("albumArtist"));
+		assertEquals("The Artist", metadata.get("artist"));
+		assertEquals("1994-11-05T13:15:30Z", metadata.get("releaseDate"));
+		images = (ArrayList<Map<String, String>>) metadata.get("images");
+		assertEquals("http://lh3.googleusercontent.com/UirYk5XiPVHW2HHRtoVlvHF10_Of8VtYU9DL18qwFsFodXd3hXo60yX1BfV5up5ClCKhgZvLPUY", images.get(0).get("url"));
+		assertEquals(MetadataType.MUSIC_TRACK, media.getMetadataType());
+		assertEquals(StreamType.BUFFERED, media.getStreamType());
+		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertTrue(media.getTracks().isEmpty());
+		assertEquals("http://audioURL", media.getUrl());
+		volume = mediaStatus.getVolume();
+		assertEquals(null, volume.getControlType());
+		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
+		assertEquals(0.69999999f, volume.getLevel().floatValue(), 0.000001f);
+		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
+		assertFalse(volume.isMuted());
+
+
+		channel.close();
+	}
+
+
+	@Test
+	public void liveTest() throws IOException, Exception {
+		MockedChromeCast mock = new MockedChromeCast();
+		ChromeCast cc = new ChromeCast(
+			"Mock",
+			"localhost",
+			null,
+			null,
+			"unique",
+			EnumSet.of(CastDeviceCapability.AUDIO_OUT, CastDeviceCapability.VIDEO_OUT),
+			"Mocked ChromeCast",
+			null,
+			"Mock",
+			1,
+			null,
+			"sender-test"
+		);
+		final List<CastEvent<?>> events = new CopyOnWriteArrayList<>();
+		final CyclicBarrier barrier = new CyclicBarrier(2);
+		cc.addEventListener(new CastEventListener() {
+
+			@Override
+			public void onEvent(CastEvent<?> event) {
+				events.add(event);
+				try {
+					barrier.await();
+				} catch (InterruptedException | BrokenBarrierException e) {
+				}
+			}
+		});
+		cc.connect();
+		barrier.await(15, TimeUnit.SECONDS);
+		barrier.reset();
+		assertEquals(1, events.size());
+		assertEquals(CastEventType.CONNECTED, events.get(0).getEventType());
+		assertEquals(Boolean.TRUE, events.get(0).getData());
+		cc.disconnect();
+		mock.close();
+	}
+
+
+}

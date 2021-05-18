@@ -15,7 +15,10 @@
  */
 package org.digitalmediaserver.chromecast.api;
 
+import static org.digitalmediaserver.chromecast.api.Util.isBlank;
 import static org.digitalmediaserver.chromecast.api.Util.readB32Int;
+import static org.digitalmediaserver.chromecast.api.Util.requireNotBlank;
+import static org.digitalmediaserver.chromecast.api.Util.requireNotNull;
 import static org.digitalmediaserver.chromecast.api.Util.writeB32Int;
 import java.io.Closeable;
 import java.io.IOException;
@@ -54,8 +57,11 @@ import org.digitalmediaserver.chromecast.api.CastChannel.CastMessage.PayloadType
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListenerList;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 import org.digitalmediaserver.chromecast.api.CastEvent.DefaultCastEvent;
-import org.digitalmediaserver.chromecast.api.CastEvent.SimpleCastEventListenerList;
+import org.digitalmediaserver.chromecast.api.StandardResponse.AppAvailabilityResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.CloseResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.InvalidResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.LaunchErrorResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.LoadFailedResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MediaStatusResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.ReceiverStatusResponse;
 import org.slf4j.Logger;
@@ -95,9 +101,8 @@ public class Channel implements Closeable {
 	@Nonnull
 	protected static final Executor EXECUTOR = createExecutor();
 
-	protected final SimpleCastEventListenerList<CastEvent<?>, ?> listeners = new SimpleCastEventListenerList(); //TODO: (Nad) Temp test
-
-	protected final EventListenerHolder eventListener;
+	@Nonnull
+	protected final CastEventListenerList listeners;
 
 	@Nonnull
 	protected final Object socketLock = new Object();
@@ -169,9 +174,9 @@ public class Channel implements Closeable {
 		@Nonnull String host,
 		@Nonnull String remoteName,
 		@Nullable String senderId,
-		EventListenerHolder eventListener
+		@Nonnull CastEventListenerList listeners
 	) {
-		this(host, 8009, remoteName, senderId, eventListener);
+		this(host, 8009, remoteName, senderId, listeners);
 	}
 
 	public Channel(
@@ -179,21 +184,16 @@ public class Channel implements Closeable {
 		int port,
 		@Nonnull String remoteName,
 		@Nullable String senderId,
-		EventListenerHolder eventListener
+		@Nonnull CastEventListenerList listeners
 	) {
-		if (Util.isBlank(host)) {
-			throw new IllegalArgumentException("host cannot be blank");
-		}
-		if (Util.isBlank(remoteName)) {
-			throw new IllegalArgumentException("remoteName cannot be blank");
-		}
-		if (Util.isBlank(senderId)) {
-			throw new IllegalArgumentException("senderId cannot be blank");
-		}
+		requireNotBlank(host, "host");
+		requireNotBlank(remoteName, "remoteName");
+		requireNotBlank(senderId, "senderId"); //TODO: (Nad) Figure out senderId ("platform" or "applicaton" level)
+		requireNotNull(listeners, "listeners");
 		this.address = new InetSocketAddress(host, port);
 		this.remoteName = remoteName;
 		this.senderId = senderId;
-		this.eventListener = eventListener;
+		this.listeners = listeners;
 	}
 
 	//TODO: (Nad) WIP
@@ -246,8 +246,16 @@ public class Channel implements Closeable {
 			pingTimer.schedule(pingTask, 1000, PING_PERIOD);
 		}
 
-		//TODO: (Nad) Connect event here, use executor..?
-		notifyListenerOfConnectionEvent(true);
+		// Send connect event TODO: (Nad) Differentiate between different "types" of connection events?
+		if (!listeners.isEmpty()) {
+			EXECUTOR.execute(new Runnable() {
+
+				@Override
+				public void run() {
+					listeners.fire(new DefaultCastEvent<>(CastEventType.CONNECTED, Boolean.TRUE));
+				}
+			});
+		}
 
 		return true;
 	}
@@ -272,7 +280,16 @@ public class Channel implements Closeable {
 
 			socket.close();
 		}
-		notifyListenerOfConnectionEvent(false); //TODO: (Nad) Executor..?
+		// Send connect event TODO: (Nad) Differentiate between different "types" of connection events?
+		if (!listeners.isEmpty()) {
+			EXECUTOR.execute(new Runnable() {
+
+				@Override
+				public void run() {
+					listeners.fire(new DefaultCastEvent<>(CastEventType.CONNECTED, Boolean.FALSE));
+				}
+			});
+		}
 
 //		synchronized (closedSync) { //TODO: (Nad) Remove
 //			if (closed) {
@@ -398,13 +415,13 @@ public class Channel implements Closeable {
 		write(namespace, message, destinationId);
 		try {
 			T response = rp.get();
-			if (response instanceof StandardResponse.InvalidResponse) {
-				StandardResponse.InvalidResponse invalid = (StandardResponse.InvalidResponse) response;
+			if (response instanceof InvalidResponse) {
+				InvalidResponse invalid = (InvalidResponse) response;
 				throw new ChromeCastException("Invalid request: " + invalid.getReason());
-			} else if (response instanceof StandardResponse.LoadFailedResponse) {
+			} else if (response instanceof LoadFailedResponse) {
 				throw new ChromeCastException("Unable to load media");
-			} else if (response instanceof StandardResponse.LaunchErrorResponse) {
-				StandardResponse.LaunchErrorResponse launchError = (StandardResponse.LaunchErrorResponse) response;
+			} else if (response instanceof LaunchErrorResponse) {
+				LaunchErrorResponse launchError = (LaunchErrorResponse) response;
 				throw new ChromeCastException("Application launch error: " + launchError.getReason());
 			}
 			return response;
@@ -460,26 +477,8 @@ public class Channel implements Closeable {
 		return CastMessage.parseFrom(buf);
 	}
 
-	private void notifyListenerOfConnectionEvent(final boolean connected) {
-		if (this.eventListener != null) {
-			this.eventListener.deliverConnectionEvent(connected);
-		}
-	}
-
-	private void notifyListenersOfSpontaneousEvent(JsonNode json) throws JsonProcessingException {
-		if (this.eventListener != null) {
-			this.eventListener.deliverEvent(json);
-		}
-	}
-
-	private void notifyListenersCustomMessageEvent(CustomMessageEvent event) {
-		if (this.eventListener != null) {
-			this.eventListener.deliverAppEvent(event);
-		}
-	}
-
 	public ReceiverStatus getStatus() throws IOException {
-		StandardResponse.ReceiverStatusResponse status = sendStandard(
+		ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.status(),
 			DEFAULT_RECEIVER_ID
@@ -488,7 +487,7 @@ public class Channel implements Closeable {
 	}
 
 	public boolean isAppAvailable(String appId) throws IOException {
-		StandardResponse.AppAvailabilityResponse availability = sendStandard(
+		AppAvailabilityResponse availability = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.appAvailability(appId),
 			DEFAULT_RECEIVER_ID
@@ -497,7 +496,7 @@ public class Channel implements Closeable {
 	}
 
 	public ReceiverStatus launch(String appId) throws IOException {
-		StandardResponse.ReceiverStatusResponse status = sendStandard(
+		ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.launch(appId),
 			DEFAULT_RECEIVER_ID
@@ -506,7 +505,7 @@ public class Channel implements Closeable {
 	}
 
 	public ReceiverStatus stop(String sessionId) throws IOException {
-		StandardResponse.ReceiverStatusResponse status = sendStandard(
+		ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.stop(sessionId),
 			DEFAULT_RECEIVER_ID
@@ -524,7 +523,7 @@ public class Channel implements Closeable {
 	public MediaStatus load(String destinationId, String sessionId, Media media, boolean autoplay, double currentTime,
 		Map<String, String> customData) throws IOException {
 		startSession(destinationId);
-		StandardResponse.MediaStatusResponse status = sendStandard(
+		MediaStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.load(sessionId, media, autoplay, currentTime, customData),
 			destinationId
@@ -534,7 +533,7 @@ public class Channel implements Closeable {
 
 	public MediaStatus play(String destinationId, String sessionId, long mediaSessionId) throws IOException {
 		startSession(destinationId);
-		StandardResponse.MediaStatusResponse status = sendStandard(
+		MediaStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.play(sessionId, mediaSessionId),
 			destinationId
@@ -544,7 +543,7 @@ public class Channel implements Closeable {
 
 	public MediaStatus pause(String destinationId, String sessionId, long mediaSessionId) throws IOException {
 		startSession(destinationId);
-		StandardResponse.MediaStatusResponse status = sendStandard(
+		MediaStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.pause(sessionId, mediaSessionId),
 			destinationId
@@ -554,7 +553,7 @@ public class Channel implements Closeable {
 
 	public MediaStatus seek(String destinationId, String sessionId, long mediaSessionId, double currentTime) throws IOException {
 		startSession(destinationId);
-		StandardResponse.MediaStatusResponse status = sendStandard(
+		MediaStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.seek(sessionId, mediaSessionId, currentTime),
 			destinationId
@@ -563,7 +562,7 @@ public class Channel implements Closeable {
 	}
 
 	public ReceiverStatus setVolume(Volume volume) throws IOException {
-		StandardResponse.ReceiverStatusResponse status = sendStandard(
+		ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.setVolume(volume),
 			DEFAULT_RECEIVER_ID
@@ -573,7 +572,7 @@ public class Channel implements Closeable {
 
 	public MediaStatus getMediaStatus(String destinationId) throws IOException {
 		startSession(destinationId);
-		StandardResponse.MediaStatusResponse status = sendStandard(
+		MediaStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.status(),
 			destinationId
@@ -682,9 +681,7 @@ public class Channel implements Closeable {
 
 		public InputHandler(@Nonnull InputStream inputStream) {
 			super(remoteName + " input handler");
-			if (inputStream == null) {
-				throw new IllegalArgumentException("inputStream cannot be null");
-			}
+			requireNotNull(inputStream, "inputStream");
 			this.is = inputStream;
 
 			String messageString;
@@ -710,7 +707,7 @@ public class Channel implements Closeable {
 			CastMessage message = null;
 			PayloadType payloadType;
 			try {
-				while (running) { //TODO: (Nad) Figure out
+				while (running) {
 					message = null;
 					try {
 						message = readMessage(is);
@@ -732,16 +729,15 @@ public class Channel implements Closeable {
 							case BINARY:
 								LOGGER.trace(
 									CHROMECAST_API_MARKER,
-									"{} InputHandler: Received a message with binary payload ({} bytes)",
+									"{} InputHandler: Received message with binary payload ({} bytes)",
 									remoteName,
 									message.getPayloadBinary() == null ? "unknown number of" : message.getPayloadBinary().size()
 								);
-								CustomMessageEvent event = new CustomMessageEvent(message.getNamespace(), message.getPayloadBinary());
-								notifyListenersCustomMessageEvent(event);
+								EXECUTOR.execute(new BinaryMessageHandler(message));
 								break;
 							case STRING:
 								jsonMessage = message.getPayloadUtf8();
-								if (Util.isBlank(jsonMessage)) {
+								if (isBlank(jsonMessage)) {
 									LOGGER.trace(
 										CHROMECAST_API_MARKER,
 										"{} InputHandler: Received an empty string message - ignoring",
@@ -776,7 +772,7 @@ public class Channel implements Closeable {
 								}
 								LOGGER.trace(
 									CHROMECAST_API_MARKER,
-									"{} InputHandler: Received a string message \"{}\"",
+									"{} InputHandler: Received string message \"{}\"",
 									remoteName,
 									jsonMessage
 								);
@@ -871,12 +867,8 @@ public class Channel implements Closeable {
 		protected final String jsonMessage;
 
 		public StringMessageHandler(@Nonnull CastMessage message, @Nonnull String jsonMessage) {
-			if (message == null) {
-				throw new IllegalArgumentException("message cannot be null");
-			}
-			if (Util.isBlank(jsonMessage)) {
-				throw new IllegalArgumentException("jsonMessage cannot be blank");
-			}
+			requireNotNull(message, "message");
+			requireNotBlank(jsonMessage, "jsonMessage");
 			this.message = message;
 			this.jsonMessage = jsonMessage;
 		}
@@ -901,11 +893,13 @@ public class Channel implements Closeable {
 				if (requestId > 0L && (resultProcessor = requests.remove(requestId)) != null) { //TODO: (Nad) Sync
 					resultProcessor.process(jsonMessage); //TODO: (Nad) Sync
 				} else if (parsedMessage == null || isCustomMessage(parsedMessage)) {
-					//TODO: (Nad) Send "custom" event
-					CustomMessageEvent event = new CustomMessageEvent(message.getNamespace(), message.getPayloadUtf8());
-					notifyListenersCustomMessageEvent(event);
+					if (!listeners.isEmpty()) {
+						listeners.fire(new DefaultCastEvent<>(
+							CastEventType.APPEVENT,
+							new CustomMessageEvent(message.getNamespace(), message.getPayloadUtf8())
+						));
+					}
 				} else if ("CLOSE".equals(responseType)) { //TODO: (Nad) Reevaluate - which "connection" does it apply to?
-					notifyListenersOfSpontaneousEvent(parsedMessage);
 					try {
 						close();
 					} catch (IOException e) {
@@ -916,51 +910,43 @@ public class Channel implements Closeable {
 							e.getMessage()
 						);
 					}
-				} else { //TODO: (Nad) Figure out "CLOSE" message
-					StandardResponse resp;
-					if (!Util.isBlank(responseType)) {
+					if (!listeners.isEmpty()) {
+						listeners.fire(new DefaultCastEvent<>(CastEventType.CLOSE, null)); //TODO: (Nad) Investigate/Figure out
+					}
+				} else if (!listeners.isEmpty()) { //TODO: (Nad) Figure out "CLOSE" message
+					StandardResponse response;
+					if (!isBlank(responseType)) {
 						try {
-							resp = jsonMapper.treeToValue(parsedMessage, StandardResponse.class);
-						} catch (JsonMappingException jme) {
-							resp = null;
+							response = jsonMapper.treeToValue(parsedMessage, StandardResponse.class);
+						} catch (JsonMappingException e) {
+							response = null;
 						}
 					} else {
-						resp = null;
+						response = null;
 					}
 
-					if (resp instanceof MediaStatusResponse) {
-						MediaStatusResponse mediaStatusResponse = (MediaStatusResponse) resp;
-						// It may be a single media status event
-						if (mediaStatusResponse.getStatuses().isEmpty()) {
-							if (parsedMessage.has("media")) {
-								try {
-									listeners.fire(new DefaultCastEvent<>(
-										CastEventType.MEDIA_STATUS,
-										jsonMapper.treeToValue(parsedMessage, MediaStatus.class)
-									));
-								} catch (JsonMappingException jme) {
-									// TODO: (Nad) Log
-								}
-							}
-						} else {
-							for (MediaStatus mediaStatus : mediaStatusResponse.getStatuses()) {
-								listeners.fire(new DefaultCastEvent<>(CastEventType.MEDIA_STATUS, mediaStatus));
-							}
+					//TODO: (Nad) New message
+//					DEVICE_UPDATED
+//					{"device":{"capabilities":196613,"deviceId":"342c6da3-23f4-9119-f833-121beaab0e9a","name":"Spycast","volume":{"level":0.6299999952316284,"muted":false}},"requestId":0,"responseType":"DEVICE_UPDATED"}
+//					{"device":{"capabilities":196613,"deviceId":"342c6da3-23f4-9119-f833-121beaab0e9a","name":"Spycast","volume":{"level":0.4000000059604645,"muted":false}},"requestId":0,"responseType":"DEVICE_UPDATED"}
+
+					if (response instanceof MediaStatusResponse) {
+						MediaStatusResponse mediaStatusResponse = (MediaStatusResponse) response;
+						for (MediaStatus mediaStatus : mediaStatusResponse.getStatuses()) {
+							listeners.fire(new DefaultCastEvent<>(CastEventType.MEDIA_STATUS, mediaStatus));
 						}
-					} else if (resp instanceof ReceiverStatusResponse) {
+					} else if (response instanceof ReceiverStatusResponse) {
 						listeners.fire(new DefaultCastEvent<>(
 							CastEventType.RECEIVER_STATUS,
-							((ReceiverStatusResponse) resp).getStatus()
+							((ReceiverStatusResponse) response).getStatus()
 						));
-					} else if (resp instanceof CloseResponse) { //TODO: (Nad) Investigate
+					} else if (response instanceof CloseResponse) { //TODO: (Nad) Investigate
 						listeners.fire(new DefaultCastEvent<>(CastEventType.CLOSE, null));
+					} else if (response instanceof StandardResponse) { //TODO: (Nad) Here..
+						LOGGER.error(CHROMECAST_API_MARKER, "Received unhandled standard response of type {}: {}", response.getClass().getSimpleName(), response);
 					} else {
-						listeners.fire(new DefaultCastEvent<>(CastEventType.UNKNOWN, parsedMessage)); //TODO: (Nad) How to make immutable?
+						listeners.fire(new DefaultCastEvent<>(CastEventType.UNKNOWN, parsedMessage));
 					}
-
-
-
-					notifyListenersOfSpontaneousEvent(parsedMessage); //TODO: (Nad) Handle event
 				}
 			} catch (JsonProcessingException e) {
 				LOGGER.warn(
@@ -970,6 +956,26 @@ public class Channel implements Closeable {
 					e.getMessage()
 				);
 				LOGGER.trace(CHROMECAST_API_MARKER, "", e);
+			}
+		}
+	}
+
+	protected class BinaryMessageHandler implements Runnable {
+
+		protected final CastMessage message;
+
+		public BinaryMessageHandler(@Nonnull CastMessage message) {
+			requireNotNull(message, "message");
+			this.message = message;
+		}
+
+		@Override
+		public void run() {
+			if (!listeners.isEmpty()) {
+				listeners.fire(new DefaultCastEvent<>(CastEventType.APPEVENT, new CustomMessageEvent(
+					message.getNamespace(),
+					message.getPayloadBinary()
+				)));
 			}
 		}
 	}

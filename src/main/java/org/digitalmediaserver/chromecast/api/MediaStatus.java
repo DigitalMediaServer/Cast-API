@@ -17,7 +17,6 @@ package org.digitalmediaserver.chromecast.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -207,27 +206,46 @@ public class MediaStatus {
 	}
 
 	@Override
-	public final String toString() {
-		return String.format(
-			"MediaStatus{activeTrackIds: %s, mediaSessionId: %d, playbackRate: %f, playerState: %s," +
-			" currentItemId: %s, currentTime: %f, customData: %s, loadingItemId: %s, items: %s," +
-			" preloadedItemId: %s, supportedMediaCommands: %d, volume: %s, media: %s, repeatMode: %s," +
-			" idleReason: %s}",
-			Arrays.toString(this.activeTrackIds.toArray()),
-			this.mediaSessionId,
-			this.playbackRate,
-			this.playerState,
-			this.currentItemId,
-			this.currentTime,
-			Arrays.toString(this.customData.keySet().toArray()),
-			this.loadingItemId,
-			Arrays.toString(this.items.toArray()),
-			this.preloadedItemId,
-			this.supportedMediaCommands,
-			this.volume,
-			this.media,
-			this.repeatMode,
-			this.idleReason
-		);
+	public String toString() {
+		StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+		builder.append(" [");
+		if (activeTrackIds != null) {
+			builder.append("activeTrackIds=").append(activeTrackIds).append(", ");
+		}
+		builder.append("mediaSessionId=").append(mediaSessionId).append(", playbackRate=").append(playbackRate).append(", ");
+		if (playerState != null) {
+			builder.append("playerState=").append(playerState).append(", ");
+		}
+		if (currentItemId != null) {
+			builder.append("currentItemId=").append(currentItemId).append(", ");
+		}
+		builder.append("currentTime=").append(currentTime).append(", ");
+		if (customData != null) {
+			builder.append("customData=").append(customData).append(", ");
+		}
+		if (loadingItemId != null) {
+			builder.append("loadingItemId=").append(loadingItemId).append(", ");
+		}
+		if (items != null) {
+			builder.append("items=").append(items).append(", ");
+		}
+		if (preloadedItemId != null) {
+			builder.append("preloadedItemId=").append(preloadedItemId).append(", ");
+		}
+		builder.append("supportedMediaCommands=").append(supportedMediaCommands).append(", ");
+		if (volume != null) {
+			builder.append("volume=").append(volume).append(", ");
+		}
+		if (media != null) {
+			builder.append("media=").append(media).append(", ");
+		}
+		if (repeatMode != null) {
+			builder.append("repeatMode=").append(repeatMode).append(", ");
+		}
+		if (idleReason != null) {
+			builder.append("idleReason=").append(idleReason);
+		}
+		builder.append("]");
+		return builder.toString();
 	}
 }
