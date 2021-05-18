@@ -16,6 +16,7 @@
 package org.digitalmediaserver.chromecast.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.digitalmediaserver.chromecast.api.Media.StreamType;
 import org.digitalmediaserver.chromecast.api.MediaStatus.PlayerState;
 import org.digitalmediaserver.chromecast.api.MediaStatus.RepeatMode;
 import org.junit.Test;
@@ -61,14 +62,27 @@ public class MediaStatusTest {
 		assertEquals((Integer) 1, mediaStatus.getCurrentItemId());
 		assertEquals(0f, mediaStatus.getCurrentTime(), 0f);
 
-		final Media media = new Media("http://192.168.1.6:8192/audio-123-mp3", "audio/mpeg", 389.355102d, Media.StreamType.BUFFERED);
+		final Media media = Media
+			.builder(null, "audio/mpeg", StreamType.BUFFERED)
+			.contentId("http://192.168.1.6:8192/audio-123-mp3")
+			.duration(389.355102d)
+			.build();
 
 		final Map<String, String> payload = new HashMap<>();
 		payload.put("thumb", null);
-		payload.put("title", "Example Track Title");
+		payload.put("title:", "Example Track Title");
 		final Map<String, Object> customData = new HashMap<>();
 		customData.put("payload", payload);
-		assertEquals(Collections.singletonList(new QueueItem(true, customData, 1, media)), mediaStatus.getItems());
+		assertEquals(Collections.singletonList(new QueueItem(
+			null,
+			Boolean.TRUE,
+			customData,
+			Integer.valueOf(1),
+			media,
+			null,
+			null,
+			null)
+		), mediaStatus.getItems());
 
 		assertEquals(media, mediaStatus.getMedia());
 		assertEquals(Media.MetadataType.GENERIC, media.getMetadataType());
@@ -77,8 +91,7 @@ public class MediaStatusTest {
 		assertEquals(PlayerState.BUFFERING, mediaStatus.getPlayerState());
 		assertEquals(RepeatMode.REPEAT_OFF, mediaStatus.getRepeatMode());
 		assertEquals(15, mediaStatus.getSupportedMediaCommands());
-		assertEquals(new Volume(1f, false, Volume.DEFAULT_INCREMENT, Volume.DEFAULT_INCREMENT.doubleValue(), Volume.DEFAULT_CONTROL_TYPE),
-			mediaStatus.getVolume());
+		assertEquals(new MediaVolume(1d, false), mediaStatus.getVolume());
 	}
 
 	@Test
@@ -97,7 +110,7 @@ public class MediaStatusTest {
 		assertTrue(mediaStatus.getItems().isEmpty());
 		assertNull(mediaStatus.getPreloadedItemId());
 
-		assertEquals(new Volume(0.6999999f, false, 0.05f, null, null), mediaStatus.getVolume());
+		assertEquals(new MediaVolume(0.6999999284744263, Boolean.FALSE), mediaStatus.getVolume());
 
 		assertNotNull(mediaStatus.getMedia());
 		Media media = mediaStatus.getMedia();
@@ -107,7 +120,7 @@ public class MediaStatusTest {
 		assertEquals(246d, media.getDuration(), 0.1);
 		assertEquals(Media.StreamType.BUFFERED, media.getStreamType());
 		assertEquals("BUFFERED", media.getContentType());
-		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals(1, media.getCustomData().size());
 		assertNotNull(media.getCustomData().get("status"));

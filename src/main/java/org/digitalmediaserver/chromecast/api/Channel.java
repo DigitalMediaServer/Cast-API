@@ -53,6 +53,10 @@ import org.digitalmediaserver.chromecast.api.CastChannel.CastMessage.PayloadType
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListenerList;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 import org.digitalmediaserver.chromecast.api.CastEvent.DefaultCastEvent;
+import org.digitalmediaserver.chromecast.api.CastException.InvalidCastException;
+import org.digitalmediaserver.chromecast.api.CastException.LaunchErrorCastException;
+import org.digitalmediaserver.chromecast.api.CastException.LoadCancelledCastException;
+import org.digitalmediaserver.chromecast.api.CastException.LoadFailedCastException;
 import org.digitalmediaserver.chromecast.api.Session.SessionClosedListener;
 import org.digitalmediaserver.chromecast.api.StandardMessage.CloseConnection;
 import org.digitalmediaserver.chromecast.api.StandardMessage.Connect;
@@ -70,9 +74,11 @@ import org.digitalmediaserver.chromecast.api.StandardRequest.Stop;
 import org.digitalmediaserver.chromecast.api.StandardResponse.AppAvailabilityResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.InvalidResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.LaunchErrorResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.LoadCancelledResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.LoadFailedResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MediaStatusResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.ReceiverStatusResponse;
+import org.digitalmediaserver.chromecast.api.Volume.VolumeControlType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -189,10 +195,28 @@ public class Channel implements Closeable {
 	@GuardedBy("sessionsLock")
 	protected final Set<Session> sessions = new HashSet<>();
 
-	/**
-	 * How much time to wait until request is processed
-	 */
-	protected volatile long requestTimeout = DEFAULT_RESPONSE_TIMEOUT;
+	/** The cached volume synchronization object */
+	@Nonnull
+	protected final Object cachedVolumeLock = new Object();
+
+	/** The last received {@link Volume} instance */
+	@Nullable
+	@GuardedBy("cachedVolumeLock")
+	protected Volume cachedVolume;
+
+	/** The gradual volume synchronization object */
+	@Nonnull
+	protected final Object gradualVolumeLock = new Object();
+
+	/** The {@link Timer} used to handle gradual volume change */
+	@Nullable
+	@GuardedBy("gradualVolumeLock")
+	protected Timer gradualVolumeTimer;
+
+	/** The {@link TimerTask} that executes the gradual volume change */
+	@Nullable
+	@GuardedBy("gradualVolumeLock")
+	protected TimerTask gradualVolumeTask;
 
 	static {
 		CAST_API_HEARTBEAT_MARKER.add(CAST_API_MARKER);
@@ -373,6 +397,11 @@ public class Channel implements Closeable {
 			pingTimer.schedule(pingTask, 1000, PING_PERIOD);
 		}
 
+		// Reset the cached volume on every connect
+		synchronized (cachedVolumeLock) {
+			cachedVolume = null;
+		}
+
 		// Send connect event
 		listeners.fire(new DefaultCastEvent<>(CastEventType.CONNECTED, Boolean.TRUE));
 		return true;
@@ -458,6 +487,9 @@ public class Channel implements Closeable {
 	 * @param responseClass the class of the expected response for synchronous
 	 *            (blocking) behavior, or {@code null} for asynchronous behavior
 	 *            that returns {@code null} immediately.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code responseClass} is non-{@code null}. If zero or
+	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The {@link Response} object of the specified type if
 	 *         {@code responseClass} is non-{@code null}, {@code null} if
 	 *         {@code responseClass} is {@code null}.
@@ -474,7 +506,8 @@ public class Channel implements Closeable {
 		Request message,
 		String sourceId,
 		String destinationId,
-		Class<T> responseClass
+		Class<T> responseClass,
+		long responseTimeout
 	) throws IOException {
 		validateNamespace(namespace);
 		Long requestId = requestCounter.getAndIncrement();
@@ -485,7 +518,7 @@ public class Channel implements Closeable {
 			return null;
 		}
 
-		ResultProcessor<T> rp = new ResultProcessor<>(session, responseClass);
+		ResultProcessor<T> rp = new ResultProcessor<>(session, responseClass, responseTimeout);
 		synchronized (requests) {
 			requests.put(requestId, rp);
 		}
@@ -498,12 +531,16 @@ public class Channel implements Closeable {
 			}
 			if (response.untypedResult instanceof InvalidResponse) {
 				InvalidResponse invalid = (InvalidResponse) response.untypedResult;
-				throw new CastException("Invalid request: " + invalid.getReason());
+				throw new InvalidCastException("Invalid request: " + invalid.getReason());
+			} else if (response.untypedResult instanceof LoadCancelledResponse) {
+				throw new LoadCancelledCastException(
+					"Loading of media was cancelled",
+					((LoadCancelledResponse) response.untypedResult).getItemId()
+				);
 			} else if (response.untypedResult instanceof LoadFailedResponse) {
-				throw new CastException("Unable to load media");
+				throw new LoadFailedCastException("Unable to load media");
 			} else if (response.untypedResult instanceof LaunchErrorResponse) {
-				LaunchErrorResponse launchError = (LaunchErrorResponse) response.untypedResult;
-				throw new CastException("Application launch error: " + launchError.getReason());
+				throw new LaunchErrorCastException("Application launch error: " + ((LaunchErrorResponse) response.untypedResult).getReason());
 			}
 			throw new CastException(
 				"Failed to deserialize response to " + responseClass.getSimpleName()
@@ -529,15 +566,35 @@ public class Channel implements Closeable {
 	 */
 	@Nullable
 	public ReceiverStatus getReceiverStatus() throws IOException {
+		return getReceiverStatus(DEFAULT_RESPONSE_TIMEOUT);
+	}
+
+	/**
+	 * Request a {@link ReceiverStatus} from the cast device.
+	 *
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link ReceiverStatus}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public ReceiverStatus getReceiverStatus(long responseTimeout) throws IOException {
 		ReceiverStatusResponse status = send(
 			null,
 			"urn:x-cast:com.google.cast.receiver",
 			new GetStatus(),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			ReceiverStatusResponse.class
+			ReceiverStatusResponse.class,
+			responseTimeout
 		);
-		return status == null ? null : status.getStatus();
+		ReceiverStatus result;
+		if (status == null || (result = status.getStatus()) == null) {
+			return null;
+		}
+		cacheVolume(result);
+		return result;
 	}
 
 	/**
@@ -552,13 +609,30 @@ public class Channel implements Closeable {
 	 *             during the operation.
 	 */
 	public boolean isApplicationAvailable(String applicationId) throws IOException {
+		return isApplicationAvailable(applicationId, DEFAULT_RESPONSE_TIMEOUT);
+	}
+
+	/**
+	 * Queries the cast device if the application represented by the specified
+	 * application ID is available.
+	 *
+	 * @param applicationId the application ID for which to query availability.
+	 * @param responseTimeout the response timeout in milliseconds if. If zero
+	 *            or negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return {@code true} if the application is available, {@code false} if
+	 *         it's not.
+	 * @throws IOException If the response times out or if an error occurs
+	 *             during the operation.
+	 */
+	public boolean isApplicationAvailable(String applicationId, long responseTimeout) throws IOException {
 		AppAvailabilityResponse availability = send(
 			null,
 			"urn:x-cast:com.google.cast.receiver",
 			new GetAppAvailability(applicationId),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			AppAvailabilityResponse.class
+			AppAvailabilityResponse.class,
+			responseTimeout
 		);
 		return availability != null && "APP_AVAILABLE".equals(availability.getAvailability().get(applicationId));
 	}
@@ -579,15 +653,42 @@ public class Channel implements Closeable {
 	 */
 	@Nullable
 	public ReceiverStatus launch(String applicationId, boolean synchronous) throws IOException {
+		return launch(applicationId, synchronous, DEFAULT_RESPONSE_TIMEOUT);
+	}
+
+	/**
+	 * Asks the cast device to launch the application represented by the
+	 * specified application ID.
+	 *
+	 * @param applicationId the application ID for the application to launch.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link ReceiverStatus} or {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public ReceiverStatus launch(String applicationId, boolean synchronous, long responseTimeout) throws IOException {
 		ReceiverStatusResponse status = send(
 			null,
 			"urn:x-cast:com.google.cast.receiver",
 			new Launch(applicationId),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			synchronous ? ReceiverStatusResponse.class : null
+			synchronous ? ReceiverStatusResponse.class : null,
+			responseTimeout
 		);
-		return status == null ? null : status.getStatus();
+		ReceiverStatus result;
+		if (status == null || (result = status.getStatus()) == null) {
+			return null;
+		}
+		cacheVolume(result);
+		return result;
 	}
 
 	/**
@@ -604,15 +705,45 @@ public class Channel implements Closeable {
 	 *             the operation.
 	 */
 	public ReceiverStatus stopApplication(@Nonnull Application application, boolean synchronous) throws IOException {
+		return stopApplication(application, synchronous, DEFAULT_RESPONSE_TIMEOUT);
+	}
+
+	/**
+	 * Asks the cast device to stop the specified {@link Application}.
+	 *
+	 * @param application the {@link Application} to stop.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link ReceiverStatus} or {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws NullPointerException If {@code application} is {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	public ReceiverStatus stopApplication(
+		@Nonnull Application application,
+		boolean synchronous,
+		long responseTimeout
+	) throws IOException {
 		ReceiverStatusResponse status = send(
 			null,
 			"urn:x-cast:com.google.cast.receiver",
 			new Stop(application.getSessionId()),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			synchronous ? ReceiverStatusResponse.class : null
+			synchronous ? ReceiverStatusResponse.class : null,
+			responseTimeout
 		);
-		return status == null ? null : status.getStatus();
+		ReceiverStatus result;
+		if (status == null || (result = status.getStatus()) == null) {
+			return null;
+		}
+		cacheVolume(result);
+		return result;
 	}
 
 	/**
@@ -726,6 +857,23 @@ public class Channel implements Closeable {
 	 */
 	@Nullable
 	public MediaStatus getMediaStatus(@Nonnull Session session) throws IOException {
+		return getMediaStatus(session, DEFAULT_RESPONSE_TIMEOUT);
+	}
+
+	/**
+	 * Request a {@link MediaStatus} from the application with the specified
+	 * {@link Session}.
+	 *
+	 * @param session the {@link Session} to use.
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link MediaStatus}.
+	 * @throws IllegalArgumentException If {@code session} is {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public MediaStatus getMediaStatus(@Nonnull Session session, long responseTimeout) throws IOException {
 		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
 			session,
@@ -733,9 +881,29 @@ public class Channel implements Closeable {
 			new GetStatus(),
 			session.sourceId,
 			session.destinationId,
-			MediaStatusResponse.class
+			MediaStatusResponse.class,
+			responseTimeout
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+	}
+
+	public MediaStatus load(
+		@Nonnull Session session,
+		Media media,
+		boolean autoplay,
+		double currentTime,
+		boolean synchronous,
+		@Nullable Map<String, Object> customData
+	) throws IOException {
+		return load(
+			session,
+			media,
+			autoplay,
+			currentTime,
+			synchronous,
+			DEFAULT_RESPONSE_TIMEOUT,
+			customData
+		);
 	}
 
 	/**
@@ -756,6 +924,9 @@ public class Channel implements Closeable {
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @param customData the custom application data to send to the remote
 	 *            application with the load command.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
@@ -772,7 +943,8 @@ public class Channel implements Closeable {
 		boolean autoplay,
 		double currentTime,
 		boolean synchronous,
-		@Nullable Map<String, String> customData
+		long responseTimeout,
+		@Nullable Map<String, Object> customData
 	) throws IOException {
 		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
@@ -787,7 +959,8 @@ public class Channel implements Closeable {
 			),
 			session.sourceId,
 			session.destinationId,
-			synchronous ? MediaStatusResponse.class : null
+			synchronous ? MediaStatusResponse.class : null,
+			responseTimeout
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
@@ -819,6 +992,39 @@ public class Channel implements Closeable {
 		int mediaSessionId,
 		boolean synchronous
 	) throws IOException {
+		return play(session, mediaSessionId, synchronous, DEFAULT_RESPONSE_TIMEOUT);
+	}
+
+	/**
+	 * Asks the remote application to start playing the media referenced by the
+	 * specified media session ID.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param session the {@link Session} to use.
+	 * @param mediaSessionId the media session ID for which the play request
+	 *            applies.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IllegalArgumentException If {@code session} is {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public MediaStatus play(
+		@Nonnull Session session,
+		int mediaSessionId,
+		boolean synchronous,
+		long responseTimeout
+	) throws IOException {
 		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
 			session,
@@ -826,7 +1032,8 @@ public class Channel implements Closeable {
 			new Play(mediaSessionId, session.id),
 			session.sourceId,
 			session.destinationId,
-			synchronous ? MediaStatusResponse.class : null
+			synchronous ? MediaStatusResponse.class : null,
+			responseTimeout
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
@@ -858,6 +1065,39 @@ public class Channel implements Closeable {
 		int mediaSessionId,
 		boolean synchronous
 	) throws IOException {
+		return pause(session, mediaSessionId, synchronous, DEFAULT_RESPONSE_TIMEOUT);
+	}
+
+	/**
+	 * Asks the remote application to pause playback of the media referenced by
+	 * the specified media session ID.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param session the {@link Session} to use.
+	 * @param mediaSessionId the media session ID for which the pause request
+	 *            applies.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IllegalArgumentException If {@code session} is {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public MediaStatus pause(
+		@Nonnull Session session,
+		int mediaSessionId,
+		boolean synchronous,
+		long responseTimeout
+	) throws IOException {
 		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
 			session,
@@ -865,7 +1105,8 @@ public class Channel implements Closeable {
 			new Pause(mediaSessionId, session.id),
 			session.sourceId,
 			session.destinationId,
-			synchronous ? MediaStatusResponse.class : null
+			synchronous ? MediaStatusResponse.class : null,
+			responseTimeout
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
@@ -899,6 +1140,47 @@ public class Channel implements Closeable {
 		double currentTime,
 		boolean synchronous
 	) throws IOException {
+		return seek(
+			session,
+			mediaSessionId,
+			currentTime,
+			synchronous,
+			DEFAULT_RESPONSE_TIMEOUT
+		);
+	}
+
+	/**
+	 * Asks the remote application to move the playback position of the media
+	 * referenced by the specified media session ID to the specified position.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param session the {@link Session} to use.
+	 * @param mediaSessionId the media session ID for which the pause request
+	 *            applies.
+	 * @param currentTime the new playback position in seconds.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IllegalArgumentException If {@code session} is {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public MediaStatus seek(
+		@Nonnull Session session,
+		int mediaSessionId,
+		double currentTime,
+		boolean synchronous,
+		long responseTimeout
+	) throws IOException {
 		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
 			session,
@@ -906,22 +1188,117 @@ public class Channel implements Closeable {
 			new Seek(mediaSessionId, session.id, currentTime),
 			session.sourceId,
 			session.destinationId,
-			synchronous ? MediaStatusResponse.class : null
+			synchronous ? MediaStatusResponse.class : null,
+			responseTimeout
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
+	/**
+	 * Sets the device {@link Volume} to the values of the specified instance. A
+	 * {@link Volume} instance contains both the volume level and the mute
+	 * state.
+	 * <p>
+	 * If the device has {@link VolumeControlType#MASTER} and the this call
+	 * changes the volume level more than the device specified "step", this
+	 * method will start a {@link Timer} based gradual change towards the
+	 * specified volume level.
+	 *
+	 * @param volume the {@link Volume} instance whose values to set.
+	 * @throws CastException If the cast device has
+	 *             {@link VolumeControlType#FIXED}.
+	 * @throws IOException If an error occurs during the operation.
+	 */
 	@Nullable
-	public ReceiverStatus setVolume(Volume volume, boolean synchronous) throws IOException {
+	public void setVolume(Volume volume) throws IOException {
+		if (volume == null) {
+			return;
+		}
+		Volume lastVolume;
+		synchronized (cachedVolumeLock) {
+			lastVolume = cachedVolume;
+		}
+		if (lastVolume != null) {
+			if (lastVolume.getControlType() == VolumeControlType.FIXED) {
+				throw new CastException("Cannot set volume level or mute since the device has a fixed volume");
+			}
+			Double currentLevelObj, targetLevelObj, stepIntervalObj;
+			if (
+				(currentLevelObj = lastVolume.getLevel()) != null &&
+				(targetLevelObj = volume.getLevel()) != null &&
+				lastVolume.getControlType() == VolumeControlType.MASTER &&
+				(stepIntervalObj = lastVolume.getStepInterval()) != null
+			) {
+				GradualVolumeTask task = null;
+				double currentLevel, targetLevel, stepInterval, diff;
+				if (
+					(currentLevel = currentLevelObj.doubleValue()) != (targetLevel = targetLevelObj.doubleValue()) &&
+					(diff = Math.abs(targetLevel - currentLevel)) > (stepInterval = stepIntervalObj.doubleValue())
+				) {
+					int steps = (int) Math.ceil(diff / stepInterval);
+					if (steps > 1) {
+						if (targetLevel < currentLevel) {
+							stepInterval = -stepInterval;
+						}
+						task = new GradualVolumeTask(stepInterval, targetLevel);
+						volume = volume.modify().level(Double.valueOf(currentLevel + stepInterval)).build();
+					}
+				}
+
+				synchronized (gradualVolumeLock) {
+					if (gradualVolumeTask != null) {
+						gradualVolumeTask.cancel();
+					}
+					if (task != null) {
+						if (gradualVolumeTimer == null) {
+							gradualVolumeTimer = new Timer(remoteName + " gradual volume timer");
+						}
+						gradualVolumeTask = task;
+						gradualVolumeTimer.schedule(task, 150, 150);
+					} else if (gradualVolumeTimer != null) {
+						gradualVolumeTimer.cancel();
+						gradualVolumeTimer = null;
+					}
+				}
+			}
+		}
+		doSetVolume(volume, false, DEFAULT_RESPONSE_TIMEOUT);
+	}
+
+	/**
+	 * Sets the device volume level using the specified parameters, without any
+	 * checks or evaluations.
+	 *
+	 * @param volume the {@link Volume} instance to send to the cast device.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link ReceiverStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	protected ReceiverStatus doSetVolume(Volume volume, boolean synchronous, long responseTimeout) throws IOException {
 		ReceiverStatusResponse status = send(
 			null,
 			"urn:x-cast:com.google.cast.receiver",
 			new SetVolume(volume),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			synchronous ? ReceiverStatusResponse.class : null
+			synchronous ? ReceiverStatusResponse.class : null,
+			responseTimeout
 		);
-		return status == null ? null : status.getStatus();
+		ReceiverStatus result;
+		if (status == null || (result = status.getStatus()) == null) {
+			return null;
+		}
+		cacheVolume(result);
+		return result;
 	}
 
 	/**
@@ -956,7 +1333,48 @@ public class Channel implements Closeable {
 			request,
 			session.sourceId,
 			session.destinationId,
-			responseClass
+			responseClass,
+			DEFAULT_RESPONSE_TIMEOUT
+		);
+	}
+
+	/**
+	 * Sends the specified {@link Request} with the specified namespace using
+	 * the specified {@link Session}.
+	 *
+	 * @param <T> the class of the {@link Response} object.
+	 * @param session the {@link Session} to use.
+	 * @param namespace the namespace to use.
+	 * @param request the {@link Request} to send.
+	 * @param responseClass the response class to to block and wait for a
+	 *            response or {@code null} to return immediately.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code responseClass} is non-{@code null}. If zero or
+	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The {@link Response} if the response is received in time, or
+	 *         {@code null} if the {@code responseClass} is {@code null} or a
+	 *         timeout occurs.
+	 * @throws IllegalArgumentException If {@link Session} is {@code null} or if
+	 *             {@code namespace} is {@code null} or invalid (see
+	 *             {@link #validateNamespace(String)} for constraints).
+	 * @throws IOException If an error occurs during the operation.
+	 */
+	public <T extends Response> T sendGenericRequest(
+		@Nonnull Session session,
+		@Nonnull String namespace,
+		Request request,
+		Class<T> responseClass,
+		long responseTimeout
+	) throws IOException {
+		requireNotNull(session, "session");
+		return send(
+			session,
+			namespace,
+			request,
+			session.sourceId,
+			session.destinationId,
+			responseClass,
+			responseTimeout
 		);
 	}
 
@@ -988,11 +1406,146 @@ public class Channel implements Closeable {
 		Request request,
 		Class<T> responseClass
 	) throws IOException {
-		return send(null, namespace, request, sourceId, destinationId, responseClass);
+		return send(null, namespace, request, sourceId, destinationId, responseClass, DEFAULT_RESPONSE_TIMEOUT);
 	}
 
-	public void setRequestTimeout(long requestTimeout) {
-		this.requestTimeout = requestTimeout;
+	/**
+	 * Sends the specified {@link Request} with the specified namespace using
+	 * the specified source and destination IDs. This is for requests that
+	 * aren't associated with a {@link Session}.
+	 *
+	 * @param <T> the class of the {@link Response} object.
+	 * @param sourceId the source ID to use.
+	 * @param destinationId the destination ID to use.
+	 * @param namespace the namespace to use.
+	 * @param request the {@link Request} to send.
+	 * @param responseClass the response class to to block and wait for a
+	 *            response or {@code null} to return immediately.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code responseClass} is non-{@code null}. If zero or
+	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The {@link Response} if the response is received in time, or
+	 *         {@code null} if the {@code responseClass} is {@code null} or a
+	 *         timeout occurs.
+	 * @throws IllegalArgumentException If {@code namespace} is {@code null} or
+	 *             invalid (see {@link #validateNamespace(String)} for
+	 *             constraints).
+	 * @throws IOException If an error occurs during the operation.
+	 */
+	public <T extends Response> T sendGenericRequest(
+		@Nonnull String sourceId,
+		@Nonnull String destinationId,
+		@Nonnull String namespace,
+		Request request,
+		Class<T> responseClass,
+		long responseTimeout
+	) throws IOException {
+		return send(null, namespace, request, sourceId, destinationId, responseClass, responseTimeout);
+	}
+
+	/**
+	 * Caches the {@link Volume} instance from the specified
+	 * {@link ReceiverStatus} as as long as neither are {@code null}.
+	 *
+	 * @param receiverStatus the {@link ReceiverStatus} from which to get the
+	 *            {@link Volume} to store.
+	 */
+	protected void cacheVolume(@Nullable ReceiverStatus receiverStatus) {
+		Volume volume;
+		if (receiverStatus != null && (volume = receiverStatus.getVolume()) != null) {
+			cacheVolume(volume);
+		}
+	}
+
+	/**
+	 * Caches the specified {@link Volume} instance as long as it's not
+	 * {@code null}.
+	 *
+	 * @param volume the {@link Volume} instance to store.
+	 */
+	protected void cacheVolume(@Nullable Volume volume) {
+		if (volume == null) {
+			return;
+		}
+		boolean setVolume;
+		synchronized (cachedVolumeLock) {
+			setVolume = cachedVolume == null;
+			cachedVolume = volume;
+		}
+
+		if (
+			setVolume &&
+			volume.getControlType() != VolumeControlType.FIXED &&
+			volume.getLevel() != null &&
+			volume.getLevel().doubleValue() < 1.0
+		) {
+			// There's a long-standing bug in the ChromeCast software that resets
+			// the device volume to 100% when the device is restarted. It correctly
+			// reports the volume level it's supposed to have, but audio is played
+			// back with 100% volume regardless. This little trick is to mitigate
+			// the bug by setting the volume to what the device reports the first
+			// time we receive one. Hopefully this won't negatively impact devices
+			// without the bug.
+			final double targetLevel = volume.getLevel().doubleValue();
+			final double interrimLevel;
+			if (targetLevel > 0.1) {
+				interrimLevel = targetLevel - 0.05;
+			} else {
+				interrimLevel = targetLevel + 0.05;
+			}
+
+			CastDevice.EXECUTOR.execute(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						send(
+							null,
+							"urn:x-cast:com.google.cast.receiver",
+							new SetVolume(new Volume(null, Double.valueOf(interrimLevel), null, null)),
+							PLATFORM_SENDER_ID,
+							PLATFORM_RECEIVER_ID,
+							null,
+							0L
+						);
+					} catch (IOException e) {
+						LOGGER.warn(
+							CAST_API_MARKER,
+							"Failed to set the initial interrim volume on {}: {}",
+							remoteName,
+							e.getMessage()
+						);
+						LOGGER.trace(CAST_API_MARKER, "", e);
+					}
+				}
+			});
+			CastDevice.EXECUTOR.execute(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						Thread.sleep(150L);
+						send(
+							null,
+							"urn:x-cast:com.google.cast.receiver",
+							new SetVolume(new Volume(null, Double.valueOf(targetLevel), null, null)),
+							PLATFORM_SENDER_ID,
+							PLATFORM_RECEIVER_ID,
+							null,
+							0L
+						);
+					} catch (IOException | InterruptedException e) {
+						LOGGER.warn(
+							CAST_API_MARKER,
+							"Failed to set the initial volume on {}: {}",
+							remoteName,
+							e.getMessage()
+						);
+						LOGGER.trace(CAST_API_MARKER, "", e);
+					}
+				}
+			});
+		}
 	}
 
 	/**
@@ -1199,6 +1752,95 @@ public class Channel implements Closeable {
 		}
 	}
 
+	/**
+	 * A {@link TimerTask} that will gradually increase or decrease the volume
+	 * level of the cast device until the target level is reached.
+	 *
+	 * @author Nadahar
+	 */
+	protected class GradualVolumeTask extends TimerTask {
+
+		/** The interval */
+		protected final double interval;
+
+		/** The target level */
+		protected final double target;
+
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param interval the partial volume level change to use for each step,
+		 *            positive to increase the volume level, negative to
+		 *            decrease it.
+		 * @param target the target volume level that will trigger a shutdown of
+		 *            the task when reached.
+		 */
+		public GradualVolumeTask(double interval, double target) {
+			this.interval = interval;
+			this.target = target;
+		}
+
+		@Override
+		public void run() {
+			Volume currentVolume;
+			synchronized (cachedVolumeLock) {
+				currentVolume = cachedVolume;
+			}
+			if (currentVolume == null || currentVolume.getLevel() == null) {
+				shutdownTask();
+			} else {
+				double currentLevel = currentVolume.getLevel().doubleValue();
+				double newLevel = currentLevel + interval;
+				if (interval > 0d) {
+					if (newLevel > target) {
+						newLevel = target;
+						shutdownTask();
+					}
+				} else {
+					if (newLevel < target) {
+						newLevel = target;
+						shutdownTask();
+					}
+				}
+				Volume newVolume = new Volume(null, Double.valueOf(newLevel), null, null);
+				try {
+					doSetVolume(newVolume, false, DEFAULT_RESPONSE_TIMEOUT);
+				} catch (IOException e) {
+					LOGGER.warn(
+						CAST_API_MARKER,
+						"An error occurred while gradually adjusting the volume " +
+						"level of {}, stopping gradual adjustment: {}", remoteName,
+						e.getMessage()
+					);
+					LOGGER.trace(CAST_API_MARKER, "", e);
+					shutdownTask();
+				}
+			}
+		}
+
+		/**
+		 * Shuts down this task.
+		 */
+		protected void shutdownTask() {
+			cancel();
+			synchronized (gradualVolumeLock) {
+				if (gradualVolumeTask == this) {
+					gradualVolumeTask = null;
+					if (gradualVolumeTimer != null) {
+						gradualVolumeTimer.cancel();
+						gradualVolumeTimer = null;
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * A {@link Thread} implementation tailored to process incoming messages on
+	 * the socket.
+	 *
+	 * @author Nadahar
+	 */
 	protected class InputHandler extends Thread {
 
 		/** The "running" state */
@@ -1479,6 +2121,13 @@ public class Channel implements Closeable {
 					}
 
 					if (response instanceof StandardResponse && response.getEventType() != null) {
+						ReceiverStatus receiverStatus;
+						if (
+							response instanceof ReceiverStatusResponse &&
+							(receiverStatus = ((ReceiverStatusResponse) response).getStatus()) != null
+						) {
+							cacheVolume(receiverStatus);
+						}
 						listeners.fire(new DefaultCastEvent<>(response.getEventType(), response));
 					} else {
 						LOGGER.error(
@@ -1524,6 +2173,9 @@ public class Channel implements Closeable {
 		/** The expected response {@link Class} */
 		protected final Class<T> responseClass;
 
+		/** The timeout in milliseconds */
+		protected final long requestTimeout;
+
 		/** Whether the associated {@link Session} has been closed */
 		@GuardedBy("this")
 		protected boolean closed;
@@ -1537,11 +2189,13 @@ public class Channel implements Closeable {
 		 *
 		 * @param session the {@link Session} if one applies to the request.
 		 * @param responseClass the expected response class.
+		 * @param requestTimeout the timeout value in milliseconds.
 		 */
-		public ResultProcessor(@Nullable Session session, @Nonnull Class<T> responseClass) {
+		public ResultProcessor(@Nullable Session session, @Nonnull Class<T> responseClass, long requestTimeout) {
 			requireNotNull(responseClass, "responseClass");
 			this.session = session;
 			this.responseClass = responseClass;
+			this.requestTimeout = requestTimeout < 1 ? DEFAULT_RESPONSE_TIMEOUT : requestTimeout;
 		}
 
 		/**

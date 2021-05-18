@@ -183,7 +183,7 @@ public class Session {
 		boolean autoplay,
 		double currentTime,
 		boolean synchronous,
-		Map<String, String> customData
+		Map<String, Object> customData
 	) throws IOException {
 		return channel.load(
 			this,
@@ -206,9 +206,15 @@ public class Session {
 				url,
 				contentType,
 				null,
-				StreamType.NONE,
+				null,
+				null,
+				null,
+				null,
+				null,
 				null,
 				metadata,
+				null,
+				StreamType.NONE,
 				null,
 				null
 			),
@@ -244,6 +250,32 @@ public class Session {
 	}
 
 	/**
+	 * Asks the remote application to start playing the media referenced by the
+	 * specified media session ID.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param mediaSessionId the media session ID for which the play request
+	 *            applies.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public MediaStatus play(int mediaSessionId, boolean synchronous, long responseTimeout) throws IOException {
+		return channel.play(this, mediaSessionId, synchronous, responseTimeout);
+	}
+
+	/**
 	 * Asks the remote application to pause playback of the media referenced by
 	 * the specified media session ID, using
 	 * {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the timeout value.
@@ -265,6 +297,32 @@ public class Session {
 	@Nullable
 	public MediaStatus pause(int mediaSessionId, boolean synchronous) throws IOException {
 		return channel.pause(this, mediaSessionId, synchronous);
+	}
+
+	/**
+	 * Asks the remote application to pause playback of the media referenced by
+	 * the specified media session ID.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param mediaSessionId the media session ID for which the pause request
+	 *            applies.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public MediaStatus pause(int mediaSessionId, boolean synchronous, long responseTimeout) throws IOException {
+		return channel.pause(this, mediaSessionId, synchronous, responseTimeout);
 	}
 
 	/**
@@ -293,11 +351,44 @@ public class Session {
 		double currentTime,
 		boolean synchronous
 	) throws IOException {
+		return channel.seek(this, mediaSessionId, currentTime, synchronous);
+	}
+
+	/**
+	 * Asks the remote application to move the playback position of the media
+	 * referenced by the specified media session ID to the specified position.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param mediaSessionId the media session ID for which the pause request
+	 *            applies.
+	 * @param currentTime the new playback position in seconds.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public MediaStatus seek(
+		int mediaSessionId,
+		double currentTime,
+		boolean synchronous,
+		long responseTimeout
+	) throws IOException {
 		return channel.seek(
 			this,
 			mediaSessionId,
 			currentTime,
-			synchronous
+			synchronous,
+			responseTimeout
 		);
 	}
 
@@ -315,6 +406,25 @@ public class Session {
 	@Nullable
 	public MediaStatus getMediaStatus() throws IOException {
 		return channel.getMediaStatus(this);
+	}
+
+	/**
+	 * Requests an updated {@link MediaStatus} from the remote application. This
+	 * method is always blocking.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be
+	 *            used.
+	 * @return The resulting {@link MediaStatus} if a reply is received in time,
+	 *         or {@code null} if a timeout occurs.
+	 * @throws IOException If an error occurs during the operation.
+	 */
+	@Nullable
+	public MediaStatus getMediaStatus(long responseTimeout) throws IOException {
+		return channel.getMediaStatus(this, responseTimeout);
 	}
 
 	/**
