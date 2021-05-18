@@ -15,125 +15,314 @@
  */
 package org.digitalmediaserver.cast;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.Arrays;
+import java.util.Locale;
+import java.util.Objects;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 /**
- * Volume settings.
+ * The volume of a device.
  */
 @Immutable
 public class Volume {
 
-	protected static final Float DEFAULT_INCREMENT = 0.05f;
-	protected static final String DEFAULT_CONTROL_TYPE = "attenuation";
+	/** The type of volume control that is available */
+	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	protected final Float level;
-	@JsonProperty
-	protected final boolean muted;
+	protected final VolumeControlType controlType;
 
+	/**
+	 * The current volume level as a value between {@code 0.0} and {@code 1.0}.
+	 * {@code 1.0} is the maximum volume possible on the receiver or stream.
+	 */
+	@Nullable
 	@JsonProperty
-	protected final Float increment;
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	protected final Double level;
+
+	/** Whether the receiver is muted, independent of the volume level */
+	@Nullable
 	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	protected final Boolean muted;
+
+	/** The allowed steps for changing volume */
+	@Nullable
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	protected final Double stepInterval;
-	@JsonProperty
-	protected final String controlType;
 
-	public Volume() {
-		level = -1f;
-		muted = false;
-		increment = DEFAULT_INCREMENT;
-		stepInterval = DEFAULT_INCREMENT.doubleValue();
-		controlType = DEFAULT_CONTROL_TYPE;
-	}
-
+	/**
+	 * Creates a new instance using the specified parameters.
+	 *
+	 * @param controlType the type of volume control that is available.
+	 * @param level the current volume level as a value between {@code 0.0} and
+	 *            {@code 1.0}.
+	 * @param muted whether the receiver is muted, independent of the volume
+	 *            level.
+	 * @param stepInterval the allowed steps for changing volume.
+	 */
 	public Volume(
-		@JsonProperty("level") Float level,
-		@JsonProperty("muted") boolean muted,
-		@JsonProperty("increment") Float increment,
-		@JsonProperty("stepInterval") Double stepInterval,
-		@JsonProperty("controlType") String controlType
+		@JsonProperty("controlType") @Nullable VolumeControlType controlType,
+		@JsonProperty("level") @Nullable Double level,
+		@JsonProperty("muted") @Nullable Boolean muted,
+		@JsonProperty("stepInterval") @Nullable Double stepInterval
 	) {
+		this.controlType = controlType;
 		this.level = level;
 		this.muted = muted;
-		if (increment != null && increment > 0f) {
-			this.increment = increment;
-		} else {
-			this.increment = DEFAULT_INCREMENT;
-		}
-		if (stepInterval != null && stepInterval > 0d) {
-			this.stepInterval = stepInterval;
-		} else {
-			this.stepInterval = DEFAULT_INCREMENT.doubleValue();
-		}
-		this.controlType = controlType;
+		this.stepInterval = stepInterval;
 	}
 
-	public Float getLevel() {
+	/**
+	 * @return The type of volume control that is available.
+	 */
+	@Nullable
+	public VolumeControlType getControlType() {
+		return controlType;
+	}
+
+	/**
+	 * @return The current volume level as a value between {@code 0.0} and
+	 *         {@code 1.0}.
+	 */
+	@Nullable
+	public Double getLevel() {
 		return level;
 	}
 
-	public boolean isMuted() {
+	/**
+	 * @return Whether the receiver is muted, independent of the volume level.
+	 */
+	@Nullable
+	public Boolean getMuted() {
 		return muted;
 	}
 
-	public Float getIncrement() {
-		return increment;
-	}
-
+	/**
+	 * @return The allowed steps for changing volume.
+	 */
+	@Nullable
 	public Double getStepInterval() {
 		return stepInterval;
 	}
 
-	public String getControlType() {
-		return controlType;
+	/**
+	 * Creates a new {@link VolumeBuilder} that is initialized with the values
+	 * from this {@link Volume} instance, which can be modified and then used to
+	 * create a new (immutable) {@link Volume} instance.
+	 *
+	 * @return The initialized {@link VolumeBuilder}.
+	 */
+	@Nonnull
+	public VolumeBuilder modify() {
+		return new VolumeBuilder(controlType, stepInterval).level(level).muted(muted);
 	}
 
 	@Override
-	public final int hashCode() {
-		return Arrays.hashCode(new Object[] {level, muted, increment, stepInterval, controlType});
+	public int hashCode() {
+		return Objects.hash(controlType, level, muted, stepInterval);
 	}
 
 	@Override
-	public final boolean equals(final Object obj) {
-		if (obj == null) {
-			return false;
-		}
-		if (obj == this) {
+	public boolean equals(Object obj) {
+		if (this == obj) {
 			return true;
 		}
 		if (!(obj instanceof Volume)) {
 			return false;
 		}
-		final Volume that = (Volume) obj;
+		Volume other = (Volume) obj;
 		return
-			this.level == null ?
-				that.level == null :
-				this.level.equals(that.level) &&
-			this.muted == that.muted &&
-			this.increment == null ?
-				that.increment == null :
-				this.increment.equals(that.increment) &&
-			this.stepInterval == null ?
-				that.stepInterval == null :
-				this.stepInterval.equals(that.stepInterval) &&
-			this.controlType == null ?
-				that.controlType == null :
-				this.controlType.equals(that.controlType);
+			controlType == other.controlType &&
+			Objects.equals(level, other.level) &&
+			Objects.equals(muted, other.muted) &&
+			Objects.equals(stepInterval, other.stepInterval);
 	}
 
 	@Override
-	public final String toString() {
-		return String.format(
-			"Volume{level: %s, muted: %b, increment: %s, stepInterval: %s, controlType: %s}",
-			level,
-			muted,
-			increment,
-			stepInterval,
-			controlType
-		);
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append(getClass().getSimpleName()).append(" [");
+		builder.append("controlType=").append(controlType).append(", ");
+		if (level != null) {
+			builder.append("level=").append(level).append(", ");
+		}
+		if (muted != null) {
+			builder.append("muted=").append(muted).append(", ");
+		}
+		builder.append("stepInterval=").append(stepInterval);
+		builder.append("]");
+		return builder.toString();
+	}
+
+	/**
+	 * A builder class for building {@link Volume} instances.
+	 *
+	 * @author Nadahar
+	 */
+	public static class VolumeBuilder {
+
+		/** The type of volume control that is available */
+		@Nullable
+		protected VolumeControlType controlType;
+
+		/**
+		 * The current volume level as a value between {@code 0.0} and {@code 1.0}.
+		 * {@code 1.0} is the maximum volume possible on the receiver or stream.
+		 */
+		@Nullable
+		protected Double level;
+
+		/** Whether the receiver is muted, independent of the volume level */
+		@Nullable
+		protected Boolean muted;
+
+		/** The allowed steps for changing volume */
+		@Nullable
+		protected Double stepInterval;
+
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param controlType the type of volume control that is available.
+		 * @param stepInterval the allowed steps for changing volume.
+		 */
+		public VolumeBuilder(@Nullable VolumeControlType controlType, @Nullable Double stepInterval) {
+			this.controlType = controlType;
+			this.stepInterval = stepInterval;
+		}
+
+		/**
+		 * @return The type of volume control that is available.
+		 */
+		@Nullable
+		public VolumeControlType controlType() {
+			return controlType;
+		}
+
+		/**
+		 * @return The current volume level as a value between {@code 0.0} and
+		 *         {@code 1.0}.
+		 */
+		@Nullable
+		public Double level() {
+			return level;
+		}
+
+		/**
+		 * Sets the current volume level as a value between {@code 0.0} and
+		 * {@code 1.0}.
+		 *
+		 * @param level the volume level to set.
+		 * @return This {@link VolumeBuilder}.
+		 */
+		@Nonnull
+		public VolumeBuilder level(@Nullable Double level) {
+			this.level = level;
+			return this;
+		}
+
+		/**
+		 * @return Whether the receiver is muted, independent of the volume
+		 *         level.
+		 */
+		@Nullable
+		public Boolean muted() {
+			return muted;
+		}
+
+		/**
+		 * Sets whether the receiver is muted, independent of the volume level.
+		 *
+		 * @param muted the mute state to set.
+		 * @return This {@link VolumeBuilder}.
+		 */
+		@Nonnull
+		public VolumeBuilder muted(@Nullable Boolean muted) {
+			this.muted = muted;
+			return this;
+		}
+
+		/**
+		 * @return The allowed steps for changing volume.
+		 */
+		@Nullable
+		public Double stepInterval() {
+			return stepInterval;
+		}
+
+		/**
+		 * Builds a new {@link Volume} instance based on the current values of
+		 * this builder.
+		 *
+		 * @return The new {@link Volume} instance.
+		 */
+		public Volume build() {
+			return new Volume(controlType, level, muted, stepInterval);
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+			builder.append(getClass().getSimpleName()).append(" [");
+			if (controlType != null) {
+				builder.append("controlType=").append(controlType).append(", ");
+			}
+			if (level != null) {
+				builder.append("level=").append(level).append(", ");
+			}
+			if (muted != null) {
+				builder.append("muted=").append(muted).append(", ");
+			}
+			if (stepInterval != null) {
+				builder.append("stepInterval=").append(stepInterval);
+			}
+			builder.append("]");
+			return builder.toString();
+		}
+	}
+
+	/**
+	 * Describes types of volume control.
+	 */
+	public enum VolumeControlType {
+
+		/** Cast device volume can be changed */
+		ATTENUATION,
+
+		/** Cast device volume can be changed */
+		FIXED,
+
+		/** Master system volume control, i.e. TV or Audio device volume is changed */
+		MASTER;
+
+		/**
+		 * Parses the specified string and returns the corresponding
+		 * {@link VolumeControlType}, or {@code null} if no match could be
+		 * found.
+		 *
+		 * @param controlType the string to parse.
+		 * @return The resulting {@link VolumeControlType} or {@code null}.
+		 */
+		@Nullable
+		@JsonCreator
+		public static VolumeControlType typeOf(String controlType) {
+			if (Util.isBlank(controlType)) {
+				return null;
+			}
+			String typeString = controlType.toUpperCase(Locale.ROOT);
+			for (VolumeControlType type : values()) {
+				if (typeString.equals(type.name())) {
+					return type;
+				}
+			}
+			return null;
+		}
 	}
 }

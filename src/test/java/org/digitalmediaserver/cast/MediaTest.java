@@ -35,7 +35,22 @@ public class MediaTest {
 		customData.put("a", "b");
 		Map<String, Object> metadata = new HashMap<>();
 		metadata.put("1", "2");
-		Media m = new Media(null, null, 123.456d, StreamType.BUFFERED, customData, metadata, null, null);
+		Media m = new Media(
+			null,
+			null,
+			null,
+			customData,
+			123.456d,
+			null,
+			null,
+			null,
+			null,
+			metadata,
+			null,
+			StreamType.BUFFERED,
+			null,
+			null
+		);
 
 		String json = jsonMapper.writeValueAsString(m);
 
@@ -47,14 +62,31 @@ public class MediaTest {
 
 	@Test
 	public void itDoesNotContainOptionalFieldsWhenNotSet() throws Exception {
-		Media m = new Media(null, null, null, null, null, null, null, null);
+		Media m = new Media(
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			null
+		);
 
 		String json = jsonMapper.writeValueAsString(m);
 
+		assertThat(json, containsString("contentId"));
+		assertThat(json, containsString("contentType"));
+		assertThat(json, containsString("streamType"));
 		assertThat(json, not(containsString("duration")));
-		assertThat(json, not(containsString("streamType")));
-		assertThat(json, containsString("customData"));
-		assertThat(json, containsString("metadata"));
+		assertThat(json, not(containsString("customData")));
+		assertThat(json, not(containsString("metadata")));
 		assertThat(json, not(containsString("metadataType")));
 	}
 }

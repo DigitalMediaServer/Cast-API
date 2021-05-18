@@ -135,7 +135,8 @@ public class CustomRequestTest {
 			new KioskStatusRequest(),
 			"sender-0",
 			"receiver-0",
-			KioskStatusResponse.class
+			KioskStatusResponse.class,
+			Channel.DEFAULT_RESPONSE_TIMEOUT
 		);
 		assertNotNull(response);
 		assertEquals("http://google.com", response.getUrl());

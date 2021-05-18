@@ -18,29 +18,51 @@ package org.digitalmediaserver.cast;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
+
 /**
- * Current ChromeCast device status.
+ * A cast device status.
  */
 @Immutable
 public class ReceiverStatus {
 
+	/** The receiver {@link Volume} instance */
+	@Nullable
 	protected final Volume volume;
 
+	/** The {@link List} of {@link Application}s */
 	@Nonnull
 	protected final List<Application> applications;
+
+	/**
+	 * {@code true} if the cast device is the active input, {@code false}
+	 * otherwise
+	 */
 	protected final boolean activeInput;
+
+	/**
+	 * {@code true} if the cast device is in standby, {@code false} otherwise
+	 */
 	protected final boolean standBy;
 
+	/**
+	 * Creates a new instance using the specified parameters.
+	 *
+	 * @param volume the {@link Volume} instance.
+	 * @param applications the {@link List} of {@link Application}s.
+	 * @param activeInput {@code true} if the cast device is the active input,
+	 *            {@code false} otherwise.
+	 * @param standBy {@code true} if the cast device is in standby,
+	 *            {@code false} otherwise.
+	 */
 	public ReceiverStatus(
-		@JsonProperty("volume") Volume volume,
-		@JsonProperty("applications") List<Application> applications,
+		@JsonProperty("volume") @Nullable Volume volume,
+		@JsonProperty("applications") @Nullable List<Application> applications,
 		@JsonProperty("isActiveInput") boolean activeInput,
 		@JsonProperty("isStandBy") boolean standBy
 	) {
@@ -52,42 +74,71 @@ public class ReceiverStatus {
 		this.standBy = standBy;
 	}
 
+	/**
+	 * @return The {@link Volume} instance.
+	 */
+	@Nullable
 	public Volume getVolume() {
 		return volume;
 	}
 
+	/**
+	 * @return The {@link List} of {@link Application}s.
+	 */
 	@Nonnull
 	public List<Application> getApplications() {
 		return applications;
 	}
 
+	/**
+	 * @return {@code true} if the cast device is the active input,
+	 *         {@code false} otherwise.
+	 */
 	public boolean isActiveInput() {
 		return activeInput;
 	}
 
+	/**
+	 * @return {@code true} if the cast device is in standby, {@code false}
+	 *         otherwise.
+	 */
 	public boolean isStandBy() {
 		return standBy;
 	}
 
+	/**
+	 * @return The {@link Application} instance of the "running" application.
+	 */
 	@Nullable
 	@JsonIgnore
-	public Application getRunningApp() {
+	public Application getRunningApplication() {
 		return applications.isEmpty() ? null : applications.get(0);
 	}
 
-	public boolean isAppRunning(String appId) {
-		Application runningApp = getRunningApp();
-		return runningApp != null && runningApp.getAppId().equals(appId);
+	/**
+	 * Checks if the application with the specified application ID currently is
+	 * the "running" application.
+	 *
+	 * @param applicationId the application ID.
+	 * @return {@code true} if the application with the specified application ID
+	 *         is currently running, {@code false} otherwise.
+	 */
+	public boolean isApplicationRunning(String applicationId) {
+		Application runningApplication = getRunningApplication();
+		return runningApplication != null && runningApplication.getAppId().equals(applicationId);
 	}
 
 	@Override
 	public String toString() {
-		return String.format(
-			"Media{volume: %s, applications: %s, activeInput: %b, standBy; %b}",
-			volume,
-			Arrays.toString(applications.toArray()),
-			activeInput,
-			standBy
-		);
+		StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+		builder.append(" [");
+		if (volume != null) {
+			builder.append("volume=").append(volume).append(", ");
+		}
+		if (applications != null) {
+			builder.append("applications=").append(applications).append(", ");
+		}
+		builder.append("activeInput=").append(activeInput).append(", standBy=").append(standBy).append("]");
+		return builder.toString();
 	}
 }

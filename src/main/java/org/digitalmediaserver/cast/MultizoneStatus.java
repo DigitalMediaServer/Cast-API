@@ -30,10 +30,20 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Immutable
 public class MultizoneStatus {
 
+	/** The {@link List} of {@link Device}s */
 	@Nonnull
 	protected final List<Device> devices;
+
+	/** {@code true} if the zone is multi-channel, {@code false} if it isn't */
 	protected final boolean isMultichannel;
 
+	/**
+	 * Creates a new instance using the specified parameters.
+	 *
+	 * @param devices the array of {@link Device}s.
+	 * @param isMultichannel {@code true} if the zone is multi-channel,
+	 *            {@code false} if it isn't.
+	 */
 	public MultizoneStatus(
 		@JsonProperty("devices") Device[] devices,
 		@JsonProperty("isMultichannel") boolean isMultichannel
@@ -46,13 +56,31 @@ public class MultizoneStatus {
 		this.isMultichannel = isMultichannel;
 	}
 
+	/**
+	 * @return The {@link Device}s of the zone.
+	 */
 	@Nonnull
 	public List<Device> getDevices() {
 		return devices;
 	}
 
+	/**
+	 * @return {@code true} if the zone is multi-channel, {@code false} if it
+	 *         isn't.
+	 */
 	@JsonProperty("isMultichannel")
 	public boolean isMultichannel() {
 		return isMultichannel;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+		builder.append(" [");
+		if (devices != null) {
+			builder.append("devices=").append(devices).append(", ");
+		}
+		builder.append("isMultichannel=").append(isMultichannel).append("]");
+		return builder.toString();
 	}
 }

@@ -103,7 +103,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 			Media media,
 			boolean autoplay,
 			double currentTime,
-			final Map<String, String> customData
+			final Map<String, Object> customData
 		) {
 			this.sessionId = sessionId;
 			this.media = media;
@@ -113,7 +113,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 			this.customData = customData == null ? null : new Object() {
 
 				@JsonProperty
-				Map<String, String> payload = customData;
+				Map<String, Object> payload = customData;
 			};
 		}
 	}
@@ -202,7 +202,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		Media media,
 		boolean autoplay,
 		double currentTime,
-		Map<String, String> customData
+		Map<String, Object> customData
 	) {
 		return new Load(sessionId, media, autoplay, currentTime, customData);
 	}

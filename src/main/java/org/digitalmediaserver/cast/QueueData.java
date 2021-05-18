@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.digitalmediaserver.chromecast.api;
+package org.digitalmediaserver.cast;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,7 +22,7 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-import org.digitalmediaserver.chromecast.api.MediaStatus.RepeatMode;
+import org.digitalmediaserver.cast.MediaStatus.RepeatMode;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 

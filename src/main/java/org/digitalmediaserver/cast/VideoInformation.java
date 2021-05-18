@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.digitalmediaserver.chromecast.api;
+package org.digitalmediaserver.cast;
 
 import java.util.Locale;
 import java.util.Objects;

@@ -19,23 +19,39 @@ import javax.annotation.concurrent.Immutable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Namespace of the ChromeCast application.
+ * The namespace of the a cast application.
  */
 @Immutable
 public class Namespace {
 
+	/** The name of this namespace */
+	@JsonProperty
 	protected final String name;
 
+	/**
+	 * Creates a new instance using the specified name.
+	 *
+	 * @param name the name of the namespace.
+	 */
 	public Namespace(@JsonProperty("name") String name) {
 		this.name = name;
 	}
 
+	/**
+	 * @return The name of the namespace.
+	 */
 	public String getName() {
 		return name;
 	}
 
 	@Override
-	public final String toString() {
-		return String.format("Namespace{%s}", this.name);
+	public String toString() {
+		StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+		builder.append(" [");
+		if (name != null) {
+			builder.append("name=").append(name);
+		}
+		builder.append("]");
+		return builder.toString();
 	}
 }

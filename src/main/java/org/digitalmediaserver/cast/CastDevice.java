@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
@@ -44,6 +45,7 @@ import org.digitalmediaserver.cast.CastEvent.CastEventListener;
 import org.digitalmediaserver.cast.CastEvent.CastEventListenerList;
 import org.digitalmediaserver.cast.CastEvent.CastEventType;
 import org.digitalmediaserver.cast.CastEvent.ThreadedCastEventListenerList;
+import org.digitalmediaserver.cast.Volume.VolumeControlType;
 
 
 /**
@@ -605,17 +607,6 @@ public class CastDevice {
 	}
 
 	/**
-	 * Set up how much time to wait until request is processed (in
-	 * milliseconds).
-	 *
-	 * @param requestTimeout value in milliseconds until request times out
-	 *            waiting for response
-	 */
-	public void setRequestTimeout(long requestTimeout) {
-		channel.setRequestTimeout(requestTimeout);
-	}
-
-	/**
 	 * Requests a status from the cast device and returns the resulting
 	 * {@link ReceiverStatus} if one is obtained, using
 	 * {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the timeout.
@@ -645,7 +636,7 @@ public class CastDevice {
 	@Nullable
 	public Application getRunningApplication() throws IOException {
 		ReceiverStatus status = getReceiverStatus();
-		return status == null ? null : status.getRunningApp();
+		return status == null ? null : status.getRunningApplication();
 	}
 
 	/**
@@ -679,7 +670,7 @@ public class CastDevice {
 	 */
 	public boolean isApplicationRunning(String applicationId) throws IOException {
 		ReceiverStatus status = getReceiverStatus();
-		Application application = status == null ? null : status.getRunningApp();
+		Application application = status == null ? null : status.getRunningApplication();
 		return application == null ? false : applicationId.equals(application.getAppId());
 	}
 
@@ -773,65 +764,75 @@ public class CastDevice {
 	}
 
 	/**
-	 * @param level volume level from 0 to 1 to set
+	 * Sets the volume level for the cast device to the specified volume level
+	 * (the value must be in the range 0-1). This method will create a one-time
+	 * {@link Volume} instance, so if both mute and volume level should be
+	 * changed, it's better to use {@link #setVolume(Volume)}.
+	 * <p>
+	 * If the cast device has {@link VolumeControlType#MASTER} and the volume
+	 * level changes more than that of the device specified "step interval", a
+	 * {@link Timer} that will adjust the volume gradually until it reaches the
+	 * target level will be started.
+	 *
+	 * @param level the new volume level.
+	 * @throws SocketException If the {@link Channel} is closed and
+	 *             {@code autoReconnect} is {@code false}.
+	 * @throws IOException If the cast device has
+	 *             {@link VolumeControlType#FIXED} or an error occurs during the
+	 *             operation.
+	 */
+	public void setVolumeLevel(double level) throws IOException {
+		if (level < 0.0) {
+			level = 0.0;
+		} else if (level > 1.0) {
+			level = 1.0;
+		}
+		channel().setVolume(new Volume(null, Double.valueOf(level), null, null));
+	}
+
+	/**
+	 * Sets the mute state for the cast device.This method will create a
+	 * one-time {@link Volume} instance, so if both mute and volume level should
+	 * be changed, it's better to use {@link #setVolume(Volume)}.
+	 *
+	 * @param muteState {@code true} to set muted state, {@code false} to set
+	 *            unmuted state.
+	 * @throws SocketException If the {@link Channel} is closed and
+	 *             {@code autoReconnect} is {@code false}.
+	 * @throws IOException If the cast device has
+	 *             {@link VolumeControlType#FIXED} or an error occurs during the
+	 *             operation.
+	 */
+	public void setMuteState(boolean muteState) throws IOException {
+		channel().setVolume(new Volume(null, null, Boolean.valueOf(muteState), null));
+	}
+
+	/**
+	 * Sets the {@link Volume} for the cast device. The {@link Volume} instance
+	 * can contain both the volume level and the mute state, so both can be set
+	 * using at once.
+	 * <p>
+	 * The {@link Volume} instance can be created with only field(s) that should
+	 * be changed set.
+	 * <p>
+	 * If the cast device has {@link VolumeControlType#MASTER} and the volume
+	 * level changes more than that of the device specified "step interval", a
+	 * {@link Timer} that will adjust the volume gradually until it reaches the
+	 * target level will be started.
+	 *
+	 * @param volume the {@link Volume} to set.
+	 * @throws SocketException If the {@link Channel} is closed and
+	 *             {@code autoReconnect} is {@code false}.
+	 * @throws IOException If the cast device has
+	 *             {@link VolumeControlType#FIXED} or an error occurs during the
+	 *             operation.
 	 */
 	@Nullable
-	public ReceiverStatus setVolume(float level, boolean synchronous) throws IOException {
-		return channel().setVolume(new Volume(
-			level,
-			false,
-			Volume.DEFAULT_INCREMENT,
-			Volume.DEFAULT_INCREMENT.doubleValue(),
-			Volume.DEFAULT_CONTROL_TYPE
-		), synchronous);
-	}
-
-	/**
-	 * ChromeCast does not allow you to jump levels too quickly to avoid blowing
-	 * speakers. Setting by increment allows us to easily get the level we want
-	 *
-	 * @param level volume level from 0 to 1 to set
-	 * @throws IOException
-	 * @see <a href=
-	 *      "https://developers.google.com/cast/docs/design_checklist/sender#sender-control-volume">sender</a>
-	 */
-	public void setVolumeByIncrement(float level) throws IOException {
-		Volume volume = this.getReceiverStatus().getVolume();
-		float total = volume.getLevel();
-
-		if (volume.getIncrement() <= 0f) {
-			throw new CastException("Volume.increment is <= 0");
+	public void setVolume(@Nullable Volume volume) throws IOException {
+		if (volume == null) {
+			return;
 		}
-
-		// With floating points we always have minor decimal variations, using
-		// the Math.min/max
-		// works around this issue
-		// Increase volume
-		if (level > total) {
-			while (total < level) {
-				total = Math.min(total + volume.getIncrement(), level);
-				setVolume(total, false);
-			}
-			// Decrease Volume
-		} else if (level < total) {
-			while (total > level) {
-				total = Math.max(total - volume.getIncrement(), level);
-				setVolume(total, false);
-			}
-		}
-	}
-
-	/**
-	 * @param muted is to mute or not
-	 */
-	public ReceiverStatus setMuted(boolean muted, boolean synchronous) throws IOException {
-		return channel().setVolume(new Volume(
-			null,
-			muted,
-			Volume.DEFAULT_INCREMENT,
-			Volume.DEFAULT_INCREMENT.doubleValue(),
-			Volume.DEFAULT_CONTROL_TYPE
-		), synchronous);
+		channel().setVolume(volume);
 	}
 
 	/**

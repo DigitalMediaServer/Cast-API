@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.digitalmediaserver.chromecast.api;
+package org.digitalmediaserver.cast;
 
-import static org.digitalmediaserver.chromecast.api.Util.requireNotNull;
+import static org.digitalmediaserver.cast.Util.requireNotNull;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
