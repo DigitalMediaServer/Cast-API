@@ -66,13 +66,13 @@ public abstract class StandardResponse implements Response {
 		return requestId;
 	}
 
-//	/**
-//	 * @return The {@link CastEventType} to use when receiving this
-//	 *         {@link StandardResponse}.
-//	 */
-//	@Nullable
-//	@JsonIgnore
-//	public abstract CastEventType getEventType();
+	/**
+	 * @return The {@link CastEventType} to use when receiving this
+	 *         {@link StandardResponse}.
+	 */
+	@Nullable
+	@JsonIgnore
+	public abstract CastEventType getEventType();
 
 	/**
 	 * Request to send 'Pong' message in reply.
@@ -84,11 +84,11 @@ public abstract class StandardResponse implements Response {
 			super(requestId);
 		}
 
-//		@JsonIgnore
-//		@Override
-//		public CastEventType getEventType() {
-//			return null;
-//		}
+		@JsonIgnore
+		@Override
+		public CastEventType getEventType() {
+			return CastEventType.PING;
+		}
 
 		@Override
 		public String toString() {
@@ -114,11 +114,11 @@ public abstract class StandardResponse implements Response {
 			return super.getRequestId();
 		}
 
-//		@JsonIgnore
-//		@Override
-//		public CastEventType getEventType() {
-//			return null;
-//		}
+		@JsonIgnore
+		@Override
+		public CastEventType getEventType() {
+			return CastEventType.PONG;
+		}
 
 		@Override
 		public String toString() {
@@ -138,11 +138,11 @@ public abstract class StandardResponse implements Response {
 			super(requestId);
 		}
 
-//		@JsonIgnore
-//		@Override
-//		public CastEventType getEventType() {
-//			return CastEventType.CLOSE;
-//		}
+		@JsonIgnore
+		@Override
+		public CastEventType getEventType() {
+			return CastEventType.CLOSE;
+		}
 
 		@Override
 		public String toString() {
@@ -162,11 +162,11 @@ public abstract class StandardResponse implements Response {
 			super(requestId);
 		}
 
-//		@JsonIgnore
-//		@Override
-//		public CastEventType getEventType() {
-//			return CastEventType.;
-//		}
+		@JsonIgnore
+		@Override
+		public CastEventType getEventType() {
+			return CastEventType.LOAD_FAILED;
+		}
 
 		@Override
 		public String toString() {
@@ -191,6 +191,12 @@ public abstract class StandardResponse implements Response {
 
 		public String getReason() {
 			return reason;
+		}
+
+		@JsonIgnore
+		@Override
+		public CastEventType getEventType() {
+			return CastEventType.INVALID;
 		}
 
 		@Override
@@ -222,6 +228,12 @@ public abstract class StandardResponse implements Response {
 			return reason;
 		}
 
+		@JsonIgnore
+		@Override
+		public CastEventType getEventType() {
+			return CastEventType.LAUNCH_ERROR;
+		}
+
 		@Override
 		public String toString() {
 			StringBuilder builder = new StringBuilder(getClass().getSimpleName());
@@ -249,6 +261,12 @@ public abstract class StandardResponse implements Response {
 
 		public ReceiverStatus getStatus() {
 			return status;
+		}
+
+		@JsonIgnore
+		@Override
+		public CastEventType getEventType() {
+			return CastEventType.RECEIVER_STATUS;
 		}
 
 		@Override
@@ -285,8 +303,15 @@ public abstract class StandardResponse implements Response {
 		}
 
 		@Nonnull
+		@JsonProperty("status")
 		public List<MediaStatus> getStatuses() {
 			return statuses;
+		}
+
+		@JsonIgnore
+		@Override
+		public CastEventType getEventType() {
+			return CastEventType.MEDIA_STATUS;
 		}
 
 		@Override
@@ -327,6 +352,12 @@ public abstract class StandardResponse implements Response {
 			return availability;
 		}
 
+		@JsonIgnore
+		@Override
+		public CastEventType getEventType() {
+			return CastEventType.APPLICATION_AVAILABILITY;
+		}
+
 		@Override
 		public String toString() {
 			StringBuilder builder = new StringBuilder(getClass().getSimpleName());
@@ -360,6 +391,12 @@ public abstract class StandardResponse implements Response {
 			return status;
 		}
 
+		@JsonIgnore
+		@Override
+		public CastEventType getEventType() {
+			return CastEventType.MULTIZONE_STATUS;
+		}
+
 		@Override
 		public String toString() {
 			StringBuilder builder = new StringBuilder(getClass().getSimpleName());
@@ -389,6 +426,12 @@ public abstract class StandardResponse implements Response {
 			return device;
 		}
 
+		@JsonIgnore
+		@Override
+		public CastEventType getEventType() {
+			return CastEventType.DEVICE_ADDED;
+		}
+
 		@Override
 		public String toString() {
 			StringBuilder builder = new StringBuilder(getClass().getSimpleName());
@@ -416,6 +459,12 @@ public abstract class StandardResponse implements Response {
 
 		public Device getDevice() {
 			return device;
+		}
+
+		@JsonIgnore
+		@Override
+		public CastEventType getEventType() {
+			return CastEventType.DEVICE_UPDATED;
 		}
 
 		@Override
@@ -448,6 +497,12 @@ public abstract class StandardResponse implements Response {
 
 		public String getDeviceId() {
 			return deviceId;
+		}
+
+		@JsonIgnore
+		@Override
+		public CastEventType getEventType() {
+			return CastEventType.DEVICE_REMOVED;
 		}
 
 		@Override

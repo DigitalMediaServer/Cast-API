@@ -895,7 +895,7 @@ public class Channel implements Closeable {
 				} else if (parsedMessage == null || isCustomMessage(parsedMessage)) {
 					if (!listeners.isEmpty()) {
 						listeners.fire(new DefaultCastEvent<>(
-							CastEventType.APPEVENT,
+							CastEventType.CUSTOM_MESSAGE,
 							new CustomMessageEvent(message.getNamespace(), message.getPayloadUtf8())
 						));
 					}
@@ -925,26 +925,17 @@ public class Channel implements Closeable {
 						response = null;
 					}
 
-					//TODO: (Nad) New message
-//					DEVICE_UPDATED
-//					{"device":{"capabilities":196613,"deviceId":"342c6da3-23f4-9119-f833-121beaab0e9a","name":"Spycast","volume":{"level":0.6299999952316284,"muted":false}},"requestId":0,"responseType":"DEVICE_UPDATED"}
-//					{"device":{"capabilities":196613,"deviceId":"342c6da3-23f4-9119-f833-121beaab0e9a","name":"Spycast","volume":{"level":0.4000000059604645,"muted":false}},"requestId":0,"responseType":"DEVICE_UPDATED"}
-
-					if (response instanceof MediaStatusResponse) {
-						MediaStatusResponse mediaStatusResponse = (MediaStatusResponse) response;
-						for (MediaStatus mediaStatus : mediaStatusResponse.getStatuses()) {
-							listeners.fire(new DefaultCastEvent<>(CastEventType.MEDIA_STATUS, mediaStatus));
-						}
-					} else if (response instanceof ReceiverStatusResponse) {
-						listeners.fire(new DefaultCastEvent<>(
-							CastEventType.RECEIVER_STATUS,
-							((ReceiverStatusResponse) response).getStatus()
-						));
-					} else if (response instanceof CloseResponse) { //TODO: (Nad) Investigate
-						listeners.fire(new DefaultCastEvent<>(CastEventType.CLOSE, null));
-					} else if (response instanceof StandardResponse) { //TODO: (Nad) Here..
-						LOGGER.error(CHROMECAST_API_MARKER, "Received unhandled standard response of type {}: {}", response.getClass().getSimpleName(), response);
+					if (response instanceof StandardResponse) {
+//						LOGGER.error(CHROMECAST_API_MARKER, "Received unhandled standard response of type {}: {}", response.getClass().getSimpleName(), response); //TODO: (Nad) Log anything? Maybe in "CastEvent"?
+						listeners.fire(new DefaultCastEvent<>(response.getEventType(), response));
 					} else {
+						LOGGER.error(
+							CHROMECAST_API_MARKER,
+							"Received unhandled \"{}\" message from {}, this should not happen: {}",
+							responseType,
+							remoteName,
+							parsedMessage
+						);
 						listeners.fire(new DefaultCastEvent<>(CastEventType.UNKNOWN, parsedMessage));
 					}
 				}
@@ -972,7 +963,7 @@ public class Channel implements Closeable {
 		@Override
 		public void run() {
 			if (!listeners.isEmpty()) {
-				listeners.fire(new DefaultCastEvent<>(CastEventType.APPEVENT, new CustomMessageEvent(
+				listeners.fire(new DefaultCastEvent<>(CastEventType.CUSTOM_MESSAGE, new CustomMessageEvent(
 					message.getNamespace(),
 					message.getPayloadBinary()
 				)));

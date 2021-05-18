@@ -17,6 +17,19 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.ThreadSafe;
+import org.digitalmediaserver.chromecast.api.StandardResponse.AppAvailabilityResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.CloseResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.DeviceAddedResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.DeviceRemovedResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.DeviceUpdatedResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.InvalidResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.LaunchErrorResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.LoadFailedResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.MediaStatusResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.MultizoneStatusResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.PingResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.PongResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.ReceiverStatusResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -37,6 +50,9 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 
 	@Nullable
 	T getData();
+
+	@Nullable
+	<U> U getData(Class<U> cls);
 
 	@Immutable
 	public static class DefaultCastEvent<T> implements CastEvent<T> {
@@ -63,6 +79,20 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 		@Nullable
 		public T getData() {
 			return data;
+		}
+
+		@Override
+		@Nullable
+		public <U> U getData(Class<U> cls) {
+			if (data == null) {
+				return null;
+			}
+			if (!cls.isAssignableFrom(eventType.getDataClass())) {
+				throw new IllegalArgumentException(
+					"Requested type " + cls + " does not match type for event " + eventType.getDataClass()
+				);
+			}
+			return cls.cast(data);
 		}
 
 		@Override
@@ -323,20 +353,40 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 
 	public enum CastEventType {
 
+		APPLICATION_AVAILABILITY(AppAvailabilityResponse.class),
+
+		/** Special event usually received when session is stopped */
+		CLOSE(CloseResponse.class), //TODO: (Nad) Figure out, shouldn't have a payload at all..?
+
 		/** Data type will be {@link Boolean} */
 		CONNECTED(Boolean.class),
 
+		/** Data type will be {@link CustomMessageEvent} */
+		CUSTOM_MESSAGE(CustomMessageEvent.class), //TODO: (Nad) Decide on name
+
+		DEVICE_ADDED(DeviceAddedResponse.class),
+
+		DEVICE_REMOVED(DeviceRemovedResponse.class),
+
+		DEVICE_UPDATED(DeviceUpdatedResponse.class),
+
+		INVALID(InvalidResponse.class),
+
+		LAUNCH_ERROR(LaunchErrorResponse.class),
+
+		LOAD_FAILED(LoadFailedResponse.class),
+
 		/** Data type will be {@link MediaStatus} */
-		MEDIA_STATUS(MediaStatus.class),
+		MEDIA_STATUS(MediaStatusResponse.class),
+
+		MULTIZONE_STATUS(MultizoneStatusResponse.class),
+
+		PING(PingResponse.class),
+
+		PONG(PongResponse.class),
 
 		/** Data type will be {@link ReceiverStatus} */
-		RECEIVER_STATUS(ReceiverStatus.class),
-
-		/** Data type will be {@link CustomMessageEvent} */
-		APPEVENT(CustomMessageEvent.class), //TODO: (Nad) Decide on name
-
-		/** Special event usually received when session is stopped */
-		CLOSE(Object.class), //TODO: (Nad) Figure out, shouldn't have a payload at all..?
+		RECEIVER_STATUS(ReceiverStatusResponse.class),
 
 		/** Data type will be {@link JsonNode} */
 		UNKNOWN(JsonNode.class);
@@ -348,7 +398,7 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 		}
 
 		public Class<?> getDataClass() {
-			return this.dataClass;
+			return dataClass;
 		}
 	}
 }
