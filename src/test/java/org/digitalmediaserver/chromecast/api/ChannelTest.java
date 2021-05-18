@@ -1,8 +1,6 @@
 package org.digitalmediaserver.chromecast.api;
 
 import static org.junit.Assert.*;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -24,40 +22,11 @@ import org.digitalmediaserver.chromecast.api.Media.StreamType;
 import org.digitalmediaserver.chromecast.api.MediaStatus.IdleReason;
 import org.digitalmediaserver.chromecast.api.MediaStatus.PlayerState;
 import org.digitalmediaserver.chromecast.api.MediaStatus.RepeatMode;
-import org.junit.Before;
+import org.digitalmediaserver.chromecast.api.StandardResponse.MediaStatusResponse;
 import org.junit.Test;
 
 //TODO: (Nad) Rudimentary - header, decide if keep or not etc
 public class ChannelTest {
-
-//	MockedChromeCast chromeCastStub;
-//	ChromeCast cast = new ChromeCast(
-//		"Mock",
-//		"localhost",
-//		null,
-//		null,
-//		null,
-//		null,
-//		null,
-//		null,
-//		null,
-//		1,
-//		null,
-//		null
-//	);
-//
-//	@Before
-//	public void initMockedCast() throws Exception {
-//		chromeCastStub = new MockedChromeCast();
-//		cast.connect();
-//		chromeCastStub.close();
-//		// ensure that chrome cast disconnected
-//		int retry = 0;
-//		while (cast.isConnected() && retry++ < 25) {
-//			Thread.sleep(50);
-//		}
-//		assertTrue("ChromeCast wasn't properly disconnected", retry < 25);
-//	}
 
 	@SuppressWarnings("unchecked")
 	@Test
@@ -86,8 +55,11 @@ public class ChannelTest {
 		assertEquals(1, events.size());
 		CastEvent<?> event = events.get(0);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
-//		MediaStatus mediaStatus = event.getData(MediaStatus.class); //TODO: (Nad) Consider this
-		MediaStatus mediaStatus = (MediaStatus) event.getData();
+		MediaStatusResponse response = event.getData(MediaStatusResponse.class);
+		assertEquals(CastEventType.MEDIA_STATUS, response.getEventType());
+		assertEquals(-1L, response.getRequestId());
+		assertEquals(1, response.getStatuses().size());
+		MediaStatus mediaStatus = response.getStatuses().get(0);
 		assertNotNull(mediaStatus);
 		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
 		assertNull(mediaStatus.getCurrentItemId());
@@ -132,7 +104,11 @@ public class ChannelTest {
 		assertEquals(2, events.size());
 		event = events.get(1);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
-		mediaStatus = (MediaStatus) event.getData();
+		response = (MediaStatusResponse) event.getData();
+		assertEquals(CastEventType.MEDIA_STATUS, response.getEventType());
+		assertEquals(0L, response.getRequestId());
+		assertEquals(1, response.getStatuses().size());
+		mediaStatus = response.getStatuses().get(0);
 		assertNotNull(mediaStatus);
 		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
 		assertEquals(1, mediaStatus.getCurrentItemId().intValue());
@@ -173,7 +149,11 @@ public class ChannelTest {
 		assertEquals(3, events.size());
 		event = events.get(2);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
-		mediaStatus = (MediaStatus) event.getData();
+		response = (MediaStatusResponse) event.getData();
+		assertEquals(CastEventType.MEDIA_STATUS, response.getEventType());
+		assertEquals(3L, response.getRequestId());
+		assertEquals(1, response.getStatuses().size());
+		mediaStatus = response.getStatuses().get(0);
 		assertNotNull(mediaStatus);
 		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
 		assertEquals(1, mediaStatus.getCurrentItemId().intValue());
@@ -230,7 +210,11 @@ public class ChannelTest {
 		assertEquals(4, events.size());
 		event = events.get(3);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
-		mediaStatus = (MediaStatus) event.getData();
+		response = (MediaStatusResponse) event.getData();
+		assertEquals(CastEventType.MEDIA_STATUS, response.getEventType());
+		assertEquals(1L, response.getRequestId());
+		assertEquals(1, response.getStatuses().size());
+		mediaStatus = response.getStatuses().get(0);
 		assertNotNull(mediaStatus);
 		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
 		assertNull(mediaStatus.getCurrentItemId());
@@ -307,7 +291,11 @@ public class ChannelTest {
 		assertEquals(5, events.size());
 		event = events.get(4);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
-		mediaStatus = (MediaStatus) event.getData();
+		response = (MediaStatusResponse) event.getData();
+		assertEquals(CastEventType.MEDIA_STATUS, response.getEventType());
+		assertEquals(1L, response.getRequestId());
+		assertEquals(1, response.getStatuses().size());
+		mediaStatus = response.getStatuses().get(0);
 		assertNotNull(mediaStatus);
 		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
 		assertNull(mediaStatus.getCurrentItemId());
@@ -384,7 +372,11 @@ public class ChannelTest {
 		assertEquals(6, events.size());
 		event = events.get(5);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
-		mediaStatus = (MediaStatus) event.getData();
+		response = (MediaStatusResponse) event.getData();
+		assertEquals(CastEventType.MEDIA_STATUS, response.getEventType());
+		assertEquals(1L, response.getRequestId());
+		assertEquals(1, response.getStatuses().size());
+		mediaStatus = response.getStatuses().get(0);
 		assertNotNull(mediaStatus);
 		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
 		assertNull(mediaStatus.getCurrentItemId());
@@ -461,7 +453,11 @@ public class ChannelTest {
 		assertEquals(7, events.size());
 		event = events.get(6);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
-		mediaStatus = (MediaStatus) event.getData();
+		response = (MediaStatusResponse) event.getData();
+		assertEquals(CastEventType.MEDIA_STATUS, response.getEventType());
+		assertEquals(28L, response.getRequestId());
+		assertEquals(1, response.getStatuses().size());
+		mediaStatus = response.getStatuses().get(0);
 		assertNotNull(mediaStatus);
 		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
 		assertNull(mediaStatus.getCurrentItemId());
@@ -501,7 +497,11 @@ public class ChannelTest {
 		assertEquals(8, events.size());
 		event = events.get(7);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
-		mediaStatus = (MediaStatus) event.getData();
+		response = (MediaStatusResponse) event.getData();
+		assertEquals(CastEventType.MEDIA_STATUS, response.getEventType());
+		assertEquals(28L, response.getRequestId());
+		assertEquals(1, response.getStatuses().size());
+		mediaStatus = response.getStatuses().get(0);
 		assertNotNull(mediaStatus);
 		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
 		assertNull(mediaStatus.getCurrentItemId());
@@ -541,7 +541,11 @@ public class ChannelTest {
 		assertEquals(9, events.size());
 		event = events.get(8);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
-		mediaStatus = (MediaStatus) event.getData();
+		response = (MediaStatusResponse) event.getData();
+		assertEquals(CastEventType.MEDIA_STATUS, response.getEventType());
+		assertEquals(7L, response.getRequestId());
+		assertEquals(1, response.getStatuses().size());
+		mediaStatus = response.getStatuses().get(0);
 		assertNotNull(mediaStatus);
 		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
 		assertEquals(1, mediaStatus.getCurrentItemId().intValue());
@@ -584,10 +588,14 @@ public class ChannelTest {
 		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatuses.json").replaceFirst("\"type\"", "\"responseType\"");
 		handler = channel.new StringMessageHandler(message, jsonMessage);
 		handler.run();
-		assertEquals(11, events.size());
+		assertEquals(10, events.size());
 		event = events.get(9);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
-		mediaStatus = (MediaStatus) event.getData();
+		response = (MediaStatusResponse) event.getData();
+		assertEquals(CastEventType.MEDIA_STATUS, response.getEventType());
+		assertEquals(2395L, response.getRequestId());
+		assertEquals(2, response.getStatuses().size());
+		mediaStatus = response.getStatuses().get(0);
 		assertNotNull(mediaStatus);
 		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
 		assertEquals(1, mediaStatus.getCurrentItemId().intValue());
@@ -621,8 +629,7 @@ public class ChannelTest {
 		assertEquals(1f, volume.getLevel().floatValue(), 0f);
 		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
 		assertFalse(volume.isMuted());
-		event = events.get(10);
-		mediaStatus = (MediaStatus) event.getData();
+		mediaStatus = response.getStatuses().get(1);
 		assertNotNull(mediaStatus);
 		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
 		assertNull(mediaStatus.getCurrentItemId());
@@ -663,13 +670,12 @@ public class ChannelTest {
 		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
 		assertFalse(volume.isMuted());
 
-
 		channel.close();
 	}
 
 
 	@Test
-	public void liveTest() throws IOException, Exception {
+	public void liveTest() throws Exception { //TODO: (Nad) More..
 		MockedChromeCast mock = new MockedChromeCast();
 		ChromeCast cc = new ChromeCast(
 			"Mock",
