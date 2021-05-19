@@ -32,13 +32,13 @@ import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
@@ -58,7 +58,6 @@ import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListenerList;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 import org.digitalmediaserver.chromecast.api.CastEvent.DefaultCastEvent;
 import org.digitalmediaserver.chromecast.api.StandardResponse.AppAvailabilityResponse;
-import org.digitalmediaserver.chromecast.api.StandardResponse.CloseResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.InvalidResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.LaunchErrorResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.LoadFailedResponse;
@@ -152,7 +151,8 @@ public class Channel implements Closeable {
 	 * Processors of requests by their identifiers
 	 */
 	@Nonnull
-	protected final Map<Long, ResultProcessor<? extends Response>> requests = new ConcurrentHashMap<>();
+	@GuardedBy("requests")
+	protected final Map<Long, ResultProcessor<? extends Response>> requests = new HashMap<>();
 
 	/**
 	 * Single mapper object for marshalling JSON
@@ -410,7 +410,9 @@ public class Channel implements Closeable {
 		}
 
 		ResultProcessor<T> rp = new ResultProcessor<>(responseClass);
-		requests.put(requestId, rp);
+		synchronized (requests) {
+			requests.put(requestId, rp);
+		}
 
 		write(namespace, message, destinationId);
 		try {
@@ -592,6 +594,16 @@ public class Channel implements Closeable {
 
 	public void setRequestTimeout(long requestTimeout) {
 		this.requestTimeout = requestTimeout;
+	}
+
+	@Nullable
+	protected ResultProcessor<? extends Response> acquireResultProcessor(long requestId) {
+		if (requestId < 1L) {
+			return null;
+		}
+		synchronized (requests) {
+			return requests.remove(Long.valueOf(requestId));
+		}
 	}
 
 	protected static boolean isCustomMessage(@Nullable JsonNode parsedMessage) {
@@ -890,8 +902,8 @@ public class Channel implements Closeable {
 					requestId = tmpNode == null ? -1L : tmpNode.asLong(-1L);
 				}
 				ResultProcessor<? extends Response> resultProcessor;
-				if (requestId > 0L && (resultProcessor = requests.remove(requestId)) != null) { //TODO: (Nad) Sync
-					resultProcessor.process(jsonMessage); //TODO: (Nad) Sync
+				if (requestId > 0L && (resultProcessor = acquireResultProcessor(requestId)) != null) {
+					resultProcessor.process(jsonMessage);
 				} else if (parsedMessage == null || isCustomMessage(parsedMessage)) {
 					if (!listeners.isEmpty()) {
 						listeners.fire(new DefaultCastEvent<>(
