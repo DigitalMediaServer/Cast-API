@@ -606,7 +606,7 @@ public class Channel implements Closeable {
 				}
 			}
 		}
-		return !parsedMessage.has("requestId");
+		return true;
 	}
 
 	protected static Executor createExecutor() {
@@ -911,7 +911,7 @@ public class Channel implements Closeable {
 						);
 					}
 					if (!listeners.isEmpty()) {
-						listeners.fire(new DefaultCastEvent<>(CastEventType.CLOSE, null)); //TODO: (Nad) Investigate/Figure out
+						listeners.fire(new DefaultCastEvent<>(CastEventType.CLOSE, jsonMapper.treeToValue(parsedMessage, StandardResponse.class))); //TODO: (Nad) Investigate/Figure out
 					}
 				} else if (!listeners.isEmpty()) { //TODO: (Nad) Figure out "CLOSE" message
 					StandardResponse response;

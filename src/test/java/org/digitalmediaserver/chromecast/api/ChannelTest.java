@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CyclicBarrier;
@@ -22,8 +23,12 @@ import org.digitalmediaserver.chromecast.api.Media.StreamType;
 import org.digitalmediaserver.chromecast.api.MediaStatus.IdleReason;
 import org.digitalmediaserver.chromecast.api.MediaStatus.PlayerState;
 import org.digitalmediaserver.chromecast.api.MediaStatus.RepeatMode;
+import org.digitalmediaserver.chromecast.api.StandardResponse.CloseResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MediaStatusResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.ReceiverStatusResponse;
 import org.junit.Test;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 //TODO: (Nad) Rudimentary - header, decide if keep or not etc
 public class ChannelTest {
@@ -46,7 +51,7 @@ public class ChannelTest {
 			.setSourceId("receiver-0")
 			.setDestinationId("sender-0")
 			.setNamespace("namespace")
-			.setPayloadType(PayloadType.BINARY)
+			.setPayloadType(PayloadType.STRING)
 			.setPayloadUtf8("payload")
 			.build();
 		String jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-single.json").replaceFirst("\"type\"", "\"responseType\"");
@@ -670,9 +675,60 @@ public class ChannelTest {
 		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
 		assertFalse(volume.isMuted());
 
+		jsonMessage = FixtureHelper.fixtureAsString("/timetick.json").replaceFirst("\"type\"", "\"responseType\"");
+		handler = channel.new StringMessageHandler(message, jsonMessage);
+		handler.run();
+		assertEquals(11, events.size());
+		event = events.get(10);
+		assertEquals(CastEventType.CUSTOM_MESSAGE, event.getEventType());
+		CustomMessageEvent custom = event.getData(CustomMessageEvent.class);
+		assertEquals("namespace", custom.getNamespace());
+		assertEquals(PayloadType.STRING, custom.getPayloadType());
+		assertEquals("payload", custom.getStringPayload());
+		assertNull(custom.getBinaryPayload());
+
+		CloseResponse closeSource = new CloseResponse(0L);
+		ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
+		jsonMessage = jsonMapper.writeValueAsString(closeSource);
+		handler = channel.new StringMessageHandler(message, jsonMessage);
+		handler.run();
+		assertEquals(12, events.size());
+		event = events.get(11);
+		assertEquals(CastEventType.CLOSE, event.getEventType());
+		assertEquals(CloseResponse.class, event.getData().getClass());
+
+		CustomMessage customMessage = new CustomMessage();
+		customMessage.requestId = 9023L;
+		customMessage.responseType = "CUST_STATUS";
+		customMessage.content = "Test message";
+		jsonMessage = jsonMapper.writeValueAsString(customMessage);
+		message = message.toBuilder()
+			.setNamespace("urn:x-cast:com.example.app")
+			.setPayloadUtf8(jsonMessage)
+			.build();
+		handler = channel.new StringMessageHandler(message, jsonMessage);
+		handler.run();
+		assertEquals(13, events.size());
+		event = events.get(12);
+		assertEquals(CastEventType.CUSTOM_MESSAGE, event.getEventType());
+		custom = event.getData(CustomMessageEvent.class);
+		assertEquals("urn:x-cast:com.example.app", custom.getNamespace());
+		assertEquals(PayloadType.STRING, custom.getPayloadType());
+		assertEquals("{\"responseType\":\"CUST_STATUS\",\"requestId\":9023,\"content\":\"Test message\"}", custom.getStringPayload());
+		assertNull(custom.getBinaryPayload());
+
+		volume = new Volume(123f, false, 2f, Volume.DEFAULT_INCREMENT.doubleValue(), Volume.DEFAULT_CONTROL_TYPE);
+		ReceiverStatusResponse receiverStatus = new ReceiverStatusResponse(0L, new ReceiverStatus(volume, null, false, false));
+		jsonMessage = jsonMapper.writeValueAsString(receiverStatus);
+		handler = channel.new StringMessageHandler(message, jsonMessage);
+		handler.run();
+		assertEquals(14, events.size());
+		event = events.get(13);
+		assertEquals(CastEventType.RECEIVER_STATUS, event.getEventType());
+		assertEquals(volume, event.getData(ReceiverStatusResponse.class).getStatus().getVolume());
+
 		channel.close();
 	}
-
 
 	@Test
 	public void liveTest() throws Exception { //TODO: (Nad) More..
@@ -714,5 +770,45 @@ public class ChannelTest {
 		mock.close();
 	}
 
+	private static class CustomMessage {
 
+		@JsonProperty
+		public String responseType;
+		@JsonProperty
+		public long requestId;
+		@JsonProperty
+		public String content;
+
+//		@SuppressWarnings("unused")
+//		CustomAppEvent() {
+//		}
+//
+//		CustomAppEvent(
+//			@JsonProperty("responseType") String responseType,
+//			@JsonProperty("requestId") long requestId,
+//			@JsonProperty("content") String content
+//		) {
+//			this.responseType = responseType;
+//			this.requestId = requestId;
+//			this.content = content;
+//		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(content, requestId, responseType);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (!(obj instanceof CustomMessage)) {
+				return false;
+			}
+			CustomMessage other = (CustomMessage) obj;
+			return Objects.equals(content, other.content) && requestId == other.requestId
+				&& Objects.equals(responseType, other.responseType);
+		}
+	}
 }
