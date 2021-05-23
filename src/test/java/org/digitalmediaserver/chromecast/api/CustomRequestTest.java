@@ -42,7 +42,8 @@ public class CustomRequestTest {
 		null,
 		1,
 		null,
-		null
+		null,
+		true
 	);
 
 	private static class KioskStatusRequest implements Request {

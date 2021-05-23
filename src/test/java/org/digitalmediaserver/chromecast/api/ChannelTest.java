@@ -745,7 +745,8 @@ public class ChannelTest {
 			"Mock",
 			1,
 			null,
-			"sender-test"
+			"sender-test",
+			true
 		);
 		final List<CastEvent<?>> events = new CopyOnWriteArrayList<>();
 		final CyclicBarrier barrier = new CyclicBarrier(2);

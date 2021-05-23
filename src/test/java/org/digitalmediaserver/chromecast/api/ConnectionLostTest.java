@@ -41,7 +41,8 @@ public class ConnectionLostTest {
 		null,
 		1,
 		null,
-		null
+		null,
+		true
 	);
 
 	@Before
@@ -59,13 +60,13 @@ public class ConnectionLostTest {
 
 	@Test(expected = ConnectException.class)
 	public void testDisconnect() throws Exception {
-		assertNull(cast.getStatus());
+		assertNull(cast.getReceiverStatus());
 	}
 
 	@Test
 	public void testReconnect() throws Exception {
 		chromeCastStub = new MockedChromeCast();
-		assertNotNull(cast.getStatus());
+		assertNotNull(cast.getReceiverStatus());
 	}
 
 	@After

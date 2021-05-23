@@ -389,14 +389,15 @@ public class Channel implements Closeable {
 		String destinationId,
 		Class<T> responseClass
 	) throws IOException {
+//		if (isClosed()) throw SocketException..
 		// Try to reconnect
-		if (isClosed()) {
-			try {
-				oldConnect();
-			} catch (GeneralSecurityException gse) {
-				throw new ChromeCastException("Unexpected security exception", gse);
-			}
-		}
+//		if (isClosed()) { //TODO: (Nad) How many levels of reconnect should there be? Not sure this is a good idea
+//			try {
+//				oldConnect();
+//			} catch (GeneralSecurityException gse) {
+//				throw new ChromeCastException("Unexpected security exception", gse);
+//			}
+//		}
 
 		Long requestId = requestCounter.getAndIncrement();
 		message.setRequestId(requestId);
@@ -479,7 +480,7 @@ public class Channel implements Closeable {
 		return CastMessage.parseFrom(buf);
 	}
 
-	public ReceiverStatus getStatus() throws IOException {
+	public ReceiverStatus getReceiverStatus() throws IOException {
 		ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.status(),
@@ -619,6 +620,17 @@ public class Channel implements Closeable {
 			}
 		}
 		return true;
+	}
+
+	public static void validateNamespace(@Nonnull String nameSpace) throws IllegalArgumentException { //TODO: (Nad) Use..u
+		requireNotBlank(nameSpace, "namespace");
+		if (nameSpace.length() > 128) {
+			throw new IllegalArgumentException("Invalid namespace length " + nameSpace.length());
+		} else if (!nameSpace.startsWith("urn:x-cast:")) {
+			throw new IllegalArgumentException("Namespace must begin with the prefix \"urn:x-cast:\"");
+		} else if (nameSpace.length() == 11) {
+			throw new IllegalArgumentException("Namespace must begin with the prefix \"urn:x-cast:\" and have non-empty suffix");
+		}
 	}
 
 	protected static Executor createExecutor() {

@@ -18,6 +18,7 @@ package org.digitalmediaserver.chromecast.api;
 import static org.digitalmediaserver.chromecast.api.Util.getContentType;
 import static org.digitalmediaserver.chromecast.api.Util.getMediaTitle;
 import java.io.IOException;
+import java.net.SocketException;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -30,6 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.concurrent.GuardedBy;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListener;
@@ -86,14 +88,18 @@ public class ChromeCast {
 	@Nonnull
 	protected final String senderId;
 
-	protected Channel channel; //TODO: (Nad) Sync..
-	protected boolean autoReconnect = true;
+	@Nonnull
+	protected final Object channelLock = new Object();
 
-	public ChromeCast(@Nonnull JmDNS mDNS, @Nonnull String dnsName, @Nullable String senderId) {
-		this(mDNS.getServiceInfo(SERVICE_TYPE, dnsName), senderId);
+	@GuardedBy("channelLock")
+	protected Channel channel;
+	protected final boolean autoReconnect;
+
+	public ChromeCast(@Nonnull JmDNS mDNS, @Nonnull String dnsName, @Nullable String senderId, boolean autoReconnect) {
+		this(mDNS.getServiceInfo(SERVICE_TYPE, dnsName), senderId, autoReconnect);
 	}
 
-	public ChromeCast(@Nonnull ServiceInfo serviceInfo, @Nullable String senderId) {
+	public ChromeCast(@Nonnull ServiceInfo serviceInfo, @Nullable String senderId, boolean autoReconnect) {
 		this.dnsName = serviceInfo.getName();
 		if (serviceInfo.getInet4Addresses().length > 0) {
 			this.address = serviceInfo.getInet4Addresses()[0].getHostAddress();
@@ -102,6 +108,7 @@ public class ChromeCast {
 		} else {
 			throw new IllegalArgumentException("No address found for cast device");
 		}
+		this.autoReconnect = autoReconnect;
 		this.port = serviceInfo.getPort();
 		this.applicationsURL = serviceInfo.getURLs().length == 0 ? null : serviceInfo.getURLs()[0];
 		this.serviceName = serviceInfo.getApplication();
@@ -150,7 +157,8 @@ public class ChromeCast {
 		@Nullable String modelName,
 		int protocolVersion,
 		@Nullable String iconPath,
-		@Nullable String senderId
+		@Nullable String senderId,
+		boolean autoReconnect
 	) {
 		this(
 			dnsName,
@@ -165,7 +173,8 @@ public class ChromeCast {
 			modelName,
 			protocolVersion,
 			iconPath,
-			senderId
+			senderId,
+			autoReconnect
 		);
 	}
 
@@ -182,7 +191,8 @@ public class ChromeCast {
 		@Nullable String modelName,
 		int protocolVersion,
 		@Nullable String iconPath,
-		@Nullable String senderId
+		@Nullable String senderId,
+		boolean autoReconnect
 	) {
 		if (Util.isBlank(dnsName)) {
 			throw new IllegalArgumentException("dnsName cannot be blank");
@@ -190,6 +200,7 @@ public class ChromeCast {
 		if (Util.isBlank(address)) {
 			throw new IllegalArgumentException("address cannot be blank");
 		}
+		this.autoReconnect = autoReconnect;
 		this.dnsName = dnsName;
 		this.address = address;
 		this.port = port;
@@ -319,66 +330,76 @@ public class ChromeCast {
 	 * Returns the {@link #channel}. May open it if <code>autoReconnect</code>
 	 * is set to "true" (default value) and it's not yet or no longer open.
 	 *
-	 * @return an open channel.
+	 * @return an open channel. //TODO: (Nad) Fix JavaDoc
 	 */
-	private synchronized Channel channel() throws IOException {
-		if (autoReconnect) {
-			try {
-				connect();
-			} catch (GeneralSecurityException e) {
-				throw new IOException("Security error: " + e.getMessage(), e);
+	@Nonnull
+	protected Channel channel() throws IOException {
+		Channel tmpChannel;
+		synchronized (channelLock) {
+			tmpChannel = channel;
+		}
+		if (tmpChannel == null || tmpChannel.isClosed()) {
+			if (!autoReconnect) {
+				throw new SocketException("Channel is closed");
+			}
+			synchronized (channelLock) {
+				if (channel == null || channel.isClosed()) {
+					try {
+						connect();
+					} catch (GeneralSecurityException e) {
+						throw new IOException("Security error: " + e.getMessage(), e);
+					}
+				}
+				tmpChannel = channel;
 			}
 		}
-
-		return channel;
+		return tmpChannel;
 	}
 
 	private String getTransportId(Application runningApp) {
 		return runningApp.getTransportId() == null ? runningApp.getSessionId() : runningApp.getTransportId();
 	}
 
-	public synchronized void connect() throws IOException, KeyManagementException, NoSuchAlgorithmException { //TODO: (Nad) Look into sync
-		if (channel == null || channel.isClosed()) {
+	public void connect() throws IOException, KeyManagementException, NoSuchAlgorithmException {
+		synchronized (channelLock) {
+			if (channel != null && !channel.isClosed()) {
+				return;
+			}
 			channel = new Channel(address, port, displayName, senderId, listeners);
 			channel.connect();
 		}
 	}
 
-	public synchronized void disconnect() throws IOException {
-		if (channel == null) {
-			return;
+	public void disconnect() throws IOException {
+		Channel tmpChannel;
+		synchronized (channelLock) {
+			tmpChannel = channel;
+			if (tmpChannel == null) {
+				return;
+			}
+			channel = null;
 		}
-
-		channel.close();
-		channel = null;
+		tmpChannel.close();
 	}
 
 	public boolean isConnected() {
-		return channel != null && !channel.isClosed();
+		Channel tmpChannel;
+		synchronized (channelLock) {
+			tmpChannel = channel;
+			if (tmpChannel == null) {
+				return false;
+			}
+		}
+		return !tmpChannel.isClosed();
 	}
 
 	/**
-	 * Changes behaviour for opening/closing of connection with ChromeCast
-	 * device. If set to "true" (default value) then connection will be
-	 * re-established on every request in case it is not present yet, or has
-	 * been lost. "false" value means manual control over connection with
-	 * ChromeCast device, i.e. calling <code>connect()</code> or
-	 * <code>disconnect()</code> methods when needed.
+	 * Returns whether or not an attempt will be made to connect to the cast
+	 * device on demand. "Demand" is defined as that a method that requires an
+	 * active connection is invoked and no connected currently exist.
 	 *
-	 * @param autoReconnect true means controlling connection with ChromeCast
-	 *            device automatically, false - manually
-	 * @see #connect()
-	 * @see #disconnect()
-	 */
-	public void setAutoReconnect(boolean autoReconnect) {
-		this.autoReconnect = autoReconnect;
-	}
-
-	/**
-	 * @return current value of <code>autoReconnect</code> setting, which
-	 *         controls opening/closing of connection with ChromeCast device
-	 *
-	 * @see #setAutoReconnect(boolean)
+	 * @return {@code true} if automatic connect is active, {@code false}
+	 *         otherwise if this must be handled manually.
 	 */
 	public boolean isAutoReconnect() {
 		return autoReconnect;
@@ -391,16 +412,22 @@ public class ChromeCast {
 	 * @param requestTimeout value in milliseconds until request times out
 	 *            waiting for response
 	 */
-	public void setRequestTimeout(long requestTimeout) {
-		channel.setRequestTimeout(requestTimeout);
+	public void setRequestTimeout(long requestTimeout) { //TODO: (Nad) Figure out, pointless as Channel's are cycled
+		Channel tmpChannel;
+		synchronized (channelLock) {
+			tmpChannel = channel;
+		}
+		if (tmpChannel != null) {
+			tmpChannel.setRequestTimeout(requestTimeout);
+		}
 	}
 
 	/**
 	 * @return current chromecast status - volume, running applications, etc.
 	 * @throws IOException
 	 */
-	public ReceiverStatus getStatus() throws IOException {
-		return channel().getStatus();
+	public ReceiverStatus getReceiverStatus() throws IOException {
+		return channel().getReceiverStatus();
 	}
 
 	/**
@@ -408,7 +435,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public Application getRunningApplication() throws IOException {
-		ReceiverStatus status = getStatus();
+		ReceiverStatus status = getReceiverStatus();
 		return status.getRunningApp();
 	}
 
@@ -428,7 +455,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public boolean isApplicationRunning(String appId) throws IOException {
-		ReceiverStatus status = getStatus();
+		ReceiverStatus status = getReceiverStatus();
 		return status.getRunningApp() != null && appId.equals(status.getRunningApp().getAppId());
 	}
 
@@ -497,7 +524,7 @@ public class ChromeCast {
 	 *      "https://developers.google.com/cast/docs/design_checklist/sender#sender-control-volume">sender</a>
 	 */
 	public void setVolumeByIncrement(float level) throws IOException {
-		Volume volume = this.getStatus().getVolume();
+		Volume volume = this.getReceiverStatus().getVolume();
 		float total = volume.getLevel();
 
 		if (volume.getIncrement() <= 0f) {
@@ -563,7 +590,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public void play() throws IOException {
-		ReceiverStatus status = getStatus();
+		ReceiverStatus status = getReceiverStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
 			throw new ChromeCastException("No application is running in ChromeCast");
@@ -587,7 +614,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public void pause() throws IOException {
-		ReceiverStatus status = getStatus();
+		ReceiverStatus status = getReceiverStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
 			throw new ChromeCastException("No application is running in ChromeCast");
@@ -612,7 +639,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public void seek(double time) throws IOException {
-		ReceiverStatus status = getStatus();
+		ReceiverStatus status = getReceiverStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
 			throw new ChromeCastException("No application is running in ChromeCast");
@@ -659,7 +686,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public MediaStatus load(String mediaTitle, String thumb, String url, String contentType) throws IOException {
-		ReceiverStatus status = getStatus();
+		ReceiverStatus status = getReceiverStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
 			throw new ChromeCastException("No application is running in ChromeCast");
@@ -703,7 +730,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public MediaStatus load(final Media media) throws IOException {
-		ReceiverStatus status = getStatus();
+		ReceiverStatus status = getReceiverStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
 			throw new ChromeCastException("No application is running in ChromeCast");
@@ -743,7 +770,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public <T extends Response> T send(String namespace, Request request, Class<T> responseClass) throws IOException {
-		ReceiverStatus status = getStatus();
+		ReceiverStatus status = getReceiverStatus();
 		Application runningApp = status.getRunningApp();
 		if (runningApp == null) {
 			throw new ChromeCastException("No application is running in ChromeCast");
