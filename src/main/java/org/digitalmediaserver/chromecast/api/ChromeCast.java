@@ -269,7 +269,7 @@ public class ChromeCast {
 	 * @return The title of the app that is currently running, or empty string
 	 *         in case of the backdrop. Usually something like "YouTube" or
 	 *         "Spotify", but could also be, say, the URL of a web page being
-	 *         mirrored.
+	 *         mirrored. //TODO: (Nad) Fix JavaDoc
 	 */
 	@Nullable
 	public String getApplicationTitle() {
