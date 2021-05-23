@@ -53,7 +53,8 @@ public class InterruptionTest {
 		null,
 		1,
 		null,
-		null
+		null,
+		true
 	);
 	CyclicBarrier barrier = new CyclicBarrier(2);
 
