@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
@@ -100,6 +101,26 @@ public class Application {
 
 	public boolean isLaunchedFromCloud() {
 		return launchedFromCloud;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(appId, displayName, iconUrl, isIdleScreen, launchedFromCloud, namespaces, sessionId, statusText, transportId);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof Application)) {
+			return false;
+		}
+		Application other = (Application) obj;
+		return Objects.equals(appId, other.appId) && Objects.equals(displayName, other.displayName)
+			&& Objects.equals(iconUrl, other.iconUrl) && isIdleScreen == other.isIdleScreen && launchedFromCloud == other.launchedFromCloud
+			&& Objects.equals(namespaces, other.namespaces) && Objects.equals(sessionId, other.sessionId)
+			&& Objects.equals(statusText, other.statusText) && Objects.equals(transportId, other.transportId);
 	}
 
 	@Override
