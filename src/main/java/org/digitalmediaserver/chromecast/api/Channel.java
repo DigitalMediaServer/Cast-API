@@ -489,19 +489,20 @@ public class Channel implements Closeable {
 		return status == null ? null : status.getStatus();
 	}
 
-	public boolean isAppAvailable(String appId) throws IOException {
+	public boolean isApplicationAvailable(String applicationId) throws IOException {
 		AppAvailabilityResponse availability = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
-			StandardRequest.appAvailability(appId),
+			StandardRequest.appAvailability(applicationId),
 			DEFAULT_RECEIVER_ID
 		);
-		return availability != null && "APP_AVAILABLE".equals(availability.getAvailability().get(appId));
+		return availability != null && "APP_AVAILABLE".equals(availability.getAvailability().get(applicationId));
 	}
 
-	public ReceiverStatus launch(String appId) throws IOException {
+	@Nullable
+	public ReceiverStatus launch(String applicationId) throws IOException {
 		ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
-			StandardRequest.launch(appId),
+			StandardRequest.launch(applicationId),
 			DEFAULT_RECEIVER_ID
 		);
 		return status == null ? null : status.getStatus();

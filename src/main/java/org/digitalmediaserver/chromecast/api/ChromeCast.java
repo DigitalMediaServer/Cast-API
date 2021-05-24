@@ -446,7 +446,7 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	public boolean isApplicationAvailable(String appId) throws IOException {
-		return channel().isAppAvailable(appId);
+		return channel().isApplicationAvailable(appId);
 	}
 
 	/**
@@ -465,9 +465,9 @@ public class ChromeCast {
 	 *         otherwise
 	 * @throws IOException
 	 */
-	public Application launchApp(String appId) throws IOException {
-		ReceiverStatus status = channel().launch(appId);
-		return status == null ? null : status.getRunningApp();
+	@Nullable
+	public ReceiverStatus launchApplication(String appId) throws IOException {
+		return channel().launch(appId);
 	}
 
 	/**

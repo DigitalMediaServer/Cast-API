@@ -103,7 +103,7 @@ public class CustomRequestTest {
 	public void init() throws IOException, GeneralSecurityException {
 		chromeCastStub = new MockedChromeCast();
 		cast.connect();
-		cast.launchApp("KIOSK");
+		cast.launchApplication("KIOSK");
 	}
 
 	@After
