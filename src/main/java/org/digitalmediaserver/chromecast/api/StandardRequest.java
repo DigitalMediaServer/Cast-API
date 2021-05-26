@@ -40,18 +40,18 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	/**
 	 * Request for current status of ChromeCast device.
 	 */
-	static class Status extends StandardRequest {
+	public static class GetStatus extends StandardRequest {
 	}
 
 	/**
 	 * Request for availability of applications with specified identifiers.
 	 */
-	static class AppAvailability extends StandardRequest {
+	public static class GetAppAvailability extends StandardRequest {
 
 		@JsonProperty
 		final String[] appId;
 
-		AppAvailability(String... appId) {
+		GetAppAvailability(String... appId) {
 			this.appId = appId;
 		}
 	}
@@ -59,7 +59,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	/**
 	 * Request to launch application with specified identifiers.
 	 */
-	static class Launch extends StandardRequest {
+	public static class Launch extends StandardRequest {
 
 		@JsonProperty
 		final String appId;
@@ -72,7 +72,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	/**
 	 * Request to stop currently running application.
 	 */
-	static class Stop extends StandardRequest {
+	public static class Stop extends StandardRequest {
 
 		@JsonProperty
 		final String sessionId;
@@ -85,7 +85,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	/**
 	 * Request to load media.
 	 */
-	static class Load extends StandardRequest {
+	public static class Load extends StandardRequest {
 
 		@JsonProperty
 		final String sessionId;
@@ -121,7 +121,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	/**
 	 * Abstract request for an action with currently played media.
 	 */
-	abstract static class MediaRequest extends StandardRequest {
+	public abstract static class MediaRequest extends StandardRequest {
 
 		@JsonProperty
 		final long mediaSessionId;
@@ -137,7 +137,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	/**
 	 * Request to start/resume playback.
 	 */
-	static class Play extends MediaRequest {
+	public static class Play extends MediaRequest {
 
 		Play(long mediaSessionId, String sessionId) {
 			super(mediaSessionId, sessionId);
@@ -147,7 +147,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	/**
 	 * Request to pause playback.
 	 */
-	static class Pause extends MediaRequest {
+	public static class Pause extends MediaRequest {
 
 		Pause(long mediaSessionId, String sessionId) {
 			super(mediaSessionId, sessionId);
@@ -157,7 +157,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	/**
 	 * Request to change current playback position.
 	 */
-	static class Seek extends MediaRequest {
+	public static class Seek extends MediaRequest {
 
 		@JsonProperty
 		final double currentTime;
@@ -171,7 +171,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	/**
 	 * Request to change volume.
 	 */
-	static class SetVolume extends StandardRequest {
+	public static class SetVolume extends StandardRequest {
 
 		@JsonProperty
 		final Volume volume;
@@ -181,23 +181,23 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		}
 	}
 
-	static Status status() {
-		return new Status();
+	public static GetStatus status() {
+		return new GetStatus();
 	}
 
-	static AppAvailability appAvailability(String... appId) {
-		return new AppAvailability(appId);
+	public static GetAppAvailability getAppAvailability(String... applicationId) {
+		return new GetAppAvailability(applicationId);
 	}
 
-	static Launch launch(String appId) {
-		return new Launch(appId);
+	public static Launch launch(String applicationId) {
+		return new Launch(applicationId);
 	}
 
-	static Stop stop(String sessionId) {
+	public static Stop stop(String sessionId) {
 		return new Stop(sessionId);
 	}
 
-	static Load load(
+	public static Load load(
 		String sessionId,
 		Media media,
 		boolean autoplay,
@@ -207,19 +207,19 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		return new Load(sessionId, media, autoplay, currentTime, customData);
 	}
 
-	static Play play(String sessionId, long mediaSessionId) {
+	public static Play play(String sessionId, long mediaSessionId) {
 		return new Play(mediaSessionId, sessionId);
 	}
 
-	static Pause pause(String sessionId, long mediaSessionId) {
+	public static Pause pause(String sessionId, long mediaSessionId) {
 		return new Pause(mediaSessionId, sessionId);
 	}
 
-	static Seek seek(String sessionId, long mediaSessionId, double currentTime) {
+	public static Seek seek(String sessionId, long mediaSessionId, double currentTime) {
 		return new Seek(mediaSessionId, sessionId, currentTime);
 	}
 
-	static SetVolume setVolume(Volume volume) {
+	public static SetVolume setVolume(Volume volume) { //TODO: (Nad) Look into - setting the whole Volume..?
 		return new SetVolume(volume);
 	}
 }
