@@ -70,13 +70,13 @@ public class ReceiverStatus {
 
 	@Nullable
 	@JsonIgnore
-	public Application getRunningApp() {
+	public Application getRunningApplication() {
 		return applications.isEmpty() ? null : applications.get(0);
 	}
 
-	public boolean isAppRunning(String appId) {
-		Application runningApp = getRunningApp();
-		return runningApp != null && runningApp.getAppId().equals(appId);
+	public boolean isApplicationRunning(String appId) {
+		Application runningApplication = getRunningApplication();
+		return runningApplication != null && runningApplication.getAppId().equals(appId);
 	}
 
 	@Override

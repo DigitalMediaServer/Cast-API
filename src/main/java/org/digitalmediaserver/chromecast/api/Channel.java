@@ -327,9 +327,10 @@ public class Channel implements Closeable {
 		String namespace,
 		StandardRequest message,
 		String senderId,
-		String destinationId
+		String destinationId,
+		boolean synchronous
 	) throws IOException {
-		return send(namespace, message, senderId, destinationId, (Class<T>) StandardResponse.class);
+		return send(namespace, message, senderId, destinationId, synchronous ? (Class<T>) StandardResponse.class : null);
 	}
 
 	public <T extends Response> T send(
@@ -425,7 +426,8 @@ public class Channel implements Closeable {
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.status(),
 			PLATFORM_SENDER_ID,
-			PLATFORM_RECEIVER_ID
+			PLATFORM_RECEIVER_ID,
+			true
 		);
 		return status == null ? null : status.getStatus();
 	}
@@ -435,28 +437,31 @@ public class Channel implements Closeable {
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.getAppAvailability(applicationId),
 			PLATFORM_SENDER_ID,
-			PLATFORM_RECEIVER_ID
+			PLATFORM_RECEIVER_ID,
+			true
 		);
 		return availability != null && "APP_AVAILABLE".equals(availability.getAvailability().get(applicationId));
 	}
 
 	@Nullable
-	public ReceiverStatus launch(String applicationId) throws IOException {
+	public ReceiverStatus launch(String applicationId, boolean synchronous) throws IOException {
 		ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.launch(applicationId),
 			PLATFORM_SENDER_ID,
-			PLATFORM_RECEIVER_ID
+			PLATFORM_RECEIVER_ID,
+			synchronous
 		);
 		return status == null ? null : status.getStatus();
 	}
 
-	public ReceiverStatus stop(String sessionId) throws IOException {
+	public ReceiverStatus stopApplication(@Nonnull Application application, boolean synchronous) throws IOException {
 		ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
-			StandardRequest.stop(sessionId),
+			StandardRequest.stop(application.getSessionId()),
 			PLATFORM_SENDER_ID,
-			PLATFORM_RECEIVER_ID
+			PLATFORM_RECEIVER_ID,
+			synchronous
 		);
 		return status == null ? null : status.getStatus();
 	}
@@ -532,13 +537,15 @@ public class Channel implements Closeable {
 		Media media,
 		boolean autoplay,
 		double currentTime,
+		boolean synchronous,
 		@Nullable Map<String, String> customData
 	) throws IOException {
 		MediaStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.load(sessionId, media, autoplay, currentTime, customData),
 			senderId,
-			destinationId
+			destinationId,
+			synchronous
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
@@ -548,13 +555,15 @@ public class Channel implements Closeable {
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
 		@Nonnull String sessionId,
-		long mediaSessionId
+		long mediaSessionId,
+		boolean synchronous
 	) throws IOException {
 		MediaStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.play(sessionId, mediaSessionId),
 			senderId,
-			destinationId
+			destinationId,
+			synchronous
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
@@ -564,13 +573,15 @@ public class Channel implements Closeable {
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
 		@Nonnull String sessionId,
-		long mediaSessionId
+		long mediaSessionId,
+		boolean synchronous
 	) throws IOException {
 		MediaStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.pause(sessionId, mediaSessionId),
 			senderId,
-			destinationId
+			destinationId,
+			synchronous
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
@@ -581,24 +592,27 @@ public class Channel implements Closeable {
 		@Nonnull String destinationId,
 		@Nonnull String sessionId,
 		long mediaSessionId,
-		double currentTime
+		double currentTime,
+		boolean synchronous
 	) throws IOException {
 		MediaStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.seek(sessionId, mediaSessionId, currentTime),
 			senderId,
-			destinationId
+			destinationId,
+			synchronous
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
 	@Nullable
-	public ReceiverStatus setVolume(Volume volume) throws IOException {
+	public ReceiverStatus setVolume(Volume volume, boolean synchronous) throws IOException {
 		ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.setVolume(volume),
 			PLATFORM_SENDER_ID,
-			PLATFORM_RECEIVER_ID
+			PLATFORM_RECEIVER_ID,
+			synchronous
 		);
 		return status == null ? null : status.getStatus();
 	}
@@ -609,7 +623,8 @@ public class Channel implements Closeable {
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.status(),
 			senderId,
-			destinationId
+			destinationId,
+			true
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}

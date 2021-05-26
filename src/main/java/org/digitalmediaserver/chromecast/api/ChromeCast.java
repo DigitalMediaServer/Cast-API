@@ -15,8 +15,6 @@
  */
 package org.digitalmediaserver.chromecast.api;
 
-import static org.digitalmediaserver.chromecast.api.Util.getContentType;
-import static org.digitalmediaserver.chromecast.api.Util.getMediaTitle;
 import java.io.IOException;
 import java.net.SocketException;
 import java.security.GeneralSecurityException;
@@ -24,8 +22,6 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -436,7 +432,7 @@ public class ChromeCast {
 	 */
 	public Application getRunningApplication() throws IOException {
 		ReceiverStatus status = getReceiverStatus();
-		return status.getRunningApp();
+		return status.getRunningApplication();
 	}
 
 	/**
@@ -456,7 +452,7 @@ public class ChromeCast {
 	 */
 	public boolean isApplicationRunning(String appId) throws IOException {
 		ReceiverStatus status = getReceiverStatus();
-		return status.getRunningApp() != null && appId.equals(status.getRunningApp().getAppId());
+		return status.getRunningApplication() != null && appId.equals(status.getRunningApplication().getAppId());
 	}
 
 	/**
@@ -466,8 +462,8 @@ public class ChromeCast {
 	 * @throws IOException
 	 */
 	@Nullable
-	public ReceiverStatus launchApplication(String appId) throws IOException {
-		return channel().launch(appId);
+	public ReceiverStatus launchApplication(String appId, boolean synchronous) throws IOException {
+		return channel().launch(appId, synchronous);
 	}
 
 	/**
@@ -481,12 +477,11 @@ public class ChromeCast {
 	 *
 	 * @throws IOException
 	 */
-	public void stopApplication() throws IOException { //TODO: (Nad) Fix
-		Application runningApp = getRunningApplication();
-		if (runningApp == null) {
-			throw new ChromeCastException("No application is running in ChromeCast");
+	public void stopApplication(@Nullable Application application, boolean synchronous) throws IOException { //TODO: (Nad) Fix
+		if (application == null) {
+			return;
 		}
-		channel().stop(runningApp.getSessionId());
+		channel().stopApplication(application, synchronous);
 	}
 
 	public Session startSession(
@@ -506,28 +501,17 @@ public class ChromeCast {
 	}
 
 	/**
-	 * <p>
-	 * Stops the session with the given identifier.
-	 * </p>
-	 *
-	 * @param sessionId session identifier
-	 * @throws IOException
-	 */
-	public void stopSession(String sessionId) throws IOException { //TODO: (Nad) Really? Does this work?
-		channel().stop(sessionId);
-	}
-
-	/**
 	 * @param level volume level from 0 to 1 to set
 	 */
-	public void setVolume(float level) throws IOException {
-		channel().setVolume(new Volume(
+	@Nullable
+	public ReceiverStatus setVolume(float level, boolean synchronous) throws IOException {
+		return channel().setVolume(new Volume(
 			level,
 			false,
-			Volume.DEFAULT_INCREMENT,
+			Volume.DEFAULT_INCREMENT, //TODO: (Nad) THis is flawed, should use info from device
 			Volume.DEFAULT_INCREMENT.doubleValue(),
 			Volume.DEFAULT_CONTROL_TYPE
-		));
+		), synchronous);
 	}
 
 	/**
@@ -539,7 +523,7 @@ public class ChromeCast {
 	 * @see <a href=
 	 *      "https://developers.google.com/cast/docs/design_checklist/sender#sender-control-volume">sender</a>
 	 */
-	public void setVolumeByIncrement(float level) throws IOException {
+	public void setVolumeByIncrement(float level) throws IOException { //TODO: (Nad) Look into this
 		Volume volume = this.getReceiverStatus().getVolume();
 		float total = volume.getLevel();
 
@@ -554,13 +538,13 @@ public class ChromeCast {
 		if (level > total) {
 			while (total < level) {
 				total = Math.min(total + volume.getIncrement(), level);
-				setVolume(total);
+				setVolume(total, false); //TODO: (Nad) Make proper "incremental" solution
 			}
 			// Decrease Volume
 		} else if (level < total) {
 			while (total > level) {
 				total = Math.max(total - volume.getIncrement(), level);
-				setVolume(total);
+				setVolume(total, false);
 			}
 		}
 	}
@@ -568,14 +552,14 @@ public class ChromeCast {
 	/**
 	 * @param muted is to mute or not
 	 */
-	public void setMuted(boolean muted) throws IOException {
-		channel().setVolume(new Volume(
+	public ReceiverStatus setMuted(boolean muted, boolean synchronous) throws IOException {
+		return channel().setVolume(new Volume(
 			null,
 			muted,
-			Volume.DEFAULT_INCREMENT,
+			Volume.DEFAULT_INCREMENT, //TODO: (Nad) Use proper..
 			Volume.DEFAULT_INCREMENT.doubleValue(),
 			Volume.DEFAULT_CONTROL_TYPE
-		));
+		), synchronous);
 	}
 
 	/**

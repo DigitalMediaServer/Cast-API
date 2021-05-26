@@ -40,7 +40,7 @@ public class StatusTest {
 		assertFalse(status.isStandBy());
 
 		assertEquals(1, status.getApplications().size());
-		Application app = status.getRunningApp();
+		Application app = status.getRunningApplication();
 		assertFalse(app.isIdleScreen());
 
 		Volume volume = status.getVolume();
@@ -64,7 +64,7 @@ public class StatusTest {
 		assertFalse(status.isStandBy());
 
 		assertEquals(1, status.getApplications().size());
-		Application app = status.getRunningApp();
+		Application app = status.getRunningApplication();
 		assertTrue(app.isIdleScreen());
 
 		Volume volume = status.getVolume();
@@ -88,7 +88,7 @@ public class StatusTest {
 		assertFalse(status.isStandBy());
 
 		assertEquals(1, status.getApplications().size());
-		Application app = status.getRunningApp();
+		Application app = status.getRunningApplication();
 		assertTrue(app.isIdleScreen());
 		assertFalse(app.isLaunchedFromCloud());
 
@@ -113,7 +113,7 @@ public class StatusTest {
 		assertFalse(status.isStandBy());
 
 		assertEquals(1, status.getApplications().size());
-		Application app = status.getRunningApp();
+		Application app = status.getRunningApplication();
 		assertFalse(app.isIdleScreen());
 		assertFalse(app.isLaunchedFromCloud());
 
@@ -138,7 +138,7 @@ public class StatusTest {
 		assertFalse(status.isStandBy());
 
 		assertEquals(1, status.getApplications().size());
-		Application app = status.getRunningApp();
+		Application app = status.getRunningApplication();
 		assertFalse(app.isIdleScreen());
 		assertFalse(app.isLaunchedFromCloud());
 		assertEquals("CC32E753", app.getAppId());

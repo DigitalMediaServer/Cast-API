@@ -76,7 +76,7 @@ public class InterruptionTest {
 	public void initMockedCast() throws Exception {
 		chromeCastStub = new MockedChromeCast();
 		cast.connect();
-		cast.launchApplication("abcd");
+		cast.launchApplication("abcd", true);
 	}
 
 	@Test
