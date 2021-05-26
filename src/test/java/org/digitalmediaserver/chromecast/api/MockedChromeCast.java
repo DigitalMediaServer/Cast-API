@@ -158,8 +158,8 @@ final class MockedChromeCast {
 		Response handleJSON(Message message) {
 			if (message instanceof StandardMessage.Ping) {
 				return new StandardResponse.PongResponse();
-			} else if (message instanceof StandardRequest.Status) {
-				return new StandardResponse.ReceiverStatusResponse(((StandardRequest.Status) message).getRequestId(), status());
+			} else if (message instanceof StandardRequest.GetStatus) {
+				return new StandardResponse.ReceiverStatusResponse(((StandardRequest.GetStatus) message).getRequestId(), status());
 			} else if (message instanceof StandardRequest.Launch) {
 				StandardRequest.Launch launch = (StandardRequest.Launch) message;
 				runningApplications.add(new Application(
