@@ -36,7 +36,7 @@ public class ConnectionLostTest {
 		null,
 		null,
 		null,
-		null,
+		"Mocked ChromeCast",
 		null,
 		null,
 		1,

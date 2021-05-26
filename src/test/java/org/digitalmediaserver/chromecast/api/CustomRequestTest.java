@@ -37,7 +37,7 @@ public class CustomRequestTest {
 		null,
 		null,
 		null,
-		null,
+		"Mocked ChromeCast",
 		null,
 		null,
 		1,
@@ -131,9 +131,11 @@ public class CustomRequestTest {
 				return response;
 			}
 		};
-		KioskStatusResponse response = cast.send(
+		KioskStatusResponse response = cast.channel().send(
 			"urn:x-cast:de.michaelkuerbis.kiosk",
 			new KioskStatusRequest(),
+			"sender-0",
+			"receiver-0",
 			KioskStatusResponse.class
 		);
 		assertNotNull(response);

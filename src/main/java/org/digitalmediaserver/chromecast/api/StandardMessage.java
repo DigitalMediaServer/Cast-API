@@ -16,6 +16,7 @@
 package org.digitalmediaserver.chromecast.api;
 
 import javax.annotation.Nullable;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -137,7 +138,10 @@ public abstract class StandardMessage implements Message {
 		@JsonProperty
 		private final Origin origin = new Origin();
 
-		public Connect(@Nullable String userAgent, @Nullable VirtualConnectionType connectionType) {
+		@JsonCreator
+		public Connect(
+			@JsonProperty("userAgent") @Nullable String userAgent,
+			@JsonProperty("connType") @Nullable VirtualConnectionType connectionType) {
 			this.userAgent = userAgent;
 			this.connType = connectionType;
 		}
