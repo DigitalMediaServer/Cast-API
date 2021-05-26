@@ -48,7 +48,7 @@ public class InterruptionTest {
 		null,
 		null,
 		null,
-		null,
+		"Mocked ChromeCast",
 		null,
 		null,
 		1,
@@ -56,11 +56,10 @@ public class InterruptionTest {
 		null,
 		true
 	);
-	CyclicBarrier barrier = new CyclicBarrier(2);
 
 	public static class Custom implements Request, Response {
 
-		Long requestId;
+		public Long requestId;
 
 		@Override
 		public long getRequestId() {
@@ -94,6 +93,7 @@ public class InterruptionTest {
 				return new Custom();
 			}
 		};
+		final CyclicBarrier barrier = new CyclicBarrier(2);
 
 		final AtomicReference<IOException> exception = new AtomicReference<>();
 		Thread t = new Thread() {
@@ -102,7 +102,7 @@ public class InterruptionTest {
 			public void run() {
 				try {
 					barrier.await();
-					cast.send("", new Custom());
+					cast.channel().send("", new Custom(), "sender-0", "receiver-0", Custom.class);
 				} catch (IOException e) {
 					exception.set(e);
 				} catch (InterruptedException e) {
@@ -147,7 +147,7 @@ public class InterruptionTest {
 		thrown.expect(ChromeCastException.class);
 		thrown.expectCause(CoreMatchers.isA(TimeoutException.class));
 		thrown.expectMessage("Waiting for response timed out");
-		cast.send("", new Custom(), Custom.class);
+		cast.channel().send("", new Custom(), "sender-0", "receiver-0", Custom.class);
 	}
 
 	@After

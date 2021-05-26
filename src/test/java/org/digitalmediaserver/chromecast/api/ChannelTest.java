@@ -23,7 +23,6 @@ import org.digitalmediaserver.chromecast.api.Media.StreamType;
 import org.digitalmediaserver.chromecast.api.MediaStatus.IdleReason;
 import org.digitalmediaserver.chromecast.api.MediaStatus.PlayerState;
 import org.digitalmediaserver.chromecast.api.MediaStatus.RepeatMode;
-import org.digitalmediaserver.chromecast.api.StandardResponse.CloseResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MediaStatusResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.ReceiverStatusResponse;
 import org.junit.Test;
@@ -687,20 +686,11 @@ public class ChannelTest {
 		assertEquals("payload", custom.getStringPayload());
 		assertNull(custom.getBinaryPayload());
 
-		CloseResponse closeSource = new CloseResponse(0L);
-		ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
-		jsonMessage = jsonMapper.writeValueAsString(closeSource);
-		handler = channel.new StringMessageHandler(message, jsonMessage);
-		handler.run();
-		assertEquals(12, events.size());
-		event = events.get(11);
-		assertEquals(CastEventType.CLOSE, event.getEventType());
-		assertEquals(CloseResponse.class, event.getData().getClass());
-
 		CustomMessage customMessage = new CustomMessage();
 		customMessage.requestId = 9023L;
 		customMessage.responseType = "CUST_STATUS";
 		customMessage.content = "Test message";
+		ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 		jsonMessage = jsonMapper.writeValueAsString(customMessage);
 		message = message.toBuilder()
 			.setNamespace("urn:x-cast:com.example.app")
@@ -708,8 +698,8 @@ public class ChannelTest {
 			.build();
 		handler = channel.new StringMessageHandler(message, jsonMessage);
 		handler.run();
-		assertEquals(13, events.size());
-		event = events.get(12);
+		assertEquals(12, events.size());
+		event = events.get(11);
 		assertEquals(CastEventType.CUSTOM_MESSAGE, event.getEventType());
 		custom = event.getData(CustomMessageEvent.class);
 		assertEquals("urn:x-cast:com.example.app", custom.getNamespace());
@@ -722,8 +712,8 @@ public class ChannelTest {
 		jsonMessage = jsonMapper.writeValueAsString(receiverStatus);
 		handler = channel.new StringMessageHandler(message, jsonMessage);
 		handler.run();
-		assertEquals(14, events.size());
-		event = events.get(13);
+		assertEquals(13, events.size());
+		event = events.get(12);
 		assertEquals(CastEventType.RECEIVER_STATUS, event.getEventType());
 		assertEquals(volume, event.getData(ReceiverStatusResponse.class).getStatus().getVolume());
 
