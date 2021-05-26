@@ -84,23 +84,29 @@ public class Session {
 	}
 
 	@Nullable
-	public MediaStatus load(Media media, boolean autoplay, double currentTime, Map<String, String> customData) throws IOException {
-		return channel.load(senderId, destinationId, id, media, autoplay, currentTime, customData);
+	public MediaStatus load( //TODO: (Nad) OVerloads
+		Media media,
+		boolean autoplay,
+		double currentTime,
+		boolean synchronous,
+		Map<String, String> customData
+	) throws IOException {
+		return channel.load(senderId, destinationId, id, media, autoplay, currentTime, synchronous, customData);
 	}
 
 	@Nullable
-	public MediaStatus play(long mediaSessionId) throws IOException {
-		return channel.play(senderId, destinationId, id, mediaSessionId);
+	public MediaStatus play(long mediaSessionId, boolean synchronous) throws IOException {
+		return channel.play(senderId, destinationId, id, mediaSessionId, synchronous);
 	}
 
 	@Nullable
-	public MediaStatus pause(long mediaSessionId) throws IOException {
-		return channel.pause(senderId, destinationId, id, mediaSessionId);
+	public MediaStatus pause(long mediaSessionId, boolean synchronous) throws IOException {
+		return channel.pause(senderId, destinationId, id, mediaSessionId, synchronous);
 	}
 
 	@Nullable
-	public MediaStatus seek(long mediaSessionId, double currentTime) throws IOException {
-		return channel.seek(senderId, destinationId, id, mediaSessionId, currentTime);
+	public MediaStatus seek(long mediaSessionId, double currentTime, boolean synchronous) throws IOException {
+		return channel.seek(senderId, destinationId, id, mediaSessionId, currentTime, synchronous);
 	}
 
 	@Nullable
