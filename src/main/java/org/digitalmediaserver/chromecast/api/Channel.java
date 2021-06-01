@@ -57,10 +57,15 @@ import org.digitalmediaserver.chromecast.api.CastChannel.CastMessage.PayloadType
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListenerList;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 import org.digitalmediaserver.chromecast.api.CastEvent.DefaultCastEvent;
+import org.digitalmediaserver.chromecast.api.ChromeCastException.InvalidCastException;
+import org.digitalmediaserver.chromecast.api.ChromeCastException.LaunchErrorCastException;
+import org.digitalmediaserver.chromecast.api.ChromeCastException.LoadCancelledCastException;
+import org.digitalmediaserver.chromecast.api.ChromeCastException.LoadFailedCastException;
 import org.digitalmediaserver.chromecast.api.Session.ClosedByPeerListener;
 import org.digitalmediaserver.chromecast.api.StandardResponse.AppAvailabilityResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.InvalidResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.LaunchErrorResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.LoadCancelledResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.LoadFailedResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MediaStatusResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.ReceiverStatusResponse;
@@ -360,13 +365,16 @@ public class Channel implements Closeable {
 		try {
 			T response = rp.get();
 			if (response instanceof InvalidResponse) {
-				InvalidResponse invalid = (InvalidResponse) response;
-				throw new ChromeCastException("Invalid request: " + invalid.getReason());
+				throw new InvalidCastException("Invalid request: " + ((InvalidResponse) response).getReason());
+			} else if (response instanceof LoadCancelledResponse) {
+				throw new LoadCancelledCastException(
+					"Loading of media was cancelled",
+					((LoadCancelledResponse) response).getItemId()
+				);
 			} else if (response instanceof LoadFailedResponse) {
-				throw new ChromeCastException("Unable to load media");
+				throw new LoadFailedCastException("Unable to load media");
 			} else if (response instanceof LaunchErrorResponse) {
-				LaunchErrorResponse launchError = (LaunchErrorResponse) response;
-				throw new ChromeCastException("Application launch error: " + launchError.getReason());
+				throw new LaunchErrorCastException("Application launch error: " + ((LaunchErrorResponse) response).getReason());
 			}
 			return response;
 		} catch (InterruptedException e) {
@@ -374,7 +382,9 @@ public class Channel implements Closeable {
 		} catch (TimeoutException e) {
 			throw new ChromeCastException("Waiting for response timed out", e);
 		} finally {
-			requests.remove(requestId);
+			synchronized (requests) {
+				requests.remove(requestId);
+			}
 		}
 	}
 

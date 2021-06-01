@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -58,7 +59,7 @@ public class Media {
 	public static final String METADATA_STUDIO = "studio";
 	public static final String METADATA_SUBTITLE = "subtitle";
 	public static final String METADATA_TITLE = "title";
-	public static final String METADATA_TRACK_NUMBER = "trackNumber";
+	public static final String METADATA_TRACK_NUMBER = "trackNumber"; //TODO: (Nad) Add rest + implement metadataType + document value type
 	public static final String METADATA_WIDTH = "width";
 
 	/**
@@ -80,6 +81,60 @@ public class Media {
 	}
 
 	/**
+	 * The format of a HLS audio segment.
+	 */
+	public enum HlsSegmentFormat {
+
+		/** AAC Packed audio elementary stream */
+		AAC,
+
+		/** AC3 packed audio elementary stream */
+		AC3,
+
+		/** MP3 packed audio elementary stream */
+		MP3,
+
+		/** MPEG-2 transport stream */
+		TS,
+
+		/** AAC packed MPEG-2 transport stream */
+		TS_AAC,
+
+		/** E-AC3 packed audio elementary stream */
+		E_AC3,
+
+		/** Audio packed in ISO BMFF CMAF Fragmented MP4 */
+		FMP4
+	}
+
+	/**
+	 * The format of a HLS video segment.
+	 */
+	public enum HlsVideoSegmentFormat {
+
+		/** MPEG-2 Transport Stream. Supports AVC */
+		MPEG2_TS,
+
+		/** Video packed in ISO BMFF CMAF Fragmented MP4. Supports AVC and HEVC */
+		FMP4
+	}
+
+	/**
+	 * The media category.
+	 */
+	public enum MediaCategory {
+
+		/** Media is audio only */
+		AUDIO,
+
+		/** Media is video and audio (the default) */
+		VIDEO,
+
+		/** Media is a picture */
+		IMAGE
+	}
+
+	/**
 	 * <p>
 	 * Stream type.
 	 * </p>
@@ -97,33 +152,65 @@ public class Media {
 		BUFFERED, buffered, LIVE, live, NONE, none
 	}
 
-	@Nonnull
-	@JsonProperty
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Map<String, Object> metadata;
-
-	@JsonProperty("contentId")
-	private final String url;
-
-	@JsonProperty
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Double duration;
-
-	@JsonProperty
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final StreamType streamType;
+	private final String contentId; //TODO: (Nad) Add JavaDocs, getters..
 
 	@JsonProperty
 	private final String contentType;
+
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private final String contentUrl;
 
 	@Nonnull
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private final Map<String, Object> customData;
 
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private final Double duration;
+
+	/** Optional Google Assistant deep link to a media entity */
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private final String entity;
+
+	/** The format of the HLS audio segment */
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private final HlsSegmentFormat hlsSegmentFormat;
+
+	/** The format of the HLS video segment */
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private final HlsVideoSegmentFormat hlsVideoSegmentFormat;
+
+	/** The media cateory (audio, video, picture) */
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private final MediaCategory mediaCategory;
+
+	/** The media metadata */
 	@Nonnull
-	@JsonIgnore
-	private final Map<String, Object> textTrackStyle;
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private final Map<String, Object> metadata;
+
+	@Nullable
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private final Long startAbsoluteTime;
+
+	@Nonnull
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private final StreamType streamType;
+
+	/** The style of text track */
+	@Nullable
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	private final TextTrackStyle textTrackStyle;
 
 	@Nonnull
 	@JsonIgnore
@@ -134,38 +221,46 @@ public class Media {
 	}
 
 	public Media(String url, String contentType, Double duration, StreamType streamType) {
-		this(url, contentType, duration, streamType, null, null, null, null);
+		this(url, contentType, null, null, duration, null, null, null, null, null, null, streamType, null, null);
 	}
 
 	public Media(
-		@JsonProperty("contentId") String url,
+		@JsonProperty("contentId") String contentId,
 		@JsonProperty("contentType") String contentType,
-		@JsonProperty("duration") Double duration,
-		@JsonProperty("streamType") StreamType streamType,
+		@JsonProperty("contentUrl") String contentUrl,
 		@JsonProperty("customData") Map<String, Object> customData,
+		@JsonProperty("duration") Double duration,
+		@JsonProperty("entity") String entity,
+		@JsonProperty("hlsSegmentFormat") HlsSegmentFormat hlsSegmentFormat,
+		@JsonProperty("hlsVideoSegmentFormat") HlsVideoSegmentFormat hlsVideoSegmentFormat,
+		@JsonProperty("mediaCategory") MediaCategory mediaCategory,
 		@JsonProperty("metadata") Map<String, Object> metadata,
-		@JsonProperty("textTrackStyle") Map<String, Object> textTrackStyle,
+		@JsonProperty("startAbsoluteTime") Long startAbsoluteTime,
+		@JsonProperty("streamType") StreamType streamType,
+		@JsonProperty("textTrackStyle") TextTrackStyle textTrackStyle,
 		@JsonProperty("tracks") List<Track> tracks
 	) {
-		this.url = url;
+		this.contentId = contentId;
 		this.contentType = contentType;
+		this.contentUrl = contentUrl;
 		this.duration = duration;
+		this.entity = entity;
+		this.hlsSegmentFormat = hlsSegmentFormat;
+		this.hlsVideoSegmentFormat = hlsVideoSegmentFormat;
+		this.mediaCategory = mediaCategory;
+		if (metadata == null || metadata.isEmpty()) {
+			this.metadata = Collections.emptyMap();
+		} else {
+			this.metadata = Collections.unmodifiableMap(new LinkedHashMap<>(metadata));
+		}
+		this.startAbsoluteTime = startAbsoluteTime;
 		this.streamType = streamType;
 		if (customData == null || customData.isEmpty()) {
 			this.customData = Collections.emptyMap();
 		} else {
 			this.customData = Collections.unmodifiableMap(new LinkedHashMap<>(customData));
 		}
-		if (metadata == null || metadata.isEmpty()) {
-			this.metadata = Collections.emptyMap();
-		} else {
-			this.metadata = Collections.unmodifiableMap(new LinkedHashMap<>(metadata));
-		}
-		if (textTrackStyle == null || textTrackStyle.isEmpty()) {
-			this.textTrackStyle = Collections.emptyMap();
-		} else {
-			this.textTrackStyle = Collections.unmodifiableMap(new LinkedHashMap<>(textTrackStyle));
-		}
+		this.textTrackStyle = textTrackStyle;
 		if (tracks == null || tracks.isEmpty()) {
 			this.tracks = Collections.emptyList();
 		} else {
@@ -173,12 +268,34 @@ public class Media {
 		}
 	}
 
-	public String getUrl() {
-		return url;
+
+	public String getContentId() {
+		return contentId;
 	}
 
 	public String getContentType() {
 		return contentType;
+	}
+
+	public String getContentUrl() {
+		return contentUrl;
+	}
+
+	/**
+	 * Two different fields might hold the media URL, either {@code contentId}
+	 * or {@code contentUrl}. The "rules" is that {@code contentUrl} is the URL
+	 * if it is populated, otherwise {@code contentId} is the URL.
+	 * <p>
+	 * This method returns the URL for this {@link Media} instance according to
+	 * these rules.
+	 *
+	 * @return The URL for this {@link Media} or {@code null} if none is
+	 *         defined.
+	 */
+	@Nullable
+	@JsonIgnore
+	public String getUrl() {
+		return Util.isBlank(contentUrl) ? contentId : contentUrl;
 	}
 
 	public Double getDuration() {
@@ -209,11 +326,11 @@ public class Media {
 		}
 
 		Integer ordinal = (Integer) metadata.get(METADATA_TYPE);
-		return ordinal < MetadataType.values().length ? MetadataType.values()[ordinal] : GENERIC;
+		return ordinal < MetadataType.values().length ? MetadataType.values()[ordinal] : GENERIC; //TODO: (Nad) Look into this (ordinal)
 	}
 
-	@Nonnull
-	public Map<String, Object> getTextTrackStyle() {
+	@Nullable
+	public TextTrackStyle getTextTrackStyle() {
 		return textTrackStyle;
 	}
 
@@ -223,8 +340,8 @@ public class Media {
 	}
 
 	@Override
-	public final int hashCode() {
-		return Arrays.hashCode(new Object[] {this.url, this.contentType, this.streamType, this.duration});
+	public final int hashCode() { //TODO: (Nad) Regen
+		return Arrays.hashCode(new Object[] {this.contentUrl, this.contentType, this.streamType, this.duration});
 	}
 
 	@Override
@@ -240,21 +357,21 @@ public class Media {
 		}
 		final Media that = (Media) obj;
 		return
-			this.url == null ? that.url == null : this.url.equals(that.url) &&
+			this.contentUrl == null ? that.contentUrl == null : this.contentUrl.equals(that.contentUrl) &&
 			this.contentType == null ? that.contentType == null : this.contentType.equals(that.contentType) &&
 			this.streamType == null ? that.streamType == null : this.streamType.equals(that.streamType) &&
 			this.duration == null ? that.duration == null : this.duration.equals(that.duration);
 	}
 
 	@Override
-	public String toString() {
+	public String toString() { //TODO: (Nad) Update with new fields
 		StringBuilder builder = new StringBuilder(getClass().getSimpleName());
 		builder.append(" [");
 		if (metadata != null) {
 			builder.append("metadata=").append(metadata).append(", ");
 		}
-		if (url != null) {
-			builder.append("url=").append(url).append(", ");
+		if (contentUrl != null) {
+			builder.append("url=").append(contentUrl).append(", ");
 		}
 		if (duration != null) {
 			builder.append("duration=").append(duration).append(", ");

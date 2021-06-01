@@ -24,6 +24,7 @@ import org.digitalmediaserver.chromecast.api.StandardResponse.DeviceRemovedRespo
 import org.digitalmediaserver.chromecast.api.StandardResponse.DeviceUpdatedResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.InvalidResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.LaunchErrorResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.LoadCancelledResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.LoadFailedResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MediaStatusResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MultizoneStatusResponse;
@@ -373,6 +374,8 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 		INVALID(InvalidResponse.class),
 
 		LAUNCH_ERROR(LaunchErrorResponse.class),
+
+		LOAD_CANCELLED(LoadCancelledResponse.class),
 
 		LOAD_FAILED(LoadFailedResponse.class),
 

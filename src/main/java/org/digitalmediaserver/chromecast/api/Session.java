@@ -1,11 +1,13 @@
 package org.digitalmediaserver.chromecast.api;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
+import org.digitalmediaserver.chromecast.api.Media.StreamType;
 
 
 //TODO: (Nad) Header + JavaDocs
@@ -93,6 +95,39 @@ public class Session {
 	) throws IOException {
 		return channel.load(senderId, destinationId, id, media, autoplay, currentTime, synchronous, customData);
 	}
+
+	@Nullable
+	public MediaStatus load(String mediaTitle, String thumb, String url, String contentType) throws IOException { //TODO: (Nad) Too crude to keep?
+		Map<String, Object> metadata = new HashMap<>(2); //TODO: (Nad) This
+		metadata.put("title", mediaTitle);
+		metadata.put("thumb", thumb);
+		return channel.load(
+			senderId,
+			destinationId,
+			id,
+			new Media(
+				url,
+				contentType == null ? Util.getContentType(url) : contentType, //TODO: (Nad) Find another way than getContentType()
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				metadata,
+				null,
+				StreamType.NONE,
+				null,
+				null
+			),
+			false, //TODO: (Nad) Parameterize
+			0d,
+			false,
+			null
+		);
+	}
+
 
 	@Nullable
 	public MediaStatus play(long mediaSessionId, boolean synchronous) throws IOException {

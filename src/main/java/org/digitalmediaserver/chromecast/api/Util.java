@@ -84,7 +84,7 @@ final class Util {
 		return result;
 	}
 
-	public static String getContentType(String url) {
+	public static String getContentType(String url) { //TODO: (Nad) Terrible... remove?
 		HttpURLConnection connection = null;
 		try {
 			connection = (HttpURLConnection) new URL(url).openConnection();

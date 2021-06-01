@@ -467,21 +467,22 @@ public class ChromeCast {
 	}
 
 	/**
-	 * <p>
-	 * Stops currently running application
-	 * </p>
+	 * Stops specified {@link Application} if it is running.
 	 *
-	 * <p>
-	 * If no application is running at the moment then exception is thrown.
-	 * </p>
-	 *
-	 * @throws IOException
+	 * @param application the {@link Application} to stop.
+	 * @param synchronous if {@code true}, the method will block and wait for a
+	 *            response which will be returned. If {@code false}, the method
+	 *            will not block and {@code null} will always be returned.
+	 * @return The resulting {@link ReceiverStatus} if {@code synchronous} is
+	 *         {@code true} and one is returned from the cast device.
+	 * @throws IOException If an error occurs during the operation.
 	 */
-	public void stopApplication(@Nullable Application application, boolean synchronous) throws IOException { //TODO: (Nad) Fix
+	@Nullable
+	public ReceiverStatus stopApplication(@Nullable Application application, boolean synchronous) throws IOException {
 		if (application == null) {
-			return;
+			return null;
 		}
-		channel().stopApplication(application, synchronous);
+		return channel().stopApplication(application, synchronous);
 	}
 
 	public Session startSession(

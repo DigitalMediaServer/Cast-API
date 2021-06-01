@@ -87,7 +87,7 @@ public class ChannelTest {
 		assertNotNull(media.getMetadata());
 		assertEquals(MetadataType.GENERIC, media.getMetadataType());
 		assertEquals(StreamType.NONE, media.getStreamType());
-		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("", media.getUrl());
 		Map<String, Object> metadata = media.getMetadata();
@@ -136,7 +136,7 @@ public class ChannelTest {
 		assertNotNull(media.getMetadata());
 		assertEquals(MetadataType.GENERIC, media.getMetadataType());
 		assertNull(media.getStreamType());
-		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("http://192.168.2.139:9080/audio/99fd6998-aa4d-4764-9b41-c6869dcfc85f.mp3", media.getUrl());
 		assertTrue(media.getMetadata().isEmpty());
@@ -180,7 +180,7 @@ public class ChannelTest {
 		assertTrue(media.getMetadata().isEmpty());
 		assertEquals(MetadataType.GENERIC, media.getMetadataType());
 		assertEquals(StreamType.buffered, media.getStreamType());
-		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("http://192.168.1.6:8192/audio-123-mp3", media.getUrl());
 		assertNull(mediaStatus.getLoadingItemId());
@@ -191,7 +191,7 @@ public class ChannelTest {
 		assertTrue(media.getMetadata().isEmpty());
 		assertEquals(MetadataType.GENERIC, media.getMetadataType());
 		assertEquals(StreamType.buffered, media.getStreamType());
-		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("http://192.168.1.6:8192/audio-123-mp3", media.getUrl());
 		assertEquals(1L, mediaStatus.getMediaSessionId());
@@ -279,7 +279,7 @@ public class ChannelTest {
 		assertEquals("http://lh3.googleusercontent.com/UirYk5XiPVHW2HHRtoVlvHF10_Of8VtYU9DL18qwFsFodXd3hXo60yX1BfV5up5ClCKhgZvLPUY", images.get(0).get("url"));
 		assertEquals(MetadataType.GENERIC, media.getMetadataType());
 		assertEquals(StreamType.BUFFERED, media.getStreamType());
-		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("http://audioURL", media.getUrl());
 		volume = mediaStatus.getVolume();
@@ -360,7 +360,7 @@ public class ChannelTest {
 		assertEquals("http://lh3.googleusercontent.com/UirYk5XiPVHW2HHRtoVlvHF10_Of8VtYU9DL18qwFsFodXd3hXo60yX1BfV5up5ClCKhgZvLPUY", images.get(0).get("url"));
 		assertEquals(MetadataType.MUSIC_TRACK, media.getMetadataType());
 		assertEquals(StreamType.BUFFERED, media.getStreamType());
-		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("http://audioURL", media.getUrl());
 		volume = mediaStatus.getVolume();
@@ -441,7 +441,7 @@ public class ChannelTest {
 		assertEquals("http://lh3.googleusercontent.com/UirYk5XiPVHW2HHRtoVlvHF10_Of8VtYU9DL18qwFsFodXd3hXo60yX1BfV5up5ClCKhgZvLPUY", images.get(0).get("url"));
 		assertEquals(MetadataType.GENERIC, media.getMetadataType());
 		assertEquals(StreamType.BUFFERED, media.getStreamType());
-		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("http://audioURL", media.getUrl());
 		volume = mediaStatus.getVolume();
@@ -485,7 +485,7 @@ public class ChannelTest {
 		assertTrue(media.getMetadata().isEmpty());
 		assertEquals(MetadataType.GENERIC, media.getMetadataType());
 		assertEquals(StreamType.buffered, media.getStreamType());
-		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("/public/Videos/Movies/FileB.mp4", media.getUrl());
 		volume = mediaStatus.getVolume();
@@ -529,7 +529,7 @@ public class ChannelTest {
 		assertTrue(media.getMetadata().isEmpty());
 		assertEquals(MetadataType.GENERIC, media.getMetadataType());
 		assertEquals(StreamType.buffered, media.getStreamType());
-		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("/public/Videos/Movies/FileB.mp4", media.getUrl());
 		volume = mediaStatus.getVolume();
@@ -566,7 +566,7 @@ public class ChannelTest {
 		assertTrue(media.getMetadata().isEmpty());
 		assertEquals(MetadataType.GENERIC, media.getMetadataType());
 		assertNull(media.getStreamType());
-		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4", media.getUrl());
 		customData = items.get(0).getCustomData();
@@ -623,7 +623,7 @@ public class ChannelTest {
 		assertNotNull(media.getMetadata());
 		assertEquals(MetadataType.GENERIC, media.getMetadataType());
 		assertNull(media.getStreamType());
-		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("http://192.168.2.139:9080/audio/99fd6998-aa4d-4764-9b41-c6869dcfc85f.mp3", media.getUrl());
 		assertTrue(media.getMetadata().isEmpty());
@@ -664,7 +664,7 @@ public class ChannelTest {
 		assertEquals("http://lh3.googleusercontent.com/UirYk5XiPVHW2HHRtoVlvHF10_Of8VtYU9DL18qwFsFodXd3hXo60yX1BfV5up5ClCKhgZvLPUY", images.get(0).get("url"));
 		assertEquals(MetadataType.MUSIC_TRACK, media.getMetadataType());
 		assertEquals(StreamType.BUFFERED, media.getStreamType());
-		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("http://audioURL", media.getUrl());
 		volume = mediaStatus.getVolume();
