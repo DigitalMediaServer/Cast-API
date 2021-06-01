@@ -28,7 +28,7 @@ import javax.annotation.concurrent.Immutable;
 public class Volume {
 
 	protected static final Float DEFAULT_INCREMENT = 0.05f;
-	protected static final String DEFAULT_CONTROL_TYPE = "attenuation";
+	protected static final String DEFAULT_CONTROL_TYPE = "attenuation"; //TODO: (Nad) Alternative: "fixed"
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private final Float level;

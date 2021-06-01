@@ -107,7 +107,7 @@ public class MediaStatusTest {
 		assertEquals(246d, media.getDuration(), 0.1);
 		assertEquals(Media.StreamType.BUFFERED, media.getStreamType());
 		assertEquals("BUFFERED", media.getContentType());
-		assertTrue(media.getTextTrackStyle().isEmpty());
+		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals(1, media.getCustomData().size());
 		assertNotNull(media.getCustomData().get("status"));

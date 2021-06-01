@@ -16,6 +16,7 @@
 package org.digitalmediaserver.chromecast.api;
 
 import java.io.IOException;
+import javax.annotation.Nullable;
 
 /**
  * Generic error, which may happen during interaction with ChromeCast device.
@@ -31,5 +32,51 @@ public class ChromeCastException extends IOException {
 
 	public ChromeCastException(String message, Throwable cause) {
 		super(message, cause);
+	}
+
+	//TODO: (Nad) JavaDocs
+	public static class LoadCancelledCastException extends ChromeCastException {
+
+		private static final long serialVersionUID = 1L;
+
+		@Nullable
+		private final Integer itemId;
+
+		public LoadCancelledCastException(String message, @Nullable Integer itemId) {
+			super(message);
+			this.itemId = itemId;
+		}
+
+		@Nullable
+		public Integer getItemId() {
+			return itemId;
+		}
+	}
+
+	public static class LoadFailedCastException extends ChromeCastException {
+
+		private static final long serialVersionUID = 1L;
+
+		public LoadFailedCastException(String message) {
+			super(message);
+		}
+	}
+
+	public static class InvalidCastException extends ChromeCastException {
+
+		private static final long serialVersionUID = 1L;
+
+		public InvalidCastException(String message) {
+			super(message);
+		}
+	}
+
+	public static class LaunchErrorCastException extends ChromeCastException {
+
+		private static final long serialVersionUID = 1L;
+
+		public LaunchErrorCastException(String message) {
+			super(message);
+		}
 	}
 }
