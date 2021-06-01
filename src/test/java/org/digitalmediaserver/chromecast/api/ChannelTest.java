@@ -179,7 +179,7 @@ public class ChannelTest {
 		assertEquals(389.355102, media.getDuration().doubleValue(), 0.0);
 		assertTrue(media.getMetadata().isEmpty());
 		assertEquals(MetadataType.GENERIC, media.getMetadataType());
-		assertEquals(StreamType.buffered, media.getStreamType());
+		assertEquals(StreamType.BUFFERED, media.getStreamType());
 		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("http://192.168.1.6:8192/audio-123-mp3", media.getUrl());
@@ -190,7 +190,7 @@ public class ChannelTest {
 		assertEquals(389.355102, media.getDuration().doubleValue(), 0.0);
 		assertTrue(media.getMetadata().isEmpty());
 		assertEquals(MetadataType.GENERIC, media.getMetadataType());
-		assertEquals(StreamType.buffered, media.getStreamType());
+		assertEquals(StreamType.BUFFERED, media.getStreamType());
 		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("http://192.168.1.6:8192/audio-123-mp3", media.getUrl());
@@ -484,7 +484,7 @@ public class ChannelTest {
 		assertNull(media.getDuration());
 		assertTrue(media.getMetadata().isEmpty());
 		assertEquals(MetadataType.GENERIC, media.getMetadataType());
-		assertEquals(StreamType.buffered, media.getStreamType());
+		assertEquals(StreamType.BUFFERED, media.getStreamType());
 		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("/public/Videos/Movies/FileB.mp4", media.getUrl());
@@ -528,7 +528,7 @@ public class ChannelTest {
 		assertNull(media.getDuration());
 		assertTrue(media.getMetadata().isEmpty());
 		assertEquals(MetadataType.GENERIC, media.getMetadataType());
-		assertEquals(StreamType.buffered, media.getStreamType());
+		assertEquals(StreamType.BUFFERED, media.getStreamType());
 		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("/public/Videos/Movies/FileB.mp4", media.getUrl());

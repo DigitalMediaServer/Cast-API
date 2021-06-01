@@ -81,11 +81,12 @@ public class MediaTest {
 
 		String json = jsonMapper.writeValueAsString(m);
 
+		assertThat(json, containsString("contentId"));
+		assertThat(json, containsString("contentType"));
+		assertThat(json, containsString("streamType"));
 		assertThat(json, not(containsString("duration")));
-		assertThat(json, not(containsString("streamType")));
-		assertThat(json, containsString("customData"));
-		assertThat(json, containsString("metadata"));
+		assertThat(json, not(containsString("customData")));
+		assertThat(json, not(containsString("metadata")));
 		assertThat(json, not(containsString("metadataType")));
 	}
-
 }

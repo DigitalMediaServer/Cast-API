@@ -2,6 +2,7 @@ package org.digitalmediaserver.chromecast.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.digitalmediaserver.chromecast.api.Media.StreamType;
 import org.digitalmediaserver.chromecast.api.MediaStatus.IdleReason;
 import org.digitalmediaserver.chromecast.api.MediaStatus.PlayerState;
 import org.digitalmediaserver.chromecast.api.MediaStatus.RepeatMode;
@@ -36,7 +37,7 @@ public class MediaStatusResponseTest {
 			Integer.valueOf(0),
 			4,
 			new Volume(0.8f, false, 0.1f, 0.02, "sometype"),
-			new Media("someURL", "mime"),
+			Media.builder("someURL", "mime", StreamType.NONE).build(),
 			RepeatMode.REPEAT_ALL,
 			IdleReason.FINISHED
 		);
@@ -49,11 +50,13 @@ public class MediaStatusResponseTest {
 			5.34,
 			new HashMap<String, Object>(),
 			Integer.valueOf(19),
-			Arrays.asList(new Item[] {new Item(false, new HashMap<String, Object>(), 5L, new Media("someUrl", "mimeType"))}),
+			Arrays.asList(new Item[] {
+				new Item(false, new HashMap<String, Object>(), 5L, Media.builder("someUrl", "mimeType", StreamType.NONE).build())
+			}),
 			Integer.valueOf(2),
 			19,
 			new Volume(0.5f, false, 0.1f, 0.02, "sometype"),
-			new Media("someURL", "mime"),
+			Media.builder("someURL", "mime", StreamType.NONE).build(),
 			RepeatMode.REPEAT_OFF,
 			IdleReason.CANCELLED
 		);
@@ -66,11 +69,13 @@ public class MediaStatusResponseTest {
 			19.93,
 			new HashMap<String, Object>(),
 			Integer.valueOf(11),
-			Arrays.asList(new Item[] {new Item(true, new HashMap<String, Object>(), 18L, new Media("someUrl", "mimeType"))}),
+			Arrays.asList(new Item[] {
+				new Item(true, new HashMap<String, Object>(), 18L, Media.builder("someUrl", "mimeType", StreamType.NONE).build())
+			}),
 			Integer.valueOf(5),
 			32,
 			new Volume(1f, true, 0.1f, 0.02, "sometype"),
-			new Media("someURL", "mime"),
+			Media.builder("someURL", "mime", StreamType.NONE).build(),
 			RepeatMode.REPEAT_SINGLE,
 			IdleReason.COMPLETED
 		);

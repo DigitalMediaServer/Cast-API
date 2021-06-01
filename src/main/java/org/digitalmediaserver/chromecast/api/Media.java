@@ -15,16 +15,18 @@
  */
 package org.digitalmediaserver.chromecast.api;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import static org.digitalmediaserver.chromecast.api.Media.MetadataType.GENERIC;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -135,37 +137,63 @@ public class Media {
 	}
 
 	/**
-	 * <p>
-	 * Stream type.
-	 * </p>
-	 *
+	 * Represents the stream types.
 	 * <p>
 	 * Some receivers use upper-case (like Pandora), some use lower-case (like
 	 * Google Audio), duplicate elements to support both.
-	 * </p>
 	 *
 	 * @see <a href=
 	 *      "https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media#.StreamType">
 	 *      https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media#.StreamType</a>
 	 */
 	public enum StreamType {
-		BUFFERED, buffered, LIVE, live, NONE, none
+		BUFFERED,
+		LIVE,
+		NONE;
+
+		@Nullable
+		@JsonCreator
+		public static StreamType typeOf(String streamType) {
+			if (Util.isBlank(streamType)) {
+				return null;
+			}
+			String typeString = streamType.toUpperCase(Locale.ROOT);
+			for (StreamType type : values()) {
+				if (typeString.equals(type.name())) {
+					return type;
+				}
+			}
+			return null;
+		}
 	}
 
-	private final String contentId; //TODO: (Nad) Add JavaDocs, getters..
+	/** Typically the URL of the media */
+	@Nonnull
+	@JsonProperty
+	private final String contentId;
 
+	/** The content MIME-type */
+	@Nonnull
 	@JsonProperty
 	private final String contentType;
 
+	/**
+	 * Optional media URL, to allow using {@code contentId} for real ID. If
+	 * {@code contentUrl} is provided, it will be used as media the URL,
+	 * otherwise {@code contentId} will be used as the media URL.
+	 */
+	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private final String contentUrl;
 
+	/** Application-specific media information */
 	@Nonnull
 	@JsonProperty
-	@JsonInclude(JsonInclude.Include.NON_NULL)
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	private final Map<String, Object> customData;
 
+	/** The media duration */
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private final Double duration;
@@ -193,17 +221,22 @@ public class Media {
 	/** The media metadata */
 	@Nonnull
 	@JsonProperty
-	@JsonInclude(JsonInclude.Include.NON_NULL)
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	private final Map<String, Object> metadata;
 
+	/**
+	 * Provides absolute time (Epoch Unix time in seconds) for live streams. For
+	 * live event it would be the time the event started, otherwise it will be
+	 * start of the seekable range when the streaming started.
+	 */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private final Long startAbsoluteTime;
 
+	/** The stream type (required) */
 	@Nonnull
 	@JsonProperty
-	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private final StreamType streamType;
 
 	/** The style of text track */
@@ -212,18 +245,37 @@ public class Media {
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private final TextTrackStyle textTrackStyle;
 
+	/** The media tracks */
 	@Nonnull
-	@JsonIgnore
+	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	private final List<Track> tracks;
 
-	public Media(String url, String contentType) {
-		this(url, contentType, null, null);
-	}
-
-	public Media(String url, String contentType, Double duration, StreamType streamType) {
-		this(url, contentType, null, null, duration, null, null, null, null, null, null, streamType, null, null);
-	}
-
+	/**
+	 * Creates a new instance using the specified parameters.
+	 *
+	 * @param contentId the content ID, typically the URL of the media
+	 *            (required).
+	 * @param contentType the content MIME-type.
+	 * @param contentUrl the optional media URL, to allow using
+	 *            {@code contentId} for real ID. If {@code contentUrl} is
+	 *            provided, it will be used as media the URL, otherwise
+	 *            {@code contentId} will be used as the media URL.
+	 * @param customData the application-specific media information.
+	 * @param duration the media duration.
+	 * @param entity the optional Google Assistant deep link to a media entity.
+	 * @param hlsSegmentFormat the format of the HLS audio segment.
+	 * @param hlsVideoSegmentFormat the format of the HLS video segment.
+	 * @param mediaCategory the media category.
+	 * @param metadata the media metadata.
+	 * @param startAbsoluteTime the absolute time (Epoch Unix time in seconds)
+	 *            for live streams. For live event it would be the time the
+	 *            event started, otherwise it will be start of the seekable
+	 *            range when the streaming started.
+	 * @param streamType the stream type (required).
+	 * @param textTrackStyle the style of text track.
+	 * @param tracks the media {@link Track}s.
+	 */
 	public Media(
 		@JsonProperty("contentId") String contentId,
 		@JsonProperty("contentType") String contentType,
@@ -268,15 +320,29 @@ public class Media {
 		}
 	}
 
-
+	/**
+	 * @return The content ID, typically the URL of the media.
+	 */
+	@Nonnull
 	public String getContentId() {
 		return contentId;
 	}
 
+	/**
+	 * @return The content MIME-type.
+	 */
+	@Nonnull
 	public String getContentType() {
 		return contentType;
 	}
 
+	/**
+	 * @return The optional media URL, to allow using {@code contentId} for real
+	 *         ID. If {@code contentUrl} is provided, it will be used as media
+	 *         the URL, otherwise {@code contentId} will be used as the media
+	 *         URL.
+	 */
+	@Nullable
 	public String getContentUrl() {
 		return contentUrl;
 	}
@@ -298,22 +364,96 @@ public class Media {
 		return Util.isBlank(contentUrl) ? contentId : contentUrl;
 	}
 
-	public Double getDuration() {
-		return duration;
-	}
-
-	public StreamType getStreamType() {
-		return streamType;
-	}
-
+	/**
+	 * @return The application-specific media information.
+	 */
 	@Nonnull
 	public Map<String, Object> getCustomData() {
 		return customData;
 	}
 
+	/**
+	 * @return The media duration.
+	 */
+	@Nullable
+	public Double getDuration() {
+		return duration;
+	}
+
+	/**
+	 * @return The optional Google Assistant deep link to a media entity.
+	 */
+	@Nullable
+	public String getEntity() {
+		return entity;
+	}
+
+	/**
+	 * @return The format of the HLS audio segment.
+	 */
+	@Nullable
+	public HlsSegmentFormat getHlsSegmentFormat() {
+		return hlsSegmentFormat;
+	}
+
+	/**
+	 * @return The format of the HLS video segment.
+	 */
+	@Nullable
+	public HlsVideoSegmentFormat getHlsVideoSegmentFormat() {
+		return hlsVideoSegmentFormat;
+	}
+
+	/**
+	 * @return The media category (audio, video, picture).
+	 */
+	@Nullable
+	public MediaCategory getMediaCategory() {
+		return mediaCategory;
+	}
+
+	/**
+	 * @return The media metadata.
+	 */
 	@Nonnull
 	public Map<String, Object> getMetadata() {
 		return metadata;
+	}
+
+	/**
+	 * @return The absolute time (Epoch Unix time in seconds) for live streams.
+	 *         For live event it would be the time the event started, otherwise
+	 *         it will be start of the seekable range when the streaming
+	 *         started.
+	 */
+	@Nullable
+	public Long getStartAbsoluteTime() {
+		return startAbsoluteTime;
+	}
+
+	/**
+	 * @return The stream type.
+	 */
+	@Nonnull
+	public StreamType getStreamType() {
+		return streamType;
+	}
+
+	/**
+	 * @return The style of text track.
+	 */
+	@Nullable
+	public TextTrackStyle getTextTrackStyle() {
+		return textTrackStyle;
+	}
+
+	/**
+	 *
+	 * @return The media {@link Track}s.
+	 */
+	@Nonnull
+	public List<Track> getTracks() {
+		return tracks;
 	}
 
 	/**
@@ -329,61 +469,71 @@ public class Media {
 		return ordinal < MetadataType.values().length ? MetadataType.values()[ordinal] : GENERIC; //TODO: (Nad) Look into this (ordinal)
 	}
 
-	@Nullable
-	public TextTrackStyle getTextTrackStyle() {
-		return textTrackStyle;
-	}
-
-	@Nonnull
-	public List<Track> getTracks() {
-		return tracks;
+	@Override
+	public int hashCode() {
+		return Objects.hash(
+			contentId, contentType, contentUrl, customData, duration, entity, hlsSegmentFormat,
+			hlsVideoSegmentFormat, mediaCategory, metadata, startAbsoluteTime, streamType, textTrackStyle, tracks
+		);
 	}
 
 	@Override
-	public final int hashCode() { //TODO: (Nad) Regen
-		return Arrays.hashCode(new Object[] {this.contentUrl, this.contentType, this.streamType, this.duration});
-	}
-
-	@Override
-	public final boolean equals(Object obj) {
-		if (obj == null) {
-			return false;
-		}
-		if (obj == this) {
+	public boolean equals(Object obj) {
+		if (this == obj) {
 			return true;
 		}
 		if (!(obj instanceof Media)) {
 			return false;
 		}
-		final Media that = (Media) obj;
-		return
-			this.contentUrl == null ? that.contentUrl == null : this.contentUrl.equals(that.contentUrl) &&
-			this.contentType == null ? that.contentType == null : this.contentType.equals(that.contentType) &&
-			this.streamType == null ? that.streamType == null : this.streamType.equals(that.streamType) &&
-			this.duration == null ? that.duration == null : this.duration.equals(that.duration);
+		Media other = (Media) obj;
+		return Objects.equals(contentId, other.contentId) && Objects.equals(contentType, other.contentType) &&
+			Objects.equals(contentUrl, other.contentUrl) && Objects.equals(customData, other.customData) &&
+			Objects.equals(duration, other.duration) && Objects.equals(entity, other.entity) &&
+			hlsSegmentFormat == other.hlsSegmentFormat && hlsVideoSegmentFormat == other.hlsVideoSegmentFormat &&
+			mediaCategory == other.mediaCategory && Objects.equals(metadata, other.metadata) &&
+			Objects.equals(startAbsoluteTime, other.startAbsoluteTime) && streamType == other.streamType &&
+			Objects.equals(textTrackStyle, other.textTrackStyle) && Objects.equals(tracks, other.tracks);
 	}
 
 	@Override
-	public String toString() { //TODO: (Nad) Update with new fields
-		StringBuilder builder = new StringBuilder(getClass().getSimpleName());
-		builder.append(" [");
-		if (metadata != null) {
-			builder.append("metadata=").append(metadata).append(", ");
-		}
-		if (contentUrl != null) {
-			builder.append("url=").append(contentUrl).append(", ");
-		}
-		if (duration != null) {
-			builder.append("duration=").append(duration).append(", ");
-		}
-		if (streamType != null) {
-			builder.append("streamType=").append(streamType).append(", ");
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append(getClass().getSimpleName()).append(" [");
+		if (contentId != null) {
+			builder.append("contentId=").append(contentId).append(", ");
 		}
 		if (contentType != null) {
 			builder.append("contentType=").append(contentType).append(", ");
 		}
+		if (contentUrl != null) {
+			builder.append("contentUrl=").append(contentUrl).append(", ");
+		}
 		if (customData != null) {
 			builder.append("customData=").append(customData).append(", ");
+		}
+		if (duration != null) {
+			builder.append("duration=").append(duration).append(", ");
+		}
+		if (entity != null) {
+			builder.append("entity=").append(entity).append(", ");
+		}
+		if (hlsSegmentFormat != null) {
+			builder.append("hlsSegmentFormat=").append(hlsSegmentFormat).append(", ");
+		}
+		if (hlsVideoSegmentFormat != null) {
+			builder.append("hlsVideoSegmentFormat=").append(hlsVideoSegmentFormat).append(", ");
+		}
+		if (mediaCategory != null) {
+			builder.append("mediaCategory=").append(mediaCategory).append(", ");
+		}
+		if (metadata != null) {
+			builder.append("metadata=").append(metadata).append(", ");
+		}
+		if (startAbsoluteTime != null) {
+			builder.append("startAbsoluteTime=").append(startAbsoluteTime).append(", ");
+		}
+		if (streamType != null) {
+			builder.append("streamType=").append(streamType).append(", ");
 		}
 		if (textTrackStyle != null) {
 			builder.append("textTrackStyle=").append(textTrackStyle).append(", ");
@@ -393,5 +543,329 @@ public class Media {
 		}
 		builder.append("]");
 		return builder.toString();
+	}
+
+	/**
+	 * Creates a new {@link MediaBuilder} using the specified parameters.
+	 *
+	 * @param contentId the content ID, typically the URL of the media.
+	 * @param contentType the content MIME-type.
+	 * @param streamType the stream type.
+	 * @return The new {@link MediaBuilder}.
+	 */
+	public static MediaBuilder builder(
+		@Nonnull String contentId,
+		@Nonnull String contentType,
+		@Nonnull StreamType streamType
+	) {
+		return new MediaBuilder(contentId, contentType, streamType);
+	}
+
+	/**
+	 * A builder class for the {@link Media} class.
+	 *
+	 * @author Nadahar
+	 */
+	public static class MediaBuilder {
+
+		/** Typically the URL of the media */
+		protected final String contentId;
+
+		/** The content MIME-type */
+		protected final String contentType;
+
+		/**
+		 * Optional media URL, to allow using {@code contentId} for real ID. If
+		 * {@code contentUrl} is provided, it will be used as media the URL,
+		 * otherwise {@code contentId} will be used as the media URL.
+		 */
+		protected String contentUrl;
+
+		/** Application-specific media information */
+		protected Map<String, Object> customData;
+
+		/** The media duration */
+		protected Double duration;
+
+		/** Optional Google Assistant deep link to a media entity */
+		protected String entity;
+
+		/** The format of the HLS audio segment */
+		protected HlsSegmentFormat hlsSegmentFormat;
+
+		/** The format of the HLS video segment */
+		protected HlsVideoSegmentFormat hlsVideoSegmentFormat;
+
+		/** The media category (audio, video, picture) */
+		protected MediaCategory mediaCategory;
+
+		/** The media metadata */
+		protected Map<String, Object> metadata;
+
+		/**
+		 * Provides absolute time (Epoch Unix time in seconds) for live streams. For
+		 * live event it would be the time the event started, otherwise it will be
+		 * start of the seekable range when the streaming started.
+		 */
+		protected Long startAbsoluteTime;
+
+		/** The stream type (required) */
+		protected final StreamType streamType;
+
+		/** The style of text track */
+		protected TextTrackStyle textTrackStyle;
+
+		/** The media tracks */
+		protected List<Track> tracks;
+
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param contentId the content ID, typically the URL of the media.
+		 * @param contentType the content MIME-type.
+		 * @param streamType the stream type.
+		 */
+		public MediaBuilder(@Nonnull String contentId, @Nonnull String contentType, @Nonnull StreamType streamType) {
+			Util.requireNotBlank(contentId, "contentId");
+			Util.requireNotBlank(contentType, "contentType");
+			Util.requireNotNull(streamType, "streamType");
+			this.contentId = contentId;
+			this.contentType = contentType;
+			this.streamType = streamType;
+		}
+
+		/**
+		 * @return The content ID, typically the URL of the media.
+		 */
+		public String contentId() {
+			return contentId;
+		}
+
+		/**
+		 * @return The content MIME-type.
+		 */
+		public String contentType() {
+			return contentType;
+		}
+
+		/**
+		 * @return The optional media URL, to allow using {@code contentId} for
+		 *         real ID. If {@code contentUrl} is provided, it will be used
+		 *         as media the URL, otherwise {@code contentId} will be used as
+		 *         the media URL.
+		 */
+		public String contentUrl() {
+			return contentUrl;
+		}
+
+		/**
+		 * @param contentUrl the optional media URL, to allow using
+		 *            {@code contentId} for real ID. If {@code contentUrl} is
+		 *            provided, it will be used as media the URL, otherwise
+		 *            {@code contentId} will be used as the media URL.
+		 * @return This {@link MediaBuilder}.
+		 */
+		public MediaBuilder contentUrl(String contentUrl) {
+			this.contentUrl = contentUrl;
+			return this;
+		}
+
+		/**
+		 * @return The application-specific media information.
+		 */
+		public Map<String, Object> customData() {
+			return customData;
+		}
+
+		/**
+		 * @param customData the application-specific media information.
+		 * @return This {@link MediaBuilder}.
+		 */
+		public MediaBuilder customData(Map<String, Object> customData) {
+			this.customData = customData;
+			return this;
+		}
+
+		/**
+		 * @return The media duration.
+		 */
+		public Double duration() {
+			return duration;
+		}
+
+		/**
+		 * @param duration the media duration.
+		 * @return This {@link MediaBuilder}.
+		 */
+		public MediaBuilder duration(Double duration) {
+			this.duration = duration;
+			return this;
+		}
+
+		/**
+		 * @return The optional Google Assistant deep link to a media entity.
+		 */
+		public String entity() {
+			return entity;
+		}
+
+		/**
+		 * @param entity the optional Google Assistant deep link to a media
+		 *            entity.
+		 * @return This {@link MediaBuilder}.
+		 */
+		public MediaBuilder entity(String entity) {
+			this.entity = entity;
+			return this;
+		}
+
+		/**
+		 * @return The format of the HLS audio segment.
+		 */
+		public HlsSegmentFormat hlsSegmentFormat() {
+			return hlsSegmentFormat;
+		}
+
+		/**
+		 * @param hlsSegmentFormat the format of the HLS audio segment.
+		 * @return This {@link MediaBuilder}.
+		 */
+		public MediaBuilder hlsSegmentFormat(HlsSegmentFormat hlsSegmentFormat) {
+			this.hlsSegmentFormat = hlsSegmentFormat;
+			return this;
+		}
+
+		/**
+		 * @return The format of the HLS video segment.
+		 */
+		public HlsVideoSegmentFormat hlsVideoSegmentFormat() {
+			return hlsVideoSegmentFormat;
+		}
+
+		/**
+		 * @param hlsVideoSegmentFormat the format of the HLS video segment.
+		 * @return This {@link MediaBuilder}.
+		 */
+		public MediaBuilder hlsVideoSegmentFormat(HlsVideoSegmentFormat hlsVideoSegmentFormat) {
+			this.hlsVideoSegmentFormat = hlsVideoSegmentFormat;
+			return this;
+		}
+
+		/**
+		 * @return The media category.
+		 */
+		public MediaCategory mediaCategory() {
+			return mediaCategory;
+		}
+
+		/**
+		 * @param mediaCategory the media category.
+		 * @return This {@link MediaBuilder}.
+		 */
+		public MediaBuilder mediaCategory(MediaCategory mediaCategory) {
+			this.mediaCategory = mediaCategory;
+			return this;
+		}
+
+		/**
+		 * @return The media metadata.
+		 */
+		public Map<String, Object> metadata() {
+			return metadata;
+		}
+
+		/**
+		 * @param metadata the media metadata.
+		 * @return This {@link MediaBuilder}.
+		 */
+		public MediaBuilder metadata(Map<String, Object> metadata) {
+			this.metadata = metadata;
+			return this;
+		}
+
+		/**
+		 * @return The absolute time (Epoch Unix time in seconds) for live
+		 *         streams. For live event it would be the time the event
+		 *         started, otherwise it will be start of the seekable range
+		 *         when the streaming started.
+		 */
+		public Long startAbsoluteTime() {
+			return startAbsoluteTime;
+		}
+
+		/**
+		 * @param startAbsoluteTime the absolute time (Epoch Unix time in
+		 *            seconds) for live streams. For live event it would be the
+		 *            time the event started, otherwise it will be start of the
+		 *            seekable range when the streaming started.
+		 * @return This {@link MediaBuilder}.
+		 */
+		public MediaBuilder startAbsoluteTime(Long startAbsoluteTime) {
+			this.startAbsoluteTime = startAbsoluteTime;
+			return this;
+		}
+
+		/**
+		 * @return The stream type.
+		 */
+		public StreamType streamType() {
+			return streamType;
+		}
+
+		/**
+		 * @return The style of text track.
+		 */
+		public TextTrackStyle textTrackStyle() {
+			return textTrackStyle;
+		}
+
+		/**
+		 * @param textTrackStyle the style of text track.
+		 * @return This {@link MediaBuilder}.
+		 */
+		public MediaBuilder textTrackStyle(TextTrackStyle textTrackStyle) {
+			this.textTrackStyle = textTrackStyle;
+			return this;
+		}
+
+		/**
+		 * @return The media {@link Track}s.
+		 */
+		public List<Track> tracks() {
+			return tracks;
+		}
+
+		/**
+		 * @param tracks the media {@link Track}s.
+		 * @return This {@link MediaBuilder}.
+		 */
+		public MediaBuilder tracks(List<Track> tracks) {
+			this.tracks = tracks;
+			return this;
+		}
+
+		/**
+		 * @return A new {@link Media} instance with the content from this
+		 *         {@link MediaBuilder}.
+		 */
+		@Nonnull
+		public Media build() {
+			return new Media(
+				contentId,
+				contentType,
+				contentUrl,
+				customData,
+				duration,
+				entity,
+				hlsSegmentFormat,
+				hlsVideoSegmentFormat,
+				mediaCategory,
+				metadata,
+				startAbsoluteTime,
+				streamType,
+				textTrackStyle,
+				tracks
+			);
+		}
 	}
 }
