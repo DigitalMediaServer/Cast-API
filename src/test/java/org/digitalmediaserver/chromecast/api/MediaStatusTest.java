@@ -16,6 +16,7 @@
 package org.digitalmediaserver.chromecast.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.digitalmediaserver.chromecast.api.Media.StreamType;
 import org.digitalmediaserver.chromecast.api.MediaStatus.PlayerState;
 import org.digitalmediaserver.chromecast.api.MediaStatus.RepeatMode;
 import org.junit.Test;
@@ -61,7 +62,10 @@ public class MediaStatusTest {
 		assertEquals((Integer) 1, mediaStatus.getCurrentItemId());
 		assertEquals(0f, mediaStatus.getCurrentTime(), 0f);
 
-		final Media media = new Media("http://192.168.1.6:8192/audio-123-mp3", "audio/mpeg", 389.355102d, Media.StreamType.BUFFERED);
+		final Media media = Media
+			.builder("http://192.168.1.6:8192/audio-123-mp3", "audio/mpeg", StreamType.BUFFERED)
+			.duration(389.355102d)
+			.build();
 
 		final Map<String, String> payload = new HashMap<>();
 		payload.put("thumb", null);
