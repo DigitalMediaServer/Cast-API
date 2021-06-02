@@ -153,6 +153,7 @@ public class MediaStatusResponseTest {
 		assertNull(media.getEntity());
 		assertNull(media.getHlsSegmentFormat());
 		assertNull(media.getHlsVideoSegmentFormat());
+		assertTrue(media.getImages().isEmpty());
 		assertNull(media.getMediaCategory());
 		assertTrue(media.getMetadata().isEmpty());
 		assertNull(media.getStartAbsoluteTime());
