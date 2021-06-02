@@ -23,6 +23,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public interface Response {
 
+	/**
+	 * @return The request ID.
+	 */
 	@JsonProperty
 	long getRequestId();
 }

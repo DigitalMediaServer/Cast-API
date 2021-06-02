@@ -39,10 +39,8 @@ import org.digitalmediaserver.cast.StandardResponse.CloseResponse;
 import org.digitalmediaserver.cast.StandardResponse.DeviceAddedResponse;
 import org.digitalmediaserver.cast.StandardResponse.DeviceRemovedResponse;
 import org.digitalmediaserver.cast.StandardResponse.DeviceUpdatedResponse;
-import org.digitalmediaserver.cast.StandardResponse.InvalidResponse;
+import org.digitalmediaserver.cast.StandardResponse.ErrorResponse;
 import org.digitalmediaserver.cast.StandardResponse.LaunchErrorResponse;
-import org.digitalmediaserver.cast.StandardResponse.LoadCancelledResponse;
-import org.digitalmediaserver.cast.StandardResponse.LoadFailedResponse;
 import org.digitalmediaserver.cast.StandardResponse.MediaStatusResponse;
 import org.digitalmediaserver.cast.StandardResponse.MultizoneStatusResponse;
 import org.digitalmediaserver.cast.StandardResponse.ReceiverStatusResponse;
@@ -665,17 +663,17 @@ public interface CastEvent<T> {
 		 */
 		DEVICE_UPDATED(DeviceUpdatedResponse.class),
 
-		INVALID(InvalidResponse.class),
+		/**
+		 * Event is fired when an unclaimed {@link ErrorResponse} is received,
+		 * which shouldn't normally happen
+		 */
+		ERROR_RESPONSE(ErrorResponse.class),
 
 		/**
 		 * Event is fired when an unclaimed {@link LaunchErrorResponse} is
 		 * received, which shouldn't normally happen
 		 */
 		LAUNCH_ERROR(LaunchErrorResponse.class),
-
-		LOAD_CANCELLED(LoadCancelledResponse.class),
-
-		LOAD_FAILED(LoadFailedResponse.class),
 
 		/**
 		 * Event is fired when an unclaimed {@link MediaStatusResponse} is

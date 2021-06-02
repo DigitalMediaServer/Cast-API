@@ -16,7 +16,9 @@
 package org.digitalmediaserver.cast;
 
 import java.io.IOException;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import org.digitalmediaserver.cast.StandardResponse.ErrorResponse;
 
 
 /**
@@ -46,39 +48,107 @@ public class CastException extends IOException {
 		super(message, cause);
 	}
 
-	public static class LoadCancelledCastException extends CastException {
+	/**
+	 * A specialized {@link CastException} used to deliver an
+	 * {@link ErrorResponse} if one is returned from the cast device.
+	 */
+	public static class ErrorResponseCastException extends CastException {
 
 		private static final long serialVersionUID = 1L;
 
-		@Nullable
-		private final Integer itemId;
+		/** The {@link ErrorResponse} to deliver */
+		@Nonnull
+		protected final ErrorResponse errorResponse;
 
-		public LoadCancelledCastException(String message, @Nullable Integer itemId) {
+		/**
+		 * Creates a new instance with the specified message and
+		 * {@link ErrorResponse}.
+		 *
+		 * @param message the message to use.
+		 * @param errorResponse the {@link ErrorResponse} to deliver.
+		 */
+		public ErrorResponseCastException(@Nullable String message, @Nonnull ErrorResponse errorResponse) {
 			super(message);
-			this.itemId = itemId;
+			Util.requireNotNull(errorResponse, "errorResponse");
+			this.errorResponse = errorResponse;
 		}
 
-		@Nullable
-		public Integer getItemId() {
-			return itemId;
+		/**
+		 * @return The {@link ErrorResponse} that caused this
+		 *         {@link ErrorResponseCastException}.
+		 */
+		@Nonnull
+		public ErrorResponse getErrorResponse() {
+			return errorResponse;
 		}
 	}
 
-	public static class LoadFailedCastException extends CastException {
+	/**
+	 * A specialized {@link CastException} used to deliver a
+	 * {@link StandardResponse} if another type than what was expected is
+	 * returned from the cast device.
+	 */
+	public static class UntypedCastException extends CastException {
 
 		private static final long serialVersionUID = 1L;
 
-		public LoadFailedCastException(String message) {
+		/** The {@link StandardResponse} to deliver */
+		@Nonnull
+		protected final StandardResponse untypedResponse;
+
+		/**
+		 * Creates a new instance with the specified message and untyped
+		 * {@link StandardResponse}.
+		 *
+		 * @param message the message to use.
+		 * @param untypedResponse the {@link StandardResponse} to deliver.
+		 */
+		public UntypedCastException(@Nullable String message, @Nonnull StandardResponse untypedResponse) {
 			super(message);
+			Util.requireNotNull(untypedResponse, "untypedResponse");
+			this.untypedResponse = untypedResponse;
+		}
+
+		/**
+		 * @return The untyped {@link StandardResponse} that caused this
+		 *         {@link UntypedCastException}.
+		 */
+		@Nonnull
+		public StandardResponse getUntypedResponse() {
+			return untypedResponse;
 		}
 	}
 
-	public static class InvalidCastException extends CastException {
+	/**
+	 * A specialized {@link CastException} used to deliver a responses
+	 * that could not be deserialized.
+	 */
+	public static class UnprocessedCastException extends CastException {
 
 		private static final long serialVersionUID = 1L;
 
-		public InvalidCastException(String message) {
+		/** The unprocessed {@code JSON} to deliver */
+		@Nullable
+		protected final String unprocessedResponse;
+
+		/**
+		 * Creates a new instance with the specified message and unprocessed
+		 * {@code JSON} string.
+		 *
+		 * @param message the message to use.
+		 * @param unprocessedResponse the unprocessed {@code JSON} to deliver.
+		 */
+		public UnprocessedCastException(String message, @Nullable String unprocessedResponse) {
 			super(message);
+			this.unprocessedResponse = unprocessedResponse;
+		}
+
+		/**
+		 * @return The unprocessed {@code JSON} response.
+		 */
+		@Nullable
+		public String getUnprocessedResponse() {
+			return unprocessedResponse;
 		}
 	}
 

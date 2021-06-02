@@ -23,9 +23,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public interface Request extends Message {
 
+	/**
+	 * @return The request ID.
+	 */
 	@JsonProperty
 	long getRequestId();
 
+	/**
+	 * Sets the request ID. Should be handled by the sending {@link Channel}.
+	 *
+	 * @param requestId the request ID to set.
+	 */
 	@JsonProperty
 	void setRequestId(long requestId);
 }
