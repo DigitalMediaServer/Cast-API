@@ -19,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import static org.digitalmediaserver.chromecast.api.Media.MetadataType.GENERIC;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -30,9 +29,10 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import org.digitalmediaserver.chromecast.api.Metadata.MetadataType;
 
 /**
- * Media streamed on ChromeCast device.
+ * Represents the media information.
  *
  * @see <a href=
  *      "https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.MediaInformation">
@@ -40,47 +40,6 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 public class Media {
-
-	public static final String METADATA_TYPE = "metadataType";
-	public static final String METADATA_ALBUM_ARTIST = "albumArtist";
-	public static final String METADATA_ALBUM_NAME = "albumName";
-	public static final String METADATA_ARTIST = "artist";
-	public static final String METADATA_BROADCAST_DATE = "broadcastDate";
-	public static final String METADATA_COMPOSER = "composer";
-	public static final String METADATA_CREATION_DATE = "creationDate";
-	public static final String METADATA_DISC_NUMBER = "discNumber";
-	public static final String METADATA_EPISODE_NUMBER = "episodeNumber";
-	public static final String METADATA_HEIGHT = "height";
-	public static final String METADATA_IMAGES = "images";
-	public static final String METADATA_LOCATION_NAME = "locationName";
-	public static final String METADATA_LOCATION_LATITUDE = "locationLatitude";
-	public static final String METADATA_LOCATION_LONGITUDE = "locationLongitude";
-	public static final String METADATA_RELEASE_DATE = "releaseDate";
-	public static final String METADATA_SEASON_NUMBER = "seasonNumber";
-	public static final String METADATA_SERIES_TITLE = "seriesTitle";
-	public static final String METADATA_STUDIO = "studio";
-	public static final String METADATA_SUBTITLE = "subtitle";
-	public static final String METADATA_TITLE = "title";
-	public static final String METADATA_TRACK_NUMBER = "trackNumber"; //TODO: (Nad) Add rest + implement metadataType + document value type
-	public static final String METADATA_WIDTH = "width";
-
-	/**
-	 * Type of the data found inside {@link #metadata}. You can access the type
-	 * with the key {@link #METADATA_TYPE}.
-	 *
-	 * You can access known metadata types using the constants in {@link Media},
-	 * such as {@link #METADATA_ALBUM_NAME}.
-	 *
-	 * @see <a href=
-	 *      "https://developers.google.com/cast/docs/reference/ios/interface_g_c_k_media_metadata">
-	 *      https://developers.google.com/cast/docs/reference/ios/interface_g_c_k_media_metadata</a>
-	 * @see <a href=
-	 *      "https://developers.google.com/android/reference/com/google/android/gms/cast/MediaMetadata">
-	 *      https://developers.google.com/android/reference/com/google/android/gms/cast/MediaMetadata</a>
-	 */
-	public enum MetadataType {
-		GENERIC, MOVIE, TV_SHOW, MUSIC_TRACK, PHOTO
-	}
 
 	/**
 	 * The format of a HLS audio segment.
@@ -138,19 +97,29 @@ public class Media {
 
 	/**
 	 * Represents the stream types.
-	 * <p>
-	 * Some receivers use upper-case (like Pandora), some use lower-case (like
-	 * Google Audio), duplicate elements to support both.
 	 *
 	 * @see <a href=
 	 *      "https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media#.StreamType">
 	 *      https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media#.StreamType</a>
 	 */
 	public enum StreamType {
+
+		/** VOD and DVR content */
 		BUFFERED,
+
+		/** Live linear stream content */
 		LIVE,
+
+		/** Not specified/Other */
 		NONE;
 
+		/**
+		 * Parses the specified string and returns the corresponding
+		 * {@link StreamType}, or {@code null} if no match could be found.
+		 *
+		 * @param streamType the string to parse.
+		 * @return The resulting {@link StreamType} or {@code null}.
+		 */
 		@Nullable
 		@JsonCreator
 		public static StreamType typeOf(String streamType) {
@@ -457,16 +426,16 @@ public class Media {
 	}
 
 	/**
-	 * @return the type defined by the key {@link #METADATA_TYPE}.
+	 * @return The type defined by the key {@link #METADATA_TYPE}.
 	 */
 	@JsonIgnore
 	public MetadataType getMetadataType() {
-		if (!metadata.containsKey(METADATA_TYPE)) {
-			return GENERIC;
+		if (!metadata.containsKey(Metadata.METADATA_TYPE)) {
+			return MetadataType.GENERIC;
 		}
 
-		Integer ordinal = (Integer) metadata.get(METADATA_TYPE);
-		return ordinal < MetadataType.values().length ? MetadataType.values()[ordinal] : GENERIC; //TODO: (Nad) Look into this (ordinal)
+		Integer ordinal = (Integer) metadata.get(Metadata.METADATA_TYPE);
+		return ordinal < MetadataType.values().length ? MetadataType.values()[ordinal] : MetadataType.GENERIC; //TODO: (Nad) Look into this (ordinal)
 	}
 
 	@Override
