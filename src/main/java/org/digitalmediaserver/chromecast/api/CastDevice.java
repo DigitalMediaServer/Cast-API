@@ -623,6 +623,24 @@ public class CastDevice {
 	}
 
 	/**
+	 * Requests a status from the cast device and returns the resulting
+	 * {@link ReceiverStatus} if one is obtained.
+	 * <p>
+	 * This is a blocking call that waits for the response or times out.
+	 *
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be
+	 *            used.
+	 * @return The resulting {@link ReceiverStatus}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public ReceiverStatus getReceiverStatus(long responseTimeout) throws IOException {
+		return channel().getReceiverStatus(responseTimeout);
+	}
+
+	/**
 	 * This is a convenience method that calls {@link #getReceiverStatus()} and
 	 * then {@link ReceiverStatus#getRunningApplication()}.
 	 * <p>
@@ -696,6 +714,29 @@ public class CastDevice {
 	}
 
 	/**
+	 * Asks the cast device to launch the application represented by the
+	 * specified application ID.
+	 *
+	 * @param applicationId the application ID for the application to launch.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link ReceiverStatus} or {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws SocketException If the {@link Channel} is closed and
+	 *             {@code autoReconnect} is {@code false}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public ReceiverStatus launch(String applicationId, boolean synchronous, long responseTimeout) throws IOException {
+		return channel().launch(applicationId, synchronous, responseTimeout);
+	}
+
+	/**
 	 * Asks the cast device to stop the specified {@link Application}, using
 	 * {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the timeout value.
 	 *
@@ -715,6 +756,32 @@ public class CastDevice {
 			return null;
 		}
 		return channel().stopApplication(application, synchronous);
+	}
+
+	/**
+	 * Asks the cast device to stop the specified {@link Application}.
+	 *
+	 * @param application the {@link Application} to stop.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link ReceiverStatus} or {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws SocketException If the {@link Channel} is closed and
+	 *             {@code autoReconnect} is {@code false}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public ReceiverStatus stopApplication(
+		@Nonnull Application application,
+		boolean synchronous,
+		long responseTimeout
+	) throws IOException {
+		return channel().stopApplication(application, synchronous, responseTimeout);
 	}
 
 	/**
@@ -864,6 +931,47 @@ public class CastDevice {
 		Class<T> responseClass
 	) throws IOException {
 		return channel().sendGenericRequest(sourceId, destinationId, namespace, request, responseClass);
+	}
+
+	/**
+	 * Sends the specified {@link Request} with the specified namespace using
+	 * the specified source and destination IDs. This is for requests that
+	 * aren't associated with a {@link Session}.
+	 *
+	 * @param <T> the class of the {@link Response} object.
+	 * @param sourceId the source ID to use.
+	 * @param destinationId the destination ID to use.
+	 * @param namespace the namespace to use.
+	 * @param request the {@link Request} to send.
+	 * @param responseClass the response class to to block and wait for a
+	 *            response or {@code null} to return immediately.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code responseClass} is non-{@code null}. If zero or
+	 *            negative, {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The {@link Response} if the response is received in time, or
+	 *         {@code null} if the {@code responseClass} is {@code null} or a
+	 *         timeout occurs.
+	 * @throws IllegalArgumentException If {@code namespace} is {@code null} or
+	 *             invalid (see {@link #validateNamespace(String)} for
+	 *             constraints).
+	 * @throws IOException If an error occurs during the operation.
+	 */
+	public <T extends Response> T sendGenericRequest(
+		@Nonnull String sourceId,
+		@Nonnull String destinationId,
+		@Nonnull String namespace,
+		Request request,
+		Class<T> responseClass,
+		long responseTimeout
+	) throws IOException {
+		return channel().sendGenericRequest(
+			sourceId,
+			destinationId,
+			namespace,
+			request,
+			responseClass,
+			responseTimeout
+		);
 	}
 
 	/**

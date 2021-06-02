@@ -70,21 +70,31 @@ public abstract class StandardMessage implements Message {
 	 */
 	public static class Connect extends StandardMessage {
 
+		/** The user-agent, if any */
 		@JsonProperty
 		@JsonInclude(JsonInclude.Include.NON_NULL)
-		private final String userAgent;
+		protected final String userAgent;
 
+		/** The {@link VirtualConnectionType} */
 		@JsonProperty
 		@JsonInclude(JsonInclude.Include.NON_NULL)
-		private final VirtualConnectionType connType;
+		protected final VirtualConnectionType connType;
 
+		/** The origin */
 		@JsonProperty
 		protected final Origin origin = new Origin();
 
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param userAgent the user-agent to use, if any.
+		 * @param connectionType the {@link VirtualConnectionType} to use.
+		 */
 		@JsonCreator
 		public Connect(
 			@JsonProperty("userAgent") @Nullable String userAgent,
-			@JsonProperty("connType") @Nullable VirtualConnectionType connectionType) {
+			@JsonProperty("connType") @Nullable VirtualConnectionType connectionType
+		) {
 			this.userAgent = userAgent;
 			this.connType = connectionType;
 		}
@@ -95,24 +105,9 @@ public abstract class StandardMessage implements Message {
 	 */
 	public static class CloseConnection extends StandardMessage {
 
+		/** The reason code */
 		@JsonProperty
-		private final Integer reasonCode = Integer.valueOf(5); // Closed gracefully by sender
+		protected final Integer reasonCode = Integer.valueOf(5); // Closed gracefully by sender
 
-	}
-
-	public static Ping ping() {
-		return new Ping();
-	}
-
-	public static Pong pong() {
-		return new Pong();
-	}
-
-	public static Connect connect(@Nullable String userAgent, @Nullable VirtualConnectionType connectionType) {
-		return new Connect(userAgent, connectionType);
-	}
-
-	public static CloseConnection closeConnection() {
-		return new CloseConnection();
 	}
 }

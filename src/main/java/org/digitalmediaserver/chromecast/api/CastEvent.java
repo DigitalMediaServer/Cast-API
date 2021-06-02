@@ -39,10 +39,8 @@ import org.digitalmediaserver.chromecast.api.StandardResponse.CloseResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.DeviceAddedResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.DeviceRemovedResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.DeviceUpdatedResponse;
-import org.digitalmediaserver.chromecast.api.StandardResponse.InvalidResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.ErrorResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.LaunchErrorResponse;
-import org.digitalmediaserver.chromecast.api.StandardResponse.LoadCancelledResponse;
-import org.digitalmediaserver.chromecast.api.StandardResponse.LoadFailedResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MediaStatusResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MultizoneStatusResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.ReceiverStatusResponse;
@@ -665,17 +663,17 @@ public interface CastEvent<T> {
 		 */
 		DEVICE_UPDATED(DeviceUpdatedResponse.class),
 
-		INVALID(InvalidResponse.class),
+		/**
+		 * Event is fired when an unclaimed {@link ErrorResponse} is received,
+		 * which shouldn't normally happen
+		 */
+		ERROR_RESPONSE(ErrorResponse.class),
 
 		/**
 		 * Event is fired when an unclaimed {@link LaunchErrorResponse} is
 		 * received, which shouldn't normally happen
 		 */
 		LAUNCH_ERROR(LaunchErrorResponse.class),
-
-		LOAD_CANCELLED(LoadCancelledResponse.class),
-
-		LOAD_FAILED(LoadFailedResponse.class),
 
 		/**
 		 * Event is fired when an unclaimed {@link MediaStatusResponse} is
