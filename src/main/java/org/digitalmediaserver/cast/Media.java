@@ -19,7 +19,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import static org.digitalmediaserver.cast.Media.MetadataType.GENERIC;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -30,6 +29,7 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import org.digitalmediaserver.cast.Metadata.MetadataType;
 
 /**
  * Represents the media information.
@@ -40,47 +40,6 @@ import javax.annotation.concurrent.Immutable;
  */
 @Immutable
 public class Media {
-
-	public static final String METADATA_TYPE = "metadataType";
-	public static final String METADATA_ALBUM_ARTIST = "albumArtist";
-	public static final String METADATA_ALBUM_NAME = "albumName";
-	public static final String METADATA_ARTIST = "artist";
-	public static final String METADATA_BROADCAST_DATE = "broadcastDate";
-	public static final String METADATA_COMPOSER = "composer";
-	public static final String METADATA_CREATION_DATE = "creationDate";
-	public static final String METADATA_DISC_NUMBER = "discNumber";
-	public static final String METADATA_EPISODE_NUMBER = "episodeNumber";
-	public static final String METADATA_HEIGHT = "height";
-	public static final String METADATA_IMAGES = "images";
-	public static final String METADATA_LOCATION_NAME = "locationName";
-	public static final String METADATA_LOCATION_LATITUDE = "locationLatitude";
-	public static final String METADATA_LOCATION_LONGITUDE = "locationLongitude";
-	public static final String METADATA_RELEASE_DATE = "releaseDate";
-	public static final String METADATA_SEASON_NUMBER = "seasonNumber";
-	public static final String METADATA_SERIES_TITLE = "seriesTitle";
-	public static final String METADATA_STUDIO = "studio";
-	public static final String METADATA_SUBTITLE = "subtitle";
-	public static final String METADATA_TITLE = "title";
-	public static final String METADATA_TRACK_NUMBER = "trackNumber";
-	public static final String METADATA_WIDTH = "width";
-
-	/**
-	 * Type of the data found inside {@link #metadata}. You can access the type
-	 * with the key {@link #METADATA_TYPE}.
-	 *
-	 * You can access known metadata types using the constants in {@link Media},
-	 * such as {@link #METADATA_ALBUM_NAME}.
-	 *
-	 * @see <a href=
-	 *      "https://developers.google.com/cast/docs/reference/ios/interface_g_c_k_media_metadata">
-	 *      https://developers.google.com/cast/docs/reference/ios/interface_g_c_k_media_metadata</a>
-	 * @see <a href=
-	 *      "https://developers.google.com/android/reference/com/google/android/gms/cast/MediaMetadata">
-	 *      https://developers.google.com/android/reference/com/google/android/gms/cast/MediaMetadata</a>
-	 */
-	public enum MetadataType {
-		GENERIC, MOVIE, TV_SHOW, MUSIC_TRACK, PHOTO
-	}
 
 	/**
 	 * The format of a HLS audio segment.
@@ -498,6 +457,16 @@ public class Media {
 	}
 
 	/**
+	 * @return The {@link List} of zero or more {@link Image}s from the media
+	 *         metadata.
+	 */
+	@JsonIgnore
+	@Nonnull
+	public List<Image> getImages() {
+		return Metadata.extractImages(metadata);
+	}
+
+	/**
 	 * @return The absolute time (Epoch Unix time in seconds) for live streams.
 	 *         For live event it would be the time the event started, otherwise
 	 *         it will be start of the seekable range when the streaming
@@ -534,16 +503,17 @@ public class Media {
 	}
 
 	/**
-	 * @return The type defined by the key {@link #METADATA_TYPE}.
+	 * @return The {@link MetadataType} defined by the key
+	 *         {@link Metadata#METADATA_TYPE} or {@code null}.
 	 */
+	@Nullable
 	@JsonIgnore
 	public MetadataType getMetadataType() {
-		if (!metadata.containsKey(METADATA_TYPE)) {
-			return GENERIC;
+		Object object = metadata.get(Metadata.METADATA_TYPE);
+		if (object instanceof Integer) {
+			return MetadataType.typeOf(((Integer) object).intValue());
 		}
-
-		Integer ordinal = (Integer) metadata.get(METADATA_TYPE);
-		return ordinal < MetadataType.values().length ? MetadataType.values()[ordinal] : GENERIC;
+		return null;
 	}
 
 	/**
