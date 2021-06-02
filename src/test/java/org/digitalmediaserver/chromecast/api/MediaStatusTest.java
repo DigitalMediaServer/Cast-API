@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.digitalmediaserver.chromecast.api.Media.StreamType;
 import org.digitalmediaserver.chromecast.api.MediaStatus.PlayerState;
 import org.digitalmediaserver.chromecast.api.MediaStatus.RepeatMode;
+import org.digitalmediaserver.chromecast.api.Metadata.MetadataType;
 import org.junit.Test;
 import java.io.IOException;
 import java.util.Collections;
@@ -75,7 +76,7 @@ public class MediaStatusTest {
 		assertEquals(Collections.singletonList(new Item(true, customData, 1, media)), mediaStatus.getItems());
 
 		assertEquals(media, mediaStatus.getMedia());
-		assertEquals(Media.MetadataType.GENERIC, media.getMetadataType());
+		assertEquals(MetadataType.GENERIC, media.getMetadataType());
 		assertEquals(1, mediaStatus.getMediaSessionId());
 		assertEquals(1, mediaStatus.getPlaybackRate(), 0f);
 		assertEquals(PlayerState.BUFFERING, mediaStatus.getPlayerState());
@@ -106,7 +107,7 @@ public class MediaStatusTest {
 		assertNotNull(mediaStatus.getMedia());
 		Media media = mediaStatus.getMedia();
 		assertEquals(7, media.getMetadata().size());
-		assertEquals(Media.MetadataType.MUSIC_TRACK, media.getMetadataType());
+		assertEquals(MetadataType.MUSIC_TRACK, media.getMetadataType());
 		assertEquals("http://audioURL", media.getUrl());
 		assertEquals(246d, media.getDuration(), 0.1);
 		assertEquals(Media.StreamType.BUFFERED, media.getStreamType());
@@ -128,7 +129,7 @@ public class MediaStatusTest {
 
 		final MediaStatus mediaStatus = response.getStatuses().get(0);
 		Media media = mediaStatus.getMedia();
-		assertEquals(Media.MetadataType.GENERIC, media.getMetadataType());
+		assertEquals(MetadataType.GENERIC, media.getMetadataType());
 	}
 
 	@Test
@@ -138,7 +139,7 @@ public class MediaStatusTest {
 
 		final MediaStatus mediaStatus = response.getStatuses().get(0);
 		Media media = mediaStatus.getMedia();
-		assertEquals(Media.MetadataType.GENERIC, media.getMetadataType());
+		assertEquals(MetadataType.GENERIC, media.getMetadataType());
 	}
 
 	@Test
