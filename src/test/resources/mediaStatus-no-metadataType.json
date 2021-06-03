@@ -13,7 +13,8 @@
           "albumArtist":"The Artist",
           "artist":"The Artist",
           "images": [
-            {"url": "http://lh3.googleusercontent.com/UirYk5XiPVHW2HHRtoVlvHF10_Of8VtYU9DL18qwFsFodXd3hXo60yX1BfV5up5ClCKhgZvLPUY"}
+            {"url": "http://lh3.googleusercontent.com/UirYk5XiPVHW2HHRtoVlvHF10_Of8VtYU9DL18qwFsFodXd3hXo60yX1BfV5up5ClCKhgZvLPUY"},
+           	{"url": "http://example.none", "height": 480, "width":640}
           ],
           "releaseDate":"1994-11-05T13:15:30Z"},
         "contentId":"http://audioURL",

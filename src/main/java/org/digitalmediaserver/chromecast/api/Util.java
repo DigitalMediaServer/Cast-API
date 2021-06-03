@@ -84,21 +84,6 @@ final class Util {
 		return result;
 	}
 
-	public static String getContentType(String url) { //TODO: (Nad) Terrible... remove?
-		HttpURLConnection connection = null;
-		try {
-			connection = (HttpURLConnection) new URL(url).openConnection();
-			connection.connect();
-			return connection.getContentType();
-		} catch (IOException e) {
-		} finally {
-			if (connection != null) {
-				connection.disconnect();
-			}
-		}
-		return null;
-	}
-
 	public static String getMediaTitle(String url) {
 		try {
 			URL urlObj = new URL(url);

@@ -29,6 +29,7 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import org.digitalmediaserver.chromecast.api.Metadata.Image;
 import org.digitalmediaserver.chromecast.api.Metadata.MetadataType;
 
 /**
@@ -387,6 +388,16 @@ public class Media {
 	@Nonnull
 	public Map<String, Object> getMetadata() {
 		return metadata;
+	}
+
+	/**
+	 * @return The {@link List} of zero or more {@link Image}s from the media
+	 *         metadata.
+	 */
+	@JsonIgnore
+	@Nonnull
+	public List<Image> getImages() {
+		return Metadata.extractImages(metadata);
 	}
 
 	/**

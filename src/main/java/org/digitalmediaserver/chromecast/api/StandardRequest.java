@@ -18,6 +18,7 @@ package org.digitalmediaserver.chromecast.api;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Map;
+import javax.annotation.Nonnull;
 
 /**
  * Parent class for transport object representing messages sent TO ChromeCast
@@ -25,15 +26,15 @@ import java.util.Map;
  */
 public abstract class StandardRequest extends StandardMessage implements Request { //TODO: (Nad) Immutable..
 
-	long requestId;
+	protected long requestId;
 
 	@Override
-	public final void setRequestId(long requestId) {
+	public void setRequestId(long requestId) {
 		this.requestId = requestId;
 	}
 
 	@Override
-	public final long getRequestId() {
+	public long getRequestId() {
 		return requestId;
 	}
 
@@ -49,10 +50,14 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	public static class GetAppAvailability extends StandardRequest {
 
 		@JsonProperty
-		final String[] appId;
+		private final String[] appId;
 
-		GetAppAvailability(String... appId) {
+		public GetAppAvailability(String... appId) {
 			this.appId = appId;
+		}
+
+		public String[] getAppId() {
+			return appId;
 		}
 	}
 
@@ -62,10 +67,14 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	public static class Launch extends StandardRequest {
 
 		@JsonProperty
-		final String appId;
+		private final String appId;
 
-		Launch(@JsonProperty("appId") String appId) {
+		public Launch(@JsonProperty("appId") String appId) {
 			this.appId = appId;
+		}
+
+		public String getAppId() {
+			return appId;
 		}
 	}
 
@@ -75,29 +84,47 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	public static class Stop extends StandardRequest {
 
 		@JsonProperty
-		final String sessionId;
+		private final String sessionId;
 
-		Stop(String sessionId) {
+		public Stop(String sessionId) {
 			this.sessionId = sessionId;
+		}
+
+		public String getSessionId() {
+			return sessionId;
 		}
 	}
 
 	/**
-	 * Request to load media.
+	 * A request to load media.
 	 */
 	public static class Load extends StandardRequest {
 
 		@JsonProperty
-		final String sessionId;
+		private final String sessionId;
 		@JsonProperty
-		final Media media;
+		private final Media media;
 		@JsonProperty
-		final boolean autoplay;
+		private final boolean autoplay;
 		@JsonProperty
-		final double currentTime;
+		private final double currentTime;
 		@JsonProperty
-		final Object customData;
+		private final Object customData;
 
+		/**
+		 * Creates a new request to load the specified {@link Media}.
+		 *
+		 * @param sessionId the session ID to use.
+		 * @param media the {@link Media} to load.
+		 * @param autoplay {@code true} to ask the remote application to start
+		 *            playback as soon as the {@link Media} has been loaded,
+		 *            {@code false} to ask it to transition to a paused state
+		 *            after loading.
+		 * @param currentTime the position in seconds where playback are to be
+		 *            started in the loaded {@link Media}.
+		 * @param customData the custom application data to send to the remote
+		 *            application with the load command.
+		 */
 		public Load(
 			String sessionId,
 			Media media,
@@ -116,6 +143,26 @@ public abstract class StandardRequest extends StandardMessage implements Request
 				Map<String, String> payload = customData;
 			};
 		}
+
+		public String getSessionId() {
+			return sessionId;
+		}
+
+		public Media getMedia() {
+			return media;
+		}
+
+		public boolean isAutoplay() {
+			return autoplay;
+		}
+
+		public double getCurrentTime() {
+			return currentTime;
+		}
+
+		public Object getCustomData() {
+			return customData;
+		}
 	}
 
 	/**
@@ -124,32 +171,56 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	public abstract static class MediaRequest extends StandardRequest {
 
 		@JsonProperty
-		final long mediaSessionId;
+		private final long mediaSessionId;
 		@JsonProperty
-		final String sessionId;
+		private final String sessionId;
 
-		MediaRequest(long mediaSessionId, String sessionId) {
+		public MediaRequest(long mediaSessionId, String sessionId) {
 			this.mediaSessionId = mediaSessionId;
 			this.sessionId = sessionId;
+		}
+
+		public long getMediaSessionId() {
+			return mediaSessionId;
+		}
+
+		public String getSessionId() {
+			return sessionId;
 		}
 	}
 
 	/**
-	 * Request to start/resume playback.
+	 * A request to start/resume playback.
 	 */
 	public static class Play extends MediaRequest {
 
-		Play(long mediaSessionId, String sessionId) {
+		/**
+		 * Creates a new request to start playing the media referenced by the
+		 * specified media session ID.
+		 *
+		 * @param mediaSessionId the media session ID for which the play request
+		 *            applies.
+		 * @param sessionId the session ID to use.
+		 */
+		public Play(long mediaSessionId, String sessionId) {
 			super(mediaSessionId, sessionId);
 		}
 	}
 
 	/**
-	 * Request to pause playback.
+	 * A request to pause playback.
 	 */
 	public static class Pause extends MediaRequest {
 
-		Pause(long mediaSessionId, String sessionId) {
+		/**
+		 * Creates a new request to pause playback of the media referenced by the
+		 * specified media session ID.
+		 *
+		 * @param mediaSessionId the media session ID for which the pause request
+		 *            applies.
+		 * @param sessionId the session ID to use.
+		 */
+		public Pause(long mediaSessionId, String sessionId) {
 			super(mediaSessionId, sessionId);
 		}
 	}
@@ -160,11 +231,25 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	public static class Seek extends MediaRequest {
 
 		@JsonProperty
-		final double currentTime;
+		private final double currentTime;
 
-		Seek(long mediaSessionId, String sessionId, double currentTime) {
+		/**
+		 * Creates a new request to move the playback position of the media
+		 * referenced by the specified media session ID to the specified
+		 * position.
+		 *
+		 * @param mediaSessionId the media session ID for which the seek request
+		 *            applies.
+		 * @param sessionId the session ID to use.
+		 * @param currentTime the new playback position in seconds.
+		 */
+		public Seek(long mediaSessionId, String sessionId, double currentTime) {
 			super(mediaSessionId, sessionId);
 			this.currentTime = currentTime;
+		}
+
+		public double getCurrentTime() {
+			return currentTime;
 		}
 	}
 
@@ -174,29 +259,53 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	public static class SetVolume extends StandardRequest {
 
 		@JsonProperty
-		final Volume volume;
+		private final Volume volume;
 
-		SetVolume(Volume volume) {
+		public SetVolume(Volume volume) {
 			this.volume = volume;
+		}
+
+		public Volume getVolume() {
+			return volume;
 		}
 	}
 
+	@Nonnull
 	public static GetStatus status() {
 		return new GetStatus();
 	}
 
+	@Nonnull
 	public static GetAppAvailability getAppAvailability(String... applicationId) {
 		return new GetAppAvailability(applicationId);
 	}
 
+	@Nonnull
 	public static Launch launch(String applicationId) {
 		return new Launch(applicationId);
 	}
 
+	@Nonnull
 	public static Stop stop(String sessionId) {
 		return new Stop(sessionId);
 	}
 
+	/**
+	 * Creates a new request to load the specified {@link Media}.
+	 *
+	 * @param sessionId the session ID to use.
+	 * @param media the {@link Media} to load.
+	 * @param autoplay {@code true} to ask the remote application to start
+	 *            playback as soon as the {@link Media} has been loaded,
+	 *            {@code false} to ask it to transition to a paused state
+	 *            after loading.
+	 * @param currentTime the position in seconds where playback are to be
+	 *            started in the loaded {@link Media}.
+	 * @param customData the custom application data to send to the remote
+	 *            application with the load command.
+	 * @return the new {@link Load} request.
+	 */
+	@Nonnull
 	public static Load load(
 		String sessionId,
 		Media media,
@@ -207,18 +316,50 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		return new Load(sessionId, media, autoplay, currentTime, customData);
 	}
 
+	/**
+	 * Creates a new request to start playing the media referenced by the
+	 * specified media session ID
+	 *
+	 * @param sessionId the session ID to use.
+	 * @param mediaSessionId the media session ID for which the play request
+	 *            applies.
+	 * @return The new {@link Play} request.
+	 */
+	@Nonnull
 	public static Play play(String sessionId, long mediaSessionId) {
 		return new Play(mediaSessionId, sessionId);
 	}
 
+	/**
+	 * Creates a new request to pause playback of the media referenced by the
+	 * specified media session ID
+	 *
+	 * @param sessionId the session ID to use.
+	 * @param mediaSessionId the media session ID for which the pause request
+	 *            applies.
+	 * @return The new {@link Pause} request.
+	 */
+	@Nonnull
 	public static Pause pause(String sessionId, long mediaSessionId) {
 		return new Pause(mediaSessionId, sessionId);
 	}
 
+	/**
+	 * Creates a new request to move the playback position of the media
+	 * referenced by the specified media session ID to the specified position.
+	 *
+	 * @param sessionId the session ID to use.
+	 * @param mediaSessionId the media session ID for which the seek request
+	 *            applies.
+	 * @param currentTime the new playback position in seconds.
+	 * @return The new {@link Seek} request.
+	 */
+	@Nonnull
 	public static Seek seek(String sessionId, long mediaSessionId, double currentTime) {
 		return new Seek(mediaSessionId, sessionId, currentTime);
 	}
 
+	@Nonnull
 	public static SetVolume setVolume(Volume volume) { //TODO: (Nad) Look into - setting the whole Volume..?
 		return new SetVolume(volume);
 	}
