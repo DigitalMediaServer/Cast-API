@@ -15,15 +15,23 @@
  */
 package org.digitalmediaserver.chromecast.api;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.digitalmediaserver.chromecast.api.Media.MediaBuilder;
+import org.digitalmediaserver.chromecast.api.Media.MediaCategory;
 import org.digitalmediaserver.chromecast.api.Media.StreamType;
+import org.digitalmediaserver.chromecast.api.Metadata.Image;
 import org.junit.Test;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.StringContains.containsString;
+import static org.junit.Assert.assertEquals;
 
 public class MediaTest {
 
@@ -88,5 +96,26 @@ public class MediaTest {
 		assertThat(json, not(containsString("customData")));
 		assertThat(json, not(containsString("metadata")));
 		assertThat(json, not(containsString("metadataType")));
+	}
+
+	@Test
+	public void metadataTest() throws Exception {
+		MediaBuilder builder = Media.builder("http://somevideo.mpg", "video/mpeg", StreamType.BUFFERED)
+			.duration(Double.valueOf(120d)).mediaCategory(MediaCategory.VIDEO);
+		Map<String, Object> metadata = new LinkedHashMap<>();
+		metadata.put(Metadata.Generic.TITLE, "Title");
+		metadata.put(Metadata.Generic.SUBTITLE, "Subtitle");
+		List<Image> images = new ArrayList<>();
+		images.add(new Image("http://somevideo.png", 1024, 768));
+		images.add(new Image("http://someVideo_thumb.jpg"));
+		Metadata.setImages(metadata, images);
+		builder.metadata(metadata);
+
+		Media source = builder.build();
+		String json = jsonMapper.writeValueAsString(source);
+		Media result = jsonMapper.readValue(json, Media.class);
+		assertEquals(source, result);
+		List<Image> resultImages = result.getImages();
+		assertEquals(images, resultImages);
 	}
 }

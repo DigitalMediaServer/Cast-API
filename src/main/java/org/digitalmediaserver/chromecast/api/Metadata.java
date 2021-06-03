@@ -17,12 +17,22 @@ package org.digitalmediaserver.chromecast.api;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 
 /**
@@ -39,13 +49,220 @@ public class Metadata {
 	protected static final String[] TIME_ZONE_PATTERNS = new String[] {"Z", "+hh", "+hhmm", "+hh:mm"};
 
 	/** The format pattern to use when converting to string */
-	protected static final String PATTERN = "yyyyMMdd'T'HHmmssZ";
+	protected static final String DATE_TIME_PATTERN = "yyyyMMdd'T'HHmmssZ";
 
 	/** The key used for {@link MetadataType} */
 	public static final String METADATA_TYPE = "metadataType";
 
 	/** The key used for metadata images */
 	public static final String IMAGES = "images";
+
+	public static class Image { //TODO: (Nad) JavaDocs + move
+
+		/** The URL for the image */
+		@JsonProperty
+		private final String url;
+
+		/** The height of the image (optional) */
+		@JsonProperty
+		@JsonInclude(JsonInclude.Include.NON_NULL)
+		private final Integer height;
+
+		/** The width of the image (optional) */
+		@JsonProperty
+		@JsonInclude(JsonInclude.Include.NON_NULL)
+		private final Integer width;
+
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param url the URL for the image.
+		 * @param height the height of the image (optional).
+		 * @param width the width of the image (optional).
+		 */
+		public Image(
+			@JsonProperty("url") String url,
+			@JsonProperty("height") Integer height,
+			@JsonProperty("width") Integer width
+		) {
+			this.url = url;
+			this.height = height;
+			this.width = width;
+		}
+
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param url the URL for the image.
+		 * @param height the height of the image.
+		 * @param width the width of the image.
+		 */
+		public Image(
+			String url,
+			int height,
+			int width
+		) {
+			this.url = url;
+			this.height = Integer.valueOf(height);
+			this.width = Integer.valueOf(width);
+		}
+
+		/**
+		 * Creates a new instance using the specified URL with unspecified
+		 * dimensions.
+		 *
+		 * @param url the URL for the image.
+		 */
+		public Image(String url) {
+			this.url = url;
+			this.height = null;
+			this.width = null;
+		}
+
+		/**
+		 * @return The URL for the image.
+		 */
+		public String getUrl() {
+			return url;
+		}
+
+		/**
+		 * @return The optional height of the image or {@code null}.
+		 */
+		@Nullable
+		public Integer getHeight() {
+			return height;
+		}
+
+		/**
+		 * @return The optional width of the image or {@code null}.
+		 */
+		@Nullable
+		public Integer getWidth() {
+			return width;
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(height, url, width);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (!(obj instanceof Image)) {
+				return false;
+			}
+			Image other = (Image) obj;
+			return
+				Objects.equals(height, other.height) &&
+				Objects.equals(url, other.url) &&
+				Objects.equals(width, other.width);
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+			builder.append(getClass().getSimpleName()).append(" [");
+			builder.append("url=").append(url);
+			if (height != null) {
+				builder.append(", ").append("height=").append(height);
+			}
+			if (width != null) {
+				builder.append(", ").append("width=").append(width);
+			}
+			builder.append("]");
+			return builder.toString();
+		}
+	}
+
+	@Nonnull
+	public static List<Image> extractImages(@Nullable Map<String, Object> metadata) { //TODO: (Nad) JavaDocs + move
+		List<Image> result = new ArrayList<>();
+		if (metadata == null || metadata.isEmpty()) {
+			return result;
+		}
+		Object object = metadata.get(IMAGES);
+		if (!(object instanceof List)) {
+			return result;
+		}
+		List<?> untypedList = (List<?>) object;
+		if (untypedList.isEmpty()) {
+			return result;
+		}
+		if (!(untypedList.get(0) instanceof Map)) {
+			return result;
+		}
+		@SuppressWarnings("unchecked")
+		List<Map<?, ?>> list = (List<Map<?, ?>>) untypedList;
+		String url;
+		Integer height, width;
+		for (Map<?, ?> image : list) {
+			object = image.get("url");
+			if (!(object instanceof String)) {
+				continue;
+			}
+			url = (String) object;
+			object = image.get("height");
+			height = object instanceof Integer ?
+				(Integer) object :
+				object instanceof Number ?
+					Integer.valueOf(((Number) object).intValue()) :
+					null;
+			object = image.get("width");
+			width = object instanceof Integer ?
+				(Integer) object :
+				object instanceof Number ?
+					Integer.valueOf(((Number) object).intValue()) :
+					null;
+			result.add(new Image(url, height, width));
+		}
+		return result;
+	}
+
+	public static boolean setImages(@Nullable Map<String, Object> metadata, Image... images) {
+		if (metadata == null) {
+			return false;
+		}
+		if (images == null || images.length == 0) {
+			return metadata.remove(IMAGES) != null;
+		}
+		return setImages(metadata, Arrays.asList(images));
+	}
+
+	public static boolean setImages(@Nullable Map<String, Object> metadata, @Nullable Collection<Image> images) {
+		if (metadata == null) { //TODO: (Nad) Make test..
+			return false;
+		}
+		if (images == null || images.isEmpty()) {
+			return metadata.remove(IMAGES) != null;
+		}
+		List<Map<String, Object>> imagesList = new ArrayList<>();
+		String url;
+		Integer intValue;
+		Map<String, Object> imageEntry;
+		for (Image image : images) {
+			if (Util.isBlank(url = image.getUrl())) {
+				continue;
+			}
+			imageEntry = new LinkedHashMap<>(3);
+			imageEntry.put("url", url);
+			if ((intValue = image.getHeight()) != null) {
+				imageEntry.put("height", intValue);
+			}
+			if ((intValue = image.getWidth()) != null) {
+				imageEntry.put("width", intValue);
+			}
+			imagesList.add(imageEntry);
+		}
+		if (imagesList.isEmpty()) {
+			return metadata.remove(IMAGES) != null;
+		}
+		metadata.put(IMAGES, imagesList);
+		return true;
+	}
 
 	public static class Generic {
 
@@ -598,7 +815,7 @@ public class Metadata {
 			LOGGER.debug("Calendar object cannot be null");
 			return null;
 		}
-		String pattern = PATTERN;
+		String pattern = DATE_TIME_PATTERN;
 		if (calendar.get(11) == 0 && calendar.get(12) == 0 && calendar.get(13) == 0) {
 			pattern = "yyyyMMdd";
 		}
@@ -641,7 +858,7 @@ public class Metadata {
 			if (timeString.length() == 6) {
 				pattern = "yyyyMMdd'T'HHmmss";
 			} else {
-				pattern = PATTERN;
+				pattern = DATE_TIME_PATTERN;
 			}
 		}
 

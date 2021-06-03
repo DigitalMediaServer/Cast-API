@@ -539,6 +539,32 @@ public class Channel implements Closeable {
 		}
 	}
 
+	/**
+	 * Asks the targeted remote application to load the specified {@link Media}
+	 * using the specified parameters. This can only succeed if the remote
+	 * application supports the "{@code urn:x-cast:com.google.cast.media}"
+	 * namespace.
+	 *
+	 * @param senderId the session ID to use.
+	 * @param destinationId the destination ID to use.
+	 * @param sessionId the session ID to use.
+	 * @param media the {@link Media} to load.
+	 * @param autoplay {@code true} to ask the remote application to start
+	 *            playback as soon as the {@link Media} has been loaded,
+	 *            {@code false} to ask it to transition to a paused state after
+	 *            loading.
+	 * @param currentTime the position in seconds where playback are to be
+	 *            started in the loaded {@link Media}.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @param customData the custom application data to send to the remote
+	 *            application with the load command.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 * @throws IOException If an error occurs during the operation.
+	 */
 	@Nullable
 	public MediaStatus load(
 		@Nonnull String senderId,
@@ -560,6 +586,25 @@ public class Channel implements Closeable {
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
+	/**
+	 * Asks the remote application to start playing the media referenced by the
+	 * specified media session ID. This can only succeed if the remote
+	 * application supports the "{@code urn:x-cast:com.google.cast.media}"
+	 * namespace.
+	 *
+	 * @param senderId the session ID to use.
+	 * @param destinationId the destination ID to use.
+	 * @param sessionId the session ID to use.
+	 * @param mediaSessionId the media session ID for which the play request
+	 *            applies.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 * @throws IOException If an error occurs during the operation.
+	 */
 	@Nullable
 	public MediaStatus play(
 		@Nonnull String senderId,
@@ -578,6 +623,25 @@ public class Channel implements Closeable {
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
+	/**
+	 * Asks the remote application to pause playback of the media referenced by
+	 * the specified media session ID. This can only succeed if the remote
+	 * application supports the "{@code urn:x-cast:com.google.cast.media}"
+	 * namespace.
+	 *
+	 * @param senderId the session ID to use.
+	 * @param destinationId the destination ID to use.
+	 * @param sessionId the session ID to use.
+	 * @param mediaSessionId the media session ID for which the pause request
+	 *            applies.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 * @throws IOException If an error occurs during the operation.
+	 */
 	@Nullable
 	public MediaStatus pause(
 		@Nonnull String senderId,
@@ -596,6 +660,26 @@ public class Channel implements Closeable {
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
+	/**
+	 * Asks the remote application to move the playback position of the media
+	 * referenced by the specified media session ID to the specified position.
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param senderId the session ID to use.
+	 * @param destinationId the destination ID to use.
+	 * @param sessionId the session ID to use.
+	 * @param mediaSessionId the media session ID for which the pause request
+	 *            applies.
+	 * @param currentTime the new playback position in seconds.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 * @throws IOException If an error occurs during the operation.
+	 */
 	@Nullable
 	public MediaStatus seek(
 		@Nonnull String senderId,
