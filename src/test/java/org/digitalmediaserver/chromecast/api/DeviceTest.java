@@ -16,6 +16,7 @@
 package org.digitalmediaserver.chromecast.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.digitalmediaserver.chromecast.api.Volume.VolumeControlType;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -43,9 +44,8 @@ public class DeviceTest {
 		Volume volume = device.getVolume();
 		assertEquals(0.24, volume.getLevel(), 0.001);
 		assertFalse(volume.isMuted());
-		assertNotNull(volume.getIncrement());
 		assertNotNull(volume.getStepInterval());
-		assertNull(volume.getControlType());
+		assertEquals(VolumeControlType.ATTENUATION, volume.getControlType());
 	}
 
 	@Test
@@ -71,8 +71,7 @@ public class DeviceTest {
 		Volume volume = device.getVolume();
 		assertEquals(0.35, volume.getLevel(), 0.001);
 		assertFalse(volume.isMuted());
-		assertNotNull(volume.getIncrement());
 		assertNotNull(volume.getStepInterval());
-		assertNull(volume.getControlType());
+		assertEquals(VolumeControlType.ATTENUATION, volume.getControlType());
 	}
 }

@@ -3,6 +3,7 @@ package org.digitalmediaserver.chromecast.api;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.digitalmediaserver.chromecast.api.StandardResponse.ReceiverStatusResponse;
+import org.digitalmediaserver.chromecast.api.Volume.VolumeControlType;
 import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +23,7 @@ public class StatusResponseTest {
 		nameSpaces.add(new Namespace("some.other.name.space"));
 		List<Application> applications = new ArrayList<>();
 		applications.add(new Application("appId", "iconURL", "appName", "jkl34d", "single", true, false, "55", nameSpaces));
-		ReceiverStatus status = new ReceiverStatus(new Volume(0.55f, true, 0.2f, 0.01, "wild"), applications, false, true);
+		ReceiverStatus status = new ReceiverStatus(new Volume(VolumeControlType.ATTENUATION, 0.55, true, 0.01), applications, false, true);
 		ReceiverStatusResponse source = new ReceiverStatusResponse(3591L, status);
 
 		String json = jsonMapper.writeValueAsString(source);
@@ -31,11 +32,10 @@ public class StatusResponseTest {
 		status = response.getStatus();
 		Volume volume = status.getVolume();
 		assertNotNull(volume);
-		assertEquals(0.55f, volume.getLevel(), 0f);
+		assertEquals(0.55, volume.getLevel(), 0d);
 		assertTrue(volume.isMuted());
-		assertEquals(0.2f, volume.getIncrement(), 0f);
 		assertEquals(0.01, volume.getStepInterval(), 0.0);
-		assertEquals("wild", volume.getControlType());
+		assertEquals(VolumeControlType.ATTENUATION, volume.getControlType());
 		assertFalse(status.getApplications().isEmpty());
 		applications = status.getApplications();
 		assertNotNull(applications);

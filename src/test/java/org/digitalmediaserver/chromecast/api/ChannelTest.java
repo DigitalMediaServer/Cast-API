@@ -26,6 +26,7 @@ import org.digitalmediaserver.chromecast.api.Metadata.MetadataType;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MediaStatusResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.ReceiverStatusResponse;
 import org.digitalmediaserver.chromecast.api.VideoInformation.HdrType;
+import org.digitalmediaserver.chromecast.api.Volume.VolumeControlType;
 import org.junit.Test;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -689,7 +690,7 @@ public class ChannelTest {
 		assertEquals("{\"responseType\":\"CUST_STATUS\",\"requestId\":9023,\"content\":\"Test message\"}", custom.getStringPayload());
 		assertNull(custom.getBinaryPayload());
 
-		Volume deviceVolume = new Volume(123f, false, 2f, Volume.DEFAULT_INCREMENT.doubleValue(), Volume.DEFAULT_CONTROL_TYPE);
+		Volume deviceVolume = new Volume(VolumeControlType.ATTENUATION, 123d, false, 0.05);
 		ReceiverStatusResponse receiverStatus = new ReceiverStatusResponse(0L, new ReceiverStatus(deviceVolume, null, false, false));
 		jsonMessage = jsonMapper.writeValueAsString(receiverStatus);
 		handler = channel.new StringMessageHandler(message, jsonMessage);
