@@ -29,7 +29,6 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-import org.digitalmediaserver.chromecast.api.Metadata.Image;
 import org.digitalmediaserver.chromecast.api.Metadata.MetadataType;
 
 /**

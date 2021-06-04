@@ -15,12 +15,10 @@
  */
 package org.digitalmediaserver.chromecast.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.digitalmediaserver.chromecast.api.Media.MediaBuilder;
 import org.digitalmediaserver.chromecast.api.Media.MediaCategory;
 import org.digitalmediaserver.chromecast.api.Media.StreamType;
-import org.digitalmediaserver.chromecast.api.Metadata.Image;
 import org.junit.Test;
 import java.util.ArrayList;
 import java.util.HashMap;

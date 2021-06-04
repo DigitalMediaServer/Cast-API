@@ -22,10 +22,10 @@ import org.digitalmediaserver.chromecast.api.Media.StreamType;
 import org.digitalmediaserver.chromecast.api.MediaStatus.IdleReason;
 import org.digitalmediaserver.chromecast.api.MediaStatus.PlayerState;
 import org.digitalmediaserver.chromecast.api.MediaStatus.RepeatMode;
-import org.digitalmediaserver.chromecast.api.Metadata.Image;
 import org.digitalmediaserver.chromecast.api.Metadata.MetadataType;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MediaStatusResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.ReceiverStatusResponse;
+import org.digitalmediaserver.chromecast.api.VideoInformation.HdrType;
 import org.junit.Test;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -97,12 +97,9 @@ public class ChannelTest {
 		List<Image> images = media.getImages();
 		assertEquals(1, images.size());
 		assertEquals("", images.get(0).getUrl());
-		Volume volume = mediaStatus.getVolume();
-		assertEquals(null, volume.getControlType());
-		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
-		assertEquals(null, volume.getLevel());
-		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
-		assertFalse(volume.isMuted());
+		MediaVolume volume = mediaStatus.getVolume();
+		assertNull(volume.getLevel());
+		assertNull(volume.getMuted());
 
 		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-audio-with-extraStatus.json").replaceFirst("\"type\"", "\"responseType\"");
 		handler = channel.new StringMessageHandler(message, jsonMessage);
@@ -143,11 +140,8 @@ public class ChannelTest {
 		assertEquals("http://192.168.2.139:9080/audio/99fd6998-aa4d-4764-9b41-c6869dcfc85f.mp3", media.getUrl());
 		assertTrue(media.getMetadata().isEmpty());
 		volume = mediaStatus.getVolume();
-		assertEquals(null, volume.getControlType());
-		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
-		assertEquals(1f, volume.getLevel().floatValue(), 0f);
-		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
-		assertFalse(volume.isMuted());
+		assertEquals(1d, volume.getLevel().doubleValue(), 0d);
+		assertFalse(volume.getMuted().booleanValue());
 
 		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-chromecast-audio.json").replaceFirst("\"type\"", "\"responseType\"");
 		handler = channel.new StringMessageHandler(message, jsonMessage);
@@ -166,15 +160,15 @@ public class ChannelTest {
 		assertEquals(0.0, mediaStatus.getCurrentTime(), 0.0);
 		assertTrue(mediaStatus.getCustomData().isEmpty());
 		assertNull(mediaStatus.getIdleReason());
-		List<Item> items = mediaStatus.getItems();
+		List<QueueItem> items = mediaStatus.getItems();
 		assertEquals(1, items.size());
-		assertTrue(items.get(0).isAutoplay());
+		assertTrue(items.get(0).getAutoplay().booleanValue());
 		Map<String, Object> data = items.get(0).getCustomData();
 		assertEquals(1, data.size());
 		data = (Map<String, Object>) data.get("payload");
 		assertNull(data.get("thumb"));
 		assertEquals(null, data.get("title"));
-		assertEquals(1L, items.get(0).getItemId());
+		assertEquals(1, items.get(0).getItemId().intValue());
 		media = items.get(0).getMedia();
 		assertEquals("audio/mpeg", media.getContentType());
 		assertTrue(media.getCustomData().isEmpty());
@@ -196,7 +190,7 @@ public class ChannelTest {
 		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("http://192.168.1.6:8192/audio-123-mp3", media.getUrl());
-		assertEquals(1L, mediaStatus.getMediaSessionId());
+		assertEquals(1, mediaStatus.getMediaSessionId());
 		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
 		assertEquals(PlayerState.BUFFERING, mediaStatus.getPlayerState());
 		assertNull(mediaStatus.getPreloadedItemId());
@@ -204,11 +198,8 @@ public class ChannelTest {
 		assertEquals(15, mediaStatus.getSupportedMediaCommands());
 		assertNotNull(mediaStatus.getVolume());
 		volume = mediaStatus.getVolume();
-		assertEquals("attenuation", volume.getControlType());
-		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
-		assertEquals(1f, volume.getLevel(), 0f);
-		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
-		assertFalse(volume.isMuted());
+		assertEquals(1d, volume.getLevel().doubleValue(), 0d);
+		assertFalse(volume.getMuted().booleanValue());
 
 		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-no-metadataType.json").replaceFirst("\"type\"", "\"responseType\"");
 		handler = channel.new StringMessageHandler(message, jsonMessage);
@@ -230,7 +221,7 @@ public class ChannelTest {
 		assertTrue(mediaStatus.getItems().isEmpty());
 		assertNull(mediaStatus.getLoadingItemId());
 		assertNotNull(mediaStatus.getMedia());
-		assertEquals(7L, mediaStatus.getMediaSessionId());
+		assertEquals(7, mediaStatus.getMediaSessionId());
 		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
 		assertEquals(PlayerState.PLAYING, mediaStatus.getPlayerState());
 		assertNull(mediaStatus.getPreloadedItemId());
@@ -289,11 +280,8 @@ public class ChannelTest {
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("http://audioURL", media.getUrl());
 		volume = mediaStatus.getVolume();
-		assertEquals(null, volume.getControlType());
-		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
-		assertEquals(0.69999999f, volume.getLevel().floatValue(), 0.000001f);
-		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
-		assertFalse(volume.isMuted());
+		assertEquals(0.69999999d, volume.getLevel().doubleValue(), 0.000001d);
+		assertFalse(volume.getMuted().booleanValue());
 
 		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-pandora.json").replaceFirst("\"type\"", "\"responseType\"");
 		handler = channel.new StringMessageHandler(message, jsonMessage);
@@ -315,7 +303,7 @@ public class ChannelTest {
 		assertTrue(mediaStatus.getItems().isEmpty());
 		assertNull(mediaStatus.getLoadingItemId());
 		assertNotNull(mediaStatus.getMedia());
-		assertEquals(7L, mediaStatus.getMediaSessionId());
+		assertEquals(7, mediaStatus.getMediaSessionId());
 		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
 		assertEquals(PlayerState.PLAYING, mediaStatus.getPlayerState());
 		assertNull(mediaStatus.getPreloadedItemId());
@@ -371,11 +359,8 @@ public class ChannelTest {
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("http://audioURL", media.getUrl());
 		volume = mediaStatus.getVolume();
-		assertEquals(null, volume.getControlType());
-		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
-		assertEquals(0.69999999f, volume.getLevel().floatValue(), 0.000001f);
-		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
-		assertFalse(volume.isMuted());
+		assertEquals(0.69999999d, volume.getLevel().doubleValue(), 0.000001d);
+		assertFalse(volume.getMuted().booleanValue());
 
 		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-unknown-metadataType.json").replaceFirst("\"type\"", "\"responseType\"");
 		handler = channel.new StringMessageHandler(message, jsonMessage);
@@ -397,7 +382,7 @@ public class ChannelTest {
 		assertTrue(mediaStatus.getItems().isEmpty());
 		assertNull(mediaStatus.getLoadingItemId());
 		assertNotNull(mediaStatus.getMedia());
-		assertEquals(7L, mediaStatus.getMediaSessionId());
+		assertEquals(7, mediaStatus.getMediaSessionId());
 		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
 		assertEquals(PlayerState.PLAYING, mediaStatus.getPlayerState());
 		assertNull(mediaStatus.getPreloadedItemId());
@@ -455,11 +440,8 @@ public class ChannelTest {
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("http://audioURL", media.getUrl());
 		volume = mediaStatus.getVolume();
-		assertEquals(null, volume.getControlType());
-		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
-		assertEquals(0.69999999f, volume.getLevel().floatValue(), 0.000001f);
-		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
-		assertFalse(volume.isMuted());
+		assertEquals(0.69999999d, volume.getLevel().doubleValue(), 0.000001d);
+		assertFalse(volume.getMuted().booleanValue());
 
 		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-with-idleReason.json").replaceFirst("\"type\"", "\"responseType\"");
 		handler = channel.new StringMessageHandler(message, jsonMessage);
@@ -481,7 +463,7 @@ public class ChannelTest {
 		assertTrue(mediaStatus.getItems().isEmpty());
 		assertNull(mediaStatus.getLoadingItemId());
 		assertNotNull(mediaStatus.getMedia());
-		assertEquals(1L, mediaStatus.getMediaSessionId());
+		assertEquals(1, mediaStatus.getMediaSessionId());
 		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
 		assertEquals(PlayerState.IDLE, mediaStatus.getPlayerState());
 		assertNull(mediaStatus.getPreloadedItemId());
@@ -499,11 +481,8 @@ public class ChannelTest {
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("/public/Videos/Movies/FileB.mp4", media.getUrl());
 		volume = mediaStatus.getVolume();
-		assertEquals(null, volume.getControlType());
-		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
-		assertEquals(1f, volume.getLevel().floatValue(), 0.000001f);
-		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
-		assertFalse(volume.isMuted());
+		assertEquals(1d, volume.getLevel().doubleValue(), 0.000001d);
+		assertFalse(volume.getMuted().booleanValue());
 
 		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-without-idleReason.json").replaceFirst("\"type\"", "\"responseType\"");
 		handler = channel.new StringMessageHandler(message, jsonMessage);
@@ -525,7 +504,7 @@ public class ChannelTest {
 		assertTrue(mediaStatus.getItems().isEmpty());
 		assertNull(mediaStatus.getLoadingItemId());
 		assertNotNull(mediaStatus.getMedia());
-		assertEquals(1L, mediaStatus.getMediaSessionId());
+		assertEquals(1, mediaStatus.getMediaSessionId());
 		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
 		assertEquals(PlayerState.IDLE, mediaStatus.getPlayerState());
 		assertNull(mediaStatus.getPreloadedItemId());
@@ -543,11 +522,8 @@ public class ChannelTest {
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("/public/Videos/Movies/FileB.mp4", media.getUrl());
 		volume = mediaStatus.getVolume();
-		assertEquals(null, volume.getControlType());
-		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
-		assertEquals(1f, volume.getLevel().floatValue(), 0.000001f);
-		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
-		assertFalse(volume.isMuted());
+		assertEquals(1d, volume.getLevel().doubleValue(), 0.000001d);
+		assertFalse(volume.getMuted().booleanValue());
 
 		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatus-with-videoinfo.json").replaceFirst("\"type\"", "\"responseType\"");
 		handler = channel.new StringMessageHandler(message, jsonMessage);
@@ -567,8 +543,8 @@ public class ChannelTest {
 		assertTrue(mediaStatus.getCustomData().isEmpty());
 		assertNull(mediaStatus.getIdleReason());
 		items = mediaStatus.getItems();
-		assertEquals(1L, items.get(0).getItemId());
-		assertTrue(items.get(0).isAutoplay());
+		assertEquals(1, items.get(0).getItemId().intValue());
+		assertTrue(items.get(0).getAutoplay().booleanValue());
 		media = items.get(0).getMedia();
 		assertEquals("video/mp4", media.getContentType());
 		assertTrue(media.getCustomData().isEmpty());
@@ -585,19 +561,20 @@ public class ChannelTest {
 		assertEquals("images/BigBuckBunny.jpg", data.get("thumb"));
 		assertNull(mediaStatus.getLoadingItemId());
 		assertNotNull(mediaStatus.getMedia());
-		assertEquals(1L, mediaStatus.getMediaSessionId());
+		assertEquals(1, mediaStatus.getMediaSessionId());
 		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
 		assertEquals(PlayerState.BUFFERING, mediaStatus.getPlayerState());
 		assertNull(mediaStatus.getPreloadedItemId());
 		assertEquals(RepeatMode.REPEAT_OFF, mediaStatus.getRepeatMode());
 		assertEquals(15, mediaStatus.getSupportedMediaCommands());
 		assertNotNull(mediaStatus.getVolume());
+		VideoInformation videoInfo = mediaStatus.getVideoInfo();
+		assertEquals(HdrType.SDR, videoInfo.getHdrType());
+		assertEquals(720, videoInfo.getHeight());
+		assertEquals(1280, videoInfo.getWidth());
 		volume = mediaStatus.getVolume();
-		assertEquals(null, volume.getControlType());
-		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
-		assertEquals(1f, volume.getLevel().floatValue(), 0.000001f);
-		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
-		assertFalse(volume.isMuted());
+		assertEquals(1d, volume.getLevel().doubleValue(), 0.000001d);
+		assertFalse(volume.getMuted().booleanValue());
 
 		jsonMessage = FixtureHelper.fixtureAsString("/mediaStatuses.json").replaceFirst("\"type\"", "\"responseType\"");
 		handler = channel.new StringMessageHandler(message, jsonMessage);
@@ -638,11 +615,8 @@ public class ChannelTest {
 		assertEquals("http://192.168.2.139:9080/audio/99fd6998-aa4d-4764-9b41-c6869dcfc85f.mp3", media.getUrl());
 		assertTrue(media.getMetadata().isEmpty());
 		volume = mediaStatus.getVolume();
-		assertEquals(null, volume.getControlType());
-		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
-		assertEquals(1f, volume.getLevel().floatValue(), 0f);
-		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
-		assertFalse(volume.isMuted());
+		assertEquals(1d, volume.getLevel().doubleValue(), 0d);
+		assertFalse(volume.getMuted().booleanValue());
 		mediaStatus = response.getStatuses().get(1);
 		assertNotNull(mediaStatus);
 		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
@@ -653,7 +627,7 @@ public class ChannelTest {
 		assertTrue(mediaStatus.getItems().isEmpty());
 		assertNull(mediaStatus.getLoadingItemId());
 		assertNotNull(mediaStatus.getMedia());
-		assertEquals(7L, mediaStatus.getMediaSessionId());
+		assertEquals(7, mediaStatus.getMediaSessionId());
 		assertEquals(1f, mediaStatus.getPlaybackRate(), 0f);
 		assertEquals(PlayerState.PLAYING, mediaStatus.getPlayerState());
 		assertNull(mediaStatus.getPreloadedItemId());
@@ -679,11 +653,8 @@ public class ChannelTest {
 		assertTrue(media.getTracks().isEmpty());
 		assertEquals("http://audioURL", media.getUrl());
 		volume = mediaStatus.getVolume();
-		assertEquals(null, volume.getControlType());
-		assertEquals(0.05f, volume.getIncrement().floatValue(), 0f);
-		assertEquals(0.69999999f, volume.getLevel().floatValue(), 0.000001f);
-		assertEquals(0.05, volume.getStepInterval().doubleValue(), 0.000001);
-		assertFalse(volume.isMuted());
+		assertEquals(0.69999999d, volume.getLevel().doubleValue(), 0.000001d);
+		assertFalse(volume.getMuted().booleanValue());
 
 		jsonMessage = FixtureHelper.fixtureAsString("/timetick.json").replaceFirst("\"type\"", "\"responseType\"");
 		handler = channel.new StringMessageHandler(message, jsonMessage);
@@ -718,15 +689,15 @@ public class ChannelTest {
 		assertEquals("{\"responseType\":\"CUST_STATUS\",\"requestId\":9023,\"content\":\"Test message\"}", custom.getStringPayload());
 		assertNull(custom.getBinaryPayload());
 
-		volume = new Volume(123f, false, 2f, Volume.DEFAULT_INCREMENT.doubleValue(), Volume.DEFAULT_CONTROL_TYPE);
-		ReceiverStatusResponse receiverStatus = new ReceiverStatusResponse(0L, new ReceiverStatus(volume, null, false, false));
+		Volume deviceVolume = new Volume(123f, false, 2f, Volume.DEFAULT_INCREMENT.doubleValue(), Volume.DEFAULT_CONTROL_TYPE);
+		ReceiverStatusResponse receiverStatus = new ReceiverStatusResponse(0L, new ReceiverStatus(deviceVolume, null, false, false));
 		jsonMessage = jsonMapper.writeValueAsString(receiverStatus);
 		handler = channel.new StringMessageHandler(message, jsonMessage);
 		handler.run();
 		assertEquals(13, events.size());
 		event = events.get(12);
 		assertEquals(CastEventType.RECEIVER_STATUS, event.getEventType());
-		assertEquals(volume, event.getData(ReceiverStatusResponse.class).getStatus().getVolume());
+		assertEquals(deviceVolume, event.getData(ReceiverStatusResponse.class).getStatus().getVolume());
 
 		channel.close();
 	}
