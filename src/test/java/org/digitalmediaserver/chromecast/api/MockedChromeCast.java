@@ -21,6 +21,7 @@ import com.google.protobuf.MessageLite;
 import org.digitalmediaserver.chromecast.api.CastChannel.CastMessage;
 import org.digitalmediaserver.chromecast.api.CastChannel.DeviceAuthMessage;
 import org.digitalmediaserver.chromecast.api.CastChannel.CastMessage.PayloadType;
+import org.digitalmediaserver.chromecast.api.Volume.VolumeControlType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.net.ssl.KeyManagerFactory;
@@ -184,11 +185,10 @@ public class MockedChromeCast {
 		public ReceiverStatus status() {
 			return new ReceiverStatus(
 				new Volume(
-					1f,
+					VolumeControlType.ATTENUATION,
+					1d,
 					false,
-					Volume.DEFAULT_INCREMENT,
-					Volume.DEFAULT_INCREMENT.doubleValue(),
-					Volume.DEFAULT_CONTROL_TYPE
+					0.1
 				),
 				runningApplications,
 				false,

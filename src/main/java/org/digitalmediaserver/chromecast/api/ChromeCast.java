@@ -34,6 +34,8 @@ import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListener;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListenerList;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 import org.digitalmediaserver.chromecast.api.CastEvent.SimpleCastEventListenerList;
+import org.digitalmediaserver.chromecast.api.StandardRequest.SetVolume;
+import org.digitalmediaserver.chromecast.api.Volume.VolumeBuilder;
 
 /**
  * ChromeCast device - main object used for interaction with ChromeCast dongle.
@@ -502,66 +504,121 @@ public class ChromeCast {
 	}
 
 	/**
-	 * @param level volume level from 0 to 1 to set
+	 * Sets the {@link Volume} for the cast device. The {@link Volume} instance
+	 * contains both the volume level and the mute status, so both can be set
+	 * using this method.
+	 * <p>
+	 * To use this method, a {@link Volume} instance should first be acquired
+	 * from the device. A {@link VolumeBuilder} can then be derived using
+	 * {@link Volume#modify()} and the values modified. Finally, a new
+	 * {@link Volume} instance should be created using
+	 * {@link VolumeBuilder#build()}. This is the instance that should be
+	 * specified to this method.
+	 *
+	 * @param volume the {@link Volume} instance to set.
+	 * @param synchronous if {@code true} the method will block and wait for a
+	 *            response. If {@code false} it will return immediately and
+	 *            always return {@code null}.
+	 * @return The resulting {@link ReceiverStatus} if {@code synchronous} is
+	 *         {@code true} and a response is received in time, or {@code null}
+	 *         if {@code synchronous} is {@code false} or waiting for the
+	 *         response times out.
+	 * @throws IOException If an error occurs during the operation.
 	 */
 	@Nullable
-	public ReceiverStatus setVolume(float level, boolean synchronous) throws IOException {
-		return channel().setVolume(new Volume(
-			level,
-			false,
-			Volume.DEFAULT_INCREMENT, //TODO: (Nad) THis is flawed, should use info from device
-			Volume.DEFAULT_INCREMENT.doubleValue(),
-			Volume.DEFAULT_CONTROL_TYPE
-		), synchronous);
-	}
-
-	/**
-	 * ChromeCast does not allow you to jump levels too quickly to avoid blowing
-	 * speakers. Setting by increment allows us to easily get the level we want
-	 *
-	 * @param level volume level from 0 to 1 to set
-	 * @throws IOException
-	 * @see <a href=
-	 *      "https://developers.google.com/cast/docs/design_checklist/sender#sender-control-volume">sender</a>
-	 */
-	public void setVolumeByIncrement(float level) throws IOException { //TODO: (Nad) Look into this
-		Volume volume = this.getReceiverStatus().getVolume();
-		float total = volume.getLevel();
-
-		if (volume.getIncrement() <= 0f) {
-			throw new ChromeCastException("Volume.increment is <= 0");
+	public ReceiverStatus setVolume(@Nullable Volume volume, boolean synchronous) throws IOException {
+		if (volume == null) {
+			return null;
 		}
+		return channel.setVolume(volume, synchronous);
+	}
 
-		// With floating points we always have minor decimal variations, using
-		// the Math.min/max
-		// works around this issue
-		// Increase volume
-		if (level > total) {
-			while (total < level) {
-				total = Math.min(total + volume.getIncrement(), level);
-				setVolume(total, false); //TODO: (Nad) Make proper "incremental" solution
-			}
-			// Decrease Volume
-		} else if (level < total) {
-			while (total > level) {
-				total = Math.max(total - volume.getIncrement(), level);
-				setVolume(total, false);
-			}
+	//TODO: (Nad) JavaDocs
+	@Nullable //Doc: Ineffective if a Volume instance is already held
+	public ReceiverStatus setVolumeLevel(double level, boolean synchronous) throws IOException {
+		if (level < 0.0 || level > 1.0) {
+			throw new IllegalArgumentException("Invalid volume level " + level + " (range is 0 to 1)");
 		}
+		ReceiverStatus status = channel.getReceiverStatus();
+		Volume volume;
+		if (status == null || (volume = status.getVolume()) == null ) {
+			throw new ChromeCastException("Couldn't set volume level because the current volume couldn't be acquired");
+		}
+		return setVolume(volume.modify().level(Double.valueOf(level)).build(), synchronous);
 	}
 
-	/**
-	 * @param muted is to mute or not
-	 */
-	public ReceiverStatus setMuted(boolean muted, boolean synchronous) throws IOException {
-		return channel().setVolume(new Volume(
-			null,
-			muted,
-			Volume.DEFAULT_INCREMENT, //TODO: (Nad) Use proper..
-			Volume.DEFAULT_INCREMENT.doubleValue(),
-			Volume.DEFAULT_CONTROL_TYPE
-		), synchronous);
+	//TODO: (Nad) JavaDocs
+	@Nullable //Doc: Ineffective if a Volume instance is already held
+	public ReceiverStatus setMuteState(boolean muteState, boolean synchronous) throws IOException {
+		ReceiverStatus status = channel.getReceiverStatus();
+		Volume volume;
+		if (status == null || (volume = status.getVolume()) == null ) {
+			throw new ChromeCastException("Couldn't set mute state because the current volume couldn't be acquired");
+		}
+		return setVolume(volume.modify().muted(Boolean.valueOf(muteState)).build(), synchronous);
 	}
+
+//	/**
+//	 * @param level volume level from 0 to 1 to set
+//	 */
+//	@Nullable
+//	public ReceiverStatus setVolume(float level, boolean synchronous) throws IOException {
+//		return channel().setVolume(new Volume(
+//			level,
+//			false,
+//			Volume.DEFAULT_INCREMENT, //TODO: (Nad) THis is flawed, should use info from device
+//			Volume.DEFAULT_INCREMENT.doubleValue(),
+//			Volume.DEFAULT_CONTROL_TYPE
+//		), synchronous);
+//	}
+//
+//	/**
+//	 * ChromeCast does not allow you to jump levels too quickly to avoid blowing
+//	 * speakers. Setting by increment allows us to easily get the level we want
+//	 *
+//	 * @param level volume level from 0 to 1 to set
+//	 * @throws IOException
+//	 * @see <a href=
+//	 *      "https://developers.google.com/cast/docs/design_checklist/sender#sender-control-volume">sender</a>
+//	 */
+//	public void setVolumeByIncrement(float level) throws IOException { //TODO: (Nad) Look into this
+//		Volume volume = this.getReceiverStatus().getVolume(); //TODO: (Nad) Make gradual
+//		float total = volume.getLevel();
+//
+//		if (volume.getIncrement() <= 0f) {
+//			throw new ChromeCastException("Volume.increment is <= 0");
+//		}
+//
+//		// With floating points we always have minor decimal variations, using
+//		// the Math.min/max
+//		// works around this issue
+//		// Increase volume
+//		if (level > total) {
+//			while (total < level) {
+//				total = Math.min(total + volume.getIncrement(), level);
+//				setVolume(total, false); //TODO: (Nad) Make proper "incremental" solution
+//			}
+//			// Decrease Volume
+//		} else if (level < total) {
+//			while (total > level) {
+//				total = Math.max(total - volume.getIncrement(), level);
+//				setVolume(total, false);
+//			}
+//		}
+//	}
+//
+//	/**
+//	 * @param muted is to mute or not
+//	 */
+//	public ReceiverStatus setMuted(boolean muted, boolean synchronous) throws IOException {
+//		return channel().setVolume(new Volume(
+//			null,
+//			muted,
+//			Volume.DEFAULT_INCREMENT, //TODO: (Nad) Use proper..
+//			Volume.DEFAULT_INCREMENT.doubleValue(),
+//			Volume.DEFAULT_CONTROL_TYPE
+//		), synchronous);
+//	}
 
 	/**
 	 * <p>

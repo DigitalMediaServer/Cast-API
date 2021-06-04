@@ -23,6 +23,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import org.digitalmediaserver.chromecast.api.Volume.VolumeControlType;
 
 public class StatusTest {
 
@@ -47,9 +48,8 @@ public class StatusTest {
 		assertNotNull(volume);
 		assertEquals(1.0, volume.getLevel(), 0.1);
 		assertFalse(volume.isMuted());
-		assertNull(volume.getControlType());
-		assertEquals(Volume.DEFAULT_INCREMENT, volume.getIncrement(), 0.001);
-		assertEquals(Volume.DEFAULT_INCREMENT, volume.getStepInterval(), 0.001);
+		assertEquals(VolumeControlType.ATTENUATION, volume.getControlType());
+		assertEquals(0.05, volume.getStepInterval(), 0.001);
 	}
 
 	@Test
@@ -71,8 +71,7 @@ public class StatusTest {
 		assertNotNull(volume);
 		assertEquals(1.0, volume.getLevel(), 0.1);
 		assertFalse(volume.isMuted());
-		assertEquals("attenuation", volume.getControlType());
-		assertEquals(Volume.DEFAULT_INCREMENT, volume.getIncrement(), 0.001);
+		assertEquals(VolumeControlType.ATTENUATION, volume.getControlType());
 		assertEquals(0.04, volume.getStepInterval(), 0.001);
 	}
 
@@ -96,8 +95,7 @@ public class StatusTest {
 		assertNotNull(volume);
 		assertEquals(1.0, volume.getLevel(), 0.1);
 		assertFalse(volume.isMuted());
-		assertEquals("attenuation", volume.getControlType());
-		assertEquals(Volume.DEFAULT_INCREMENT, volume.getIncrement(), 0.001);
+		assertEquals(VolumeControlType.ATTENUATION, volume.getControlType());
 		assertEquals(0.05, volume.getStepInterval(), 0.001);
 	}
 
@@ -121,8 +119,7 @@ public class StatusTest {
 		assertNotNull(volume);
 		assertEquals(1.0, volume.getLevel(), 0.1);
 		assertFalse(volume.isMuted());
-		assertEquals("attenuation", volume.getControlType());
-		assertEquals(Volume.DEFAULT_INCREMENT, volume.getIncrement(), 0.001);
+		assertEquals(VolumeControlType.ATTENUATION, volume.getControlType());
 		assertEquals(0.05, volume.getStepInterval(), 0.001);
 	}
 
@@ -161,8 +158,7 @@ public class StatusTest {
 		assertNotNull(volume);
 		assertEquals(0.2258118838071823, volume.getLevel(), 0.001);
 		assertFalse(volume.isMuted());
-		assertEquals("master", volume.getControlType());
-		assertEquals(Volume.DEFAULT_INCREMENT, volume.getIncrement(), 0.001);
+		assertEquals(VolumeControlType.MASTER, volume.getControlType());
 		assertEquals(0.019999999552965164, volume.getStepInterval(), 0.001);
 	}
 }
