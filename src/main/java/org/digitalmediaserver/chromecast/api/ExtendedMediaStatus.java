@@ -20,6 +20,7 @@ import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 
@@ -39,11 +40,13 @@ public class ExtendedMediaStatus {
 	/** The {@link Media} instance */
 	@Nullable
 	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private final Media media;
 
 	/** The media session ID */
 	@Nullable
 	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private final Integer mediaSessionId;
 
 	/**

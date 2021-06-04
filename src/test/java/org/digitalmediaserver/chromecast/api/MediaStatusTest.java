@@ -70,10 +70,19 @@ public class MediaStatusTest {
 
 		final Map<String, String> payload = new HashMap<>();
 		payload.put("thumb", null);
-		payload.put("title", "Example Track Title");
+		payload.put("title:", "Example Track Title");
 		final Map<String, Object> customData = new HashMap<>();
 		customData.put("payload", payload);
-		assertEquals(Collections.singletonList(new Item(true, customData, 1, media)), mediaStatus.getItems());
+		assertEquals(Collections.singletonList(new QueueItem(
+			null,
+			Boolean.TRUE,
+			customData,
+			Integer.valueOf(1),
+			media,
+			null,
+			null,
+			null)
+		), mediaStatus.getItems());
 
 		assertEquals(media, mediaStatus.getMedia());
 		assertEquals(MetadataType.GENERIC, media.getMetadataType());
@@ -82,8 +91,7 @@ public class MediaStatusTest {
 		assertEquals(PlayerState.BUFFERING, mediaStatus.getPlayerState());
 		assertEquals(RepeatMode.REPEAT_OFF, mediaStatus.getRepeatMode());
 		assertEquals(15, mediaStatus.getSupportedMediaCommands());
-		assertEquals(new Volume(1f, false, Volume.DEFAULT_INCREMENT, Volume.DEFAULT_INCREMENT.doubleValue(), Volume.DEFAULT_CONTROL_TYPE),
-			mediaStatus.getVolume());
+		assertEquals(new MediaVolume(1d, false), mediaStatus.getVolume());
 	}
 
 	@Test
@@ -102,7 +110,7 @@ public class MediaStatusTest {
 		assertTrue(mediaStatus.getItems().isEmpty());
 		assertNull(mediaStatus.getPreloadedItemId());
 
-		assertEquals(new Volume(0.6999999f, false, 0.05f, null, null), mediaStatus.getVolume());
+		assertEquals(new MediaVolume(0.6999999284744263, Boolean.FALSE), mediaStatus.getVolume());
 
 		assertNotNull(mediaStatus.getMedia());
 		Media media = mediaStatus.getMedia();
