@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
 import org.digitalmediaserver.chromecast.api.Media.MediaBuilder;
+import org.digitalmediaserver.chromecast.api.StandardRequest.ResumeState;
 
 
 /**
@@ -310,6 +311,9 @@ public class Session {
 	 * @param mediaSessionId the media session ID for which the pause request
 	 *            applies.
 	 * @param currentTime the new playback position in seconds.
+	 * @param resumeState the desired media player state after the seek is
+	 *            complete. If {@code null}, it will retain the state it had
+	 *            before seeking.
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
@@ -319,8 +323,43 @@ public class Session {
 	 * @throws IOException If an error occurs during the operation.
 	 */
 	@Nullable
-	public MediaStatus seek(long mediaSessionId, double currentTime, boolean synchronous) throws IOException {
-		return channel.seek(senderId, destinationId, id, mediaSessionId, currentTime, synchronous);
+	public MediaStatus seek(
+		long mediaSessionId,
+		double currentTime,
+		@Nullable ResumeState resumeState,
+		boolean synchronous
+	) throws IOException {
+		return channel.seek(senderId, destinationId, id, mediaSessionId, currentTime, resumeState, synchronous);
+	}
+
+	/**
+	 * Asks the remote application to change the volume level or mute state of
+	 * the stream of the specified media session. Please note that this is
+	 * different from the device volume level or mute state, and that this will
+	 * give the user no visual indication.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param mediaSessionId the media session ID for which the
+	 *            {@link MediaVolume} request applies.
+	 * @param volume the {@link MediaVolume} to set.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 * @throws IllegalArgumentException If {@code volume} is {@code null}.
+	 * @throws IOException If an error occurs during the operation.
+	 */
+	@Nullable
+	public MediaStatus setVolume(
+		long mediaSessionId,
+		@Nonnull MediaVolume volume,
+		boolean synchronous
+	) throws IOException {
+		return channel.setMediaVolume(senderId, destinationId, id, mediaSessionId, volume, synchronous);
 	}
 
 	/**

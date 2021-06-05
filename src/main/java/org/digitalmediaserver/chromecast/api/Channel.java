@@ -62,6 +62,7 @@ import org.digitalmediaserver.chromecast.api.ChromeCastException.LaunchErrorCast
 import org.digitalmediaserver.chromecast.api.ChromeCastException.LoadCancelledCastException;
 import org.digitalmediaserver.chromecast.api.ChromeCastException.LoadFailedCastException;
 import org.digitalmediaserver.chromecast.api.Session.ClosedByPeerListener;
+import org.digitalmediaserver.chromecast.api.StandardRequest.ResumeState;
 import org.digitalmediaserver.chromecast.api.StandardResponse.AppAvailabilityResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.InvalidResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.LaunchErrorResponse;
@@ -541,9 +542,10 @@ public class Channel implements Closeable {
 
 	/**
 	 * Asks the targeted remote application to load the specified {@link Media}
-	 * using the specified parameters. This can only succeed if the remote
-	 * application supports the "{@code urn:x-cast:com.google.cast.media}"
-	 * namespace.
+	 * using the specified parameters.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
 	 * @param senderId the session ID to use.
 	 * @param destinationId the destination ID to use.
@@ -588,9 +590,10 @@ public class Channel implements Closeable {
 
 	/**
 	 * Asks the remote application to start playing the media referenced by the
-	 * specified media session ID. This can only succeed if the remote
-	 * application supports the "{@code urn:x-cast:com.google.cast.media}"
-	 * namespace.
+	 * specified media session ID.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
 	 * @param senderId the session ID to use.
 	 * @param destinationId the destination ID to use.
@@ -625,9 +628,10 @@ public class Channel implements Closeable {
 
 	/**
 	 * Asks the remote application to pause playback of the media referenced by
-	 * the specified media session ID. This can only succeed if the remote
-	 * application supports the "{@code urn:x-cast:com.google.cast.media}"
-	 * namespace.
+	 * the specified media session ID.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
 	 * @param senderId the session ID to use.
 	 * @param destinationId the destination ID to use.
@@ -663,6 +667,7 @@ public class Channel implements Closeable {
 	/**
 	 * Asks the remote application to move the playback position of the media
 	 * referenced by the specified media session ID to the specified position.
+	 * <p>
 	 * This can only succeed if the remote application supports the
 	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
@@ -672,6 +677,9 @@ public class Channel implements Closeable {
 	 * @param mediaSessionId the media session ID for which the pause request
 	 *            applies.
 	 * @param currentTime the new playback position in seconds.
+	 * @param resumeState the desired media player state after the seek is
+	 *            complete. If {@code null}, it will retain the state it had
+	 *            before seeking.
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
@@ -687,14 +695,60 @@ public class Channel implements Closeable {
 		@Nonnull String sessionId,
 		long mediaSessionId,
 		double currentTime,
+		@Nullable ResumeState resumeState,
 		boolean synchronous
 	) throws IOException {
 		MediaStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.media",
-			StandardRequest.seek(sessionId, mediaSessionId, currentTime),
+			StandardRequest.seek(sessionId, mediaSessionId, currentTime, resumeState),
 			senderId,
 			destinationId,
 			synchronous
+		);
+		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+	}
+
+	/**
+	 * Asks the remote application to change the volume level or mute state of
+	 * the stream of the specified media session. Please note that this is
+	 * different from the device volume level or mute state, and that this will
+	 * give the user no visual indication.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param senderId the session ID to use.
+	 * @param destinationId the destination ID to use.
+	 * @param sessionId the session ID to use.
+	 * @param mediaSessionId the media session ID for which the
+	 *            {@link MediaVolume} request applies.
+	 * @param volume the {@link MediaVolume} to set.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 * @throws IllegalArgumentException If {@code senderId},
+	 *             {@code destinationId}, {@code sessionId} or {@code volume} is
+	 *             {@code null}.
+	 * @throws IOException If an error occurs during the operation.
+	 */
+	@Nullable
+	public MediaStatus setMediaVolume(
+		@Nonnull String senderId,
+		@Nonnull String destinationId,
+		@Nonnull String sessionId,
+		long mediaSessionId,
+		@Nonnull MediaVolume volume,
+		boolean synchronous
+	) throws IOException {
+		MediaStatusResponse status = send(
+			"urn:x-cast:com.google.cast.media",
+			StandardRequest.volumeRequest(sessionId, mediaSessionId, volume, null),
+			senderId,
+			destinationId,
+			synchronous ? MediaStatusResponse.class : null
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
