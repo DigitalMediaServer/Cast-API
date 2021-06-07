@@ -31,8 +31,9 @@ import javax.annotation.concurrent.Immutable;
 public class Volume {
 
 	/** The type of volume control that is available */
-	@Nonnull
+	@Nullable
 	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private final VolumeControlType controlType;
 
 	/**
@@ -51,22 +52,20 @@ public class Volume {
 	private final Boolean muted;
 
 	/** The allowed steps for changing volume */
-	@Nonnull
+	@Nullable
 	@JsonProperty
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private final Double stepInterval;
 
 	/**
 	 * Creates a new instance using the specified parameters.
 	 *
-	 * @param controlType the type of volume control that is available. If
-	 *            {@code null}, it will default to
-	 *            {@link VolumeControlType#ATTENUATION}.
+	 * @param controlType the type of volume control that is available.
 	 * @param level the current volume level as a value between {@code 0.0} and
 	 *            {@code 1.0}.
 	 * @param muted whether the receiver is muted, independent of the volume
 	 *            level.
-	 * @param stepInterval the allowed steps for changing volume. If
-	 *            {@code null}, it will default to {@code 0.05}.
+	 * @param stepInterval the allowed steps for changing volume.
 	 */
 	public Volume(
 		@JsonProperty("controlType") @Nullable VolumeControlType controlType,
@@ -74,16 +73,16 @@ public class Volume {
 		@JsonProperty("muted") @Nullable Boolean muted,
 		@JsonProperty("stepInterval") @Nullable Double stepInterval
 	) {
-		this.controlType = controlType == null ? VolumeControlType.ATTENUATION : controlType;
+		this.controlType = controlType;
 		this.level = level;
 		this.muted = muted;
-		this.stepInterval = stepInterval == null ? Double.valueOf(0.05) : stepInterval;
+		this.stepInterval = stepInterval;
 	}
 
 	/**
 	 * @return The type of volume control that is available.
 	 */
-	@Nonnull
+	@Nullable
 	public VolumeControlType getControlType() {
 		return controlType;
 	}
@@ -108,7 +107,7 @@ public class Volume {
 	/**
 	 * @return The allowed steps for changing volume.
 	 */
-	@Nonnull
+	@Nullable
 	public Double getStepInterval() {
 		return stepInterval;
 	}
@@ -170,7 +169,7 @@ public class Volume {
 	public static class VolumeBuilder {
 
 		/** The type of volume control that is available */
-		@Nonnull
+		@Nullable
 		private VolumeControlType controlType;
 
 		/**
@@ -185,7 +184,7 @@ public class Volume {
 		private Boolean muted;
 
 		/** The allowed steps for changing volume */
-		@Nonnull
+		@Nullable
 		private Double stepInterval;
 
 		/**
@@ -193,12 +192,8 @@ public class Volume {
 		 *
 		 * @param controlType the type of volume control that is available.
 		 * @param stepInterval the allowed steps for changing volume.
-		 * @throws IllegalArgumentException If any of the parameters are
-		 *             {@code null}.
 		 */
-		public VolumeBuilder(@Nonnull VolumeControlType controlType, @Nonnull Double stepInterval) {
-			Util.requireNotNull(controlType, "controlType");
-			Util.requireNotNull(stepInterval, "stepInterval");
+		public VolumeBuilder(@Nullable VolumeControlType controlType, @Nullable Double stepInterval) {
 			this.controlType = controlType;
 			this.stepInterval = stepInterval;
 		}
@@ -206,7 +201,7 @@ public class Volume {
 		/**
 		 * @return The type of volume control that is available.
 		 */
-		@Nonnull
+		@Nullable
 		public VolumeControlType controlType() {
 			return controlType;
 		}
@@ -257,7 +252,7 @@ public class Volume {
 		/**
 		 * @return The allowed steps for changing volume.
 		 */
-		@Nonnull
+		@Nullable
 		public Double stepInterval() {
 			return stepInterval;
 		}
@@ -276,14 +271,18 @@ public class Volume {
 		public String toString() {
 			StringBuilder builder = new StringBuilder();
 			builder.append(getClass().getSimpleName()).append(" [");
-			builder.append("controlType=").append(controlType).append(", ");
+			if (controlType != null) {
+				builder.append("controlType=").append(controlType).append(", ");
+			}
 			if (level != null) {
 				builder.append("level=").append(level).append(", ");
 			}
 			if (muted != null) {
 				builder.append("muted=").append(muted).append(", ");
 			}
-			builder.append("stepInterval=").append(stepInterval);
+			if (stepInterval != null) {
+				builder.append("stepInterval=").append(stepInterval);
+			}
 			builder.append("]");
 			return builder.toString();
 		}

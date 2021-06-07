@@ -41,7 +41,6 @@ public class ConnectionLostTest {
 		null,
 		1,
 		null,
-		null,
 		true
 	);
 

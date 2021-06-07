@@ -482,6 +482,80 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		}
 	}
 
+	/**
+	 * A request to set the stream volume of the playing media.
+	 * <p>
+	 * <b>Note</b> This should be a {@link MediaRequest}, but since that would
+	 * also make it a {@link StandardMessage} which maps {@code type} using
+	 * Jackson subtypes, it isn't. The reason is that another implementation,
+	 * {@link SetVolume}, is already mapped to "{@code SET_VOLUME}" which is the
+	 * same {@code type} as this request uses. The differences between the two
+	 * is the namespace, but that isn't captured by the Jackson subtype logic,
+	 * which is why this implementation is only a {@link Request} that "manually
+	 * implements" the remaining fields required for a {@link MediaRequest}.
+	 */
+	public static class StopMedia implements Request { //TODO: (Nad) Fix JavaDocs
+
+		/** The media session ID */
+		@JsonProperty
+		private final long mediaSessionId;
+
+		/** the request ID */
+		@JsonProperty
+		private long requestId;
+
+		@JsonProperty
+		private final String type = "STOP";
+
+		/** Custom data for the receiver application */
+		@Nullable
+		@JsonProperty
+		@JsonInclude(JsonInclude.Include.NON_EMPTY)
+		protected final Map<String, Object> customData;
+
+		/**
+		 * Creates a new request using the specified parameters.
+		 *
+		 * @param sessionId the session ID to use.
+		 * @param mediaSessionId the media session ID for which the seek request
+		 *            applies.
+		 * @param volume the new volume of the stream. At least one of level or
+		 *            muted must be set.
+		 * @param customData the custom data for the receiver application.
+		 * @throws IllegalArgumentException If {@code sessionId} or
+		 *             {@code volume} is {@code null}.
+		 */
+		public StopMedia(long mediaSessionId, @Nullable Map<String, Object> customData) {
+			this.mediaSessionId = mediaSessionId;
+			this.customData = customData;
+		}
+
+		/**
+		 * @return The custom data for the receiver application.
+		 */
+		@Nullable
+		public Map<String, Object> getCustomData() {
+			return customData;
+		}
+
+		@Override
+		public void setRequestId(long requestId) {
+			this.requestId = requestId;
+		}
+
+		@Override
+		public long getRequestId() {
+			return requestId;
+		}
+
+		/**
+		 * @return The media session ID.
+		 */
+		public long getMediaSessionId() {
+			return mediaSessionId;
+		}
+	}
+
 	@Nonnull
 	public static GetStatus status() {
 		return new GetStatus();
@@ -592,7 +666,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	}
 
 	/**
-	 * Creates a new {@link VolumeRequest} for setting volume level and mute on
+	 * Creates a new {@link StopMedia} for setting volume level and mute on
 	 * a <i>media stream</i> using the specified parameters.
 	 *
 	 * @param sessionId the session ID to use.
@@ -601,7 +675,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	 * @param volume the new volume of the stream. At least one of level or
 	 *            muted must be set.
 	 * @param customData the custom data for the receiver application.
-	 * @return The new {@link VolumeRequest}.
+	 * @return The new {@link StopMedia}.
 	 * @throws IllegalArgumentException If {@code sessionId} or {@code volume}
 	 *             is {@code null}.
 	 */
@@ -613,6 +687,11 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		@Nullable Map<String, Object> customData
 	) {
 		return new VolumeRequest(sessionId, mediaSessionId, volume, customData);
+	}
+
+	@Nonnull
+	public static StopMedia stopMedia(long mediaSessionId, @Nullable Map<String, Object> customData) { //TODO: (Nad) What's the point of these static methods?
+		return new StopMedia(mediaSessionId, customData);
 	}
 
 	/**

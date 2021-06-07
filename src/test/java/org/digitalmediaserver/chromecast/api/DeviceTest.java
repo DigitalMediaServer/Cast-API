@@ -44,8 +44,8 @@ public class DeviceTest {
 		Volume volume = device.getVolume();
 		assertEquals(0.24, volume.getLevel(), 0.001);
 		assertFalse(volume.isMuted());
-		assertNotNull(volume.getStepInterval());
-		assertEquals(VolumeControlType.ATTENUATION, volume.getControlType());
+		assertNull(volume.getStepInterval());
+		assertNull(volume.getControlType());
 	}
 
 	@Test
@@ -71,7 +71,7 @@ public class DeviceTest {
 		Volume volume = device.getVolume();
 		assertEquals(0.35, volume.getLevel(), 0.001);
 		assertFalse(volume.isMuted());
-		assertNotNull(volume.getStepInterval());
-		assertEquals(VolumeControlType.ATTENUATION, volume.getControlType());
+		assertNull(volume.getStepInterval());
+		assertNull(volume.getControlType());
 	}
 }

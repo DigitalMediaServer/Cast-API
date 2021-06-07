@@ -46,7 +46,7 @@ public class ChannelTest {
 				events.add(event);
 			}
 		});
-		Channel channel = new Channel("localhost", "test", "sender-test", listeners);
+		Channel channel = new Channel("localhost", "test", listeners);
 		CastMessage message = CastMessage.newBuilder()
 			.setProtocolVersion(ProtocolVersion.CASTV2_1_0)
 			.setSourceId("receiver-0")
@@ -718,7 +718,6 @@ public class ChannelTest {
 			"Mock",
 			1,
 			null,
-			"sender-test",
 			true
 		);
 		final List<CastEvent<?>> events = new CopyOnWriteArrayList<>();

@@ -48,8 +48,8 @@ public class StatusTest {
 		assertNotNull(volume);
 		assertEquals(1.0, volume.getLevel(), 0.1);
 		assertFalse(volume.isMuted());
-		assertEquals(VolumeControlType.ATTENUATION, volume.getControlType());
-		assertEquals(0.05, volume.getStepInterval(), 0.001);
+		assertNull(volume.getControlType());
+		assertNull(volume.getStepInterval());
 	}
 
 	@Test

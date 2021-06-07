@@ -65,7 +65,29 @@ public class Media {
 		E_AC3,
 
 		/** Audio packed in ISO BMFF CMAF Fragmented MP4 */
-		FMP4
+		FMP4;
+
+		/**
+		 * Parses the specified string and returns the corresponding
+		 * {@link HlsSegmentFormat}, or {@code null} if no match could be found.
+		 *
+		 * @param hlsSegmentFormat the string to parse.
+		 * @return The resulting {@link HlsSegmentFormat} or {@code null}.
+		 */
+		@Nullable
+		@JsonCreator
+		public static HlsSegmentFormat typeOf(String hlsSegmentFormat) {
+			if (Util.isBlank(hlsSegmentFormat)) {
+				return null;
+			}
+			String typeString = hlsSegmentFormat.toUpperCase(Locale.ROOT);
+			for (HlsSegmentFormat type : values()) {
+				if (typeString.equals(type.name())) {
+					return type;
+				}
+			}
+			return null;
+		}
 	}
 
 	/**
@@ -77,7 +99,30 @@ public class Media {
 		MPEG2_TS,
 
 		/** Video packed in ISO BMFF CMAF Fragmented MP4. Supports AVC and HEVC */
-		FMP4
+		FMP4;
+
+		/**
+		 * Parses the specified string and returns the corresponding
+		 * {@link HlsVideoSegmentFormat}, or {@code null} if no match could be
+		 * found.
+		 *
+		 * @param hlsVideoSegmentFormat the string to parse.
+		 * @return The resulting {@link HlsVideoSegmentFormat} or {@code null}.
+		 */
+		@Nullable
+		@JsonCreator
+		public static HlsVideoSegmentFormat typeOf(String hlsVideoSegmentFormat) {
+			if (Util.isBlank(hlsVideoSegmentFormat)) {
+				return null;
+			}
+			String typeString = hlsVideoSegmentFormat.toUpperCase(Locale.ROOT);
+			for (HlsVideoSegmentFormat type : values()) {
+				if (typeString.equals(type.name())) {
+					return type;
+				}
+			}
+			return null;
+		}
 	}
 
 	/**
@@ -92,7 +137,29 @@ public class Media {
 		VIDEO,
 
 		/** Media is a picture */
-		IMAGE
+		IMAGE;
+
+		/**
+		 * Parses the specified string and returns the corresponding
+		 * {@link MediaCategory}, or {@code null} if no match could be found.
+		 *
+		 * @param mediaCategory the string to parse.
+		 * @return The resulting {@link MediaCategory} or {@code null}.
+		 */
+		@Nullable
+		@JsonCreator
+		public static MediaCategory typeOf(String mediaCategory) {
+			if (Util.isBlank(mediaCategory)) {
+				return null;
+			}
+			String typeString = mediaCategory.toUpperCase(Locale.ROOT);
+			for (MediaCategory type : values()) {
+				if (typeString.equals(type.name())) {
+					return type;
+				}
+			}
+			return null;
+		}
 	}
 
 	/**

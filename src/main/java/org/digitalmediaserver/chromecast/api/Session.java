@@ -61,10 +61,10 @@ public class Session {
 	@Nonnull
 	protected final Object listenerLock = new Object();
 
-	/** The listener to invoke if the session is closed by the remote peer */
+	/** The listener to invoke if the session is closed */
 	@Nullable
 	@GuardedBy("listenerLock")
-	protected ClosedByPeerListener listener;
+	protected SessionClosedListener listener;
 
 	/**
 	 * Creates a new instance using the specified parameters.
@@ -134,24 +134,22 @@ public class Session {
 	}
 
 	/**
-	 * @return The listener that is invoked if the session is closed by the
-	 *         remote peer, if any.
+	 * @return The listener that is invoked if the session is closed, if any.
 	 */
 	@Nullable
-	public ClosedByPeerListener getClosedByPeerListener() {
+	public SessionClosedListener getSessionClosedListener() {
 		synchronized (listenerLock) {
 			return listener;
 		}
 	}
 
 	/**
-	 * Sets the listener that is to be invoked if the session is closed by the
-	 * remote peer.
+	 * Sets the listener that is to be invoked if the session is closed.
 	 *
-	 * @param listener The {@link ClosedByPeerListener} implementation to
+	 * @param listener The {@link SessionClosedListener} implementation to
 	 *            invoke.
 	 */
-	public void setClosedByPeerListener(@Nullable ClosedByPeerListener listener) {
+	public void setSessionClosedListener(@Nullable SessionClosedListener listener) {
 		synchronized (listenerLock) {
 			this.listener = listener;
 		}
@@ -332,6 +330,14 @@ public class Session {
 		return channel.seek(senderId, destinationId, id, mediaSessionId, currentTime, resumeState, synchronous);
 	}
 
+	@Nullable
+	public MediaStatus stop( //TODO: (Nad) Temp test, JavaDocs if keep
+		long mediaSessionId,
+		boolean synchronous
+	) throws IOException {
+		return channel.stopMedia(senderId, destinationId, mediaSessionId, synchronous);
+	}
+
 	/**
 	 * Asks the remote application to change the volume level or mute state of
 	 * the stream of the specified media session. Please note that this is
@@ -418,16 +424,14 @@ public class Session {
 
 	/**
 	 * An interface defining a callback which is invoked when a {@link Session}
-	 * is closed by the remote peer. It is not invoked if the {@link Session} is
-	 * closed from "our side".
+	 * is closed.
 	 *
 	 * @author Nadahar
 	 */
-	public interface ClosedByPeerListener {
+	public interface SessionClosedListener {
 
 		/**
-		 * Called when the specified {@link Session} is closed by the remote
-		 * peer.
+		 * Called when the specified {@link Session} is closed.
 		 *
 		 * @param session the {@link Session} that is being closed.
 		 */

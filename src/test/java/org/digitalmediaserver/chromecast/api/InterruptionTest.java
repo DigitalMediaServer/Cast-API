@@ -53,7 +53,6 @@ public class InterruptionTest {
 		null,
 		1,
 		null,
-		null,
 		true
 	);
 
