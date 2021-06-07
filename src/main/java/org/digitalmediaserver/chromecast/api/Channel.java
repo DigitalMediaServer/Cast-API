@@ -61,7 +61,7 @@ import org.digitalmediaserver.chromecast.api.ChromeCastException.InvalidCastExce
 import org.digitalmediaserver.chromecast.api.ChromeCastException.LaunchErrorCastException;
 import org.digitalmediaserver.chromecast.api.ChromeCastException.LoadCancelledCastException;
 import org.digitalmediaserver.chromecast.api.ChromeCastException.LoadFailedCastException;
-import org.digitalmediaserver.chromecast.api.Session.ClosedByPeerListener;
+import org.digitalmediaserver.chromecast.api.Session.SessionClosedListener;
 import org.digitalmediaserver.chromecast.api.StandardRequest.ResumeState;
 import org.digitalmediaserver.chromecast.api.StandardResponse.AppAvailabilityResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.InvalidResponse;
@@ -70,6 +70,7 @@ import org.digitalmediaserver.chromecast.api.StandardResponse.LoadCancelledRespo
 import org.digitalmediaserver.chromecast.api.StandardResponse.LoadFailedResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MediaStatusResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.ReceiverStatusResponse;
+import org.digitalmediaserver.chromecast.api.Volume.VolumeControlType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
@@ -132,12 +133,6 @@ public class Channel implements Closeable {
 	protected final String remoteName;
 
 	/**
-	 * The sender id used in this channel
-	 */
-	@Nonnull
-	protected final String senderId; //TODO: (Nad) Figure out... remove?
-
-	/**
 	 * Timer for PING requests
 	 */
 	@GuardedBy("socketLock")
@@ -178,6 +173,27 @@ public class Channel implements Closeable {
 	@GuardedBy("sessionsLock")
 	protected final Set<Session> sessions = new HashSet<>();
 
+	@Nonnull
+	protected final Object cachedVolumeLock = new Object();
+
+	/** The last received {@link Volume} instance */
+	@Nullable
+	@GuardedBy("cachedVolumeLock")
+	protected Volume cachedVolume;
+
+	@Nonnull
+	protected final Object gradualVolumeLock = new Object();
+
+	/** The {@link Timer} used to handle gradual volume change */
+	@Nullable
+	@GuardedBy("cachedVolumeLock")
+	protected Timer gradualVolumeTimer;
+
+	/** The {@link TimerTask} that executes the gradual volume change */
+	@Nullable
+	@GuardedBy("cachedVolumeLock")
+	protected TimerTask gradualVolumeTask;
+
 	/**
 	 * How much time to wait until request is processed
 	 */
@@ -186,26 +202,22 @@ public class Channel implements Closeable {
 	public Channel(
 		@Nonnull String host,
 		@Nonnull String remoteName,
-		@Nullable String senderId,
 		@Nonnull CastEventListenerList listeners
 	) {
-		this(host, 8009, remoteName, senderId, listeners);
+		this(host, 8009, remoteName, listeners);
 	}
 
 	public Channel(
 		@Nonnull String host,
 		int port,
 		@Nonnull String remoteName,
-		@Nullable String senderId,
 		@Nonnull CastEventListenerList listeners
 	) {
 		requireNotBlank(host, "host");
 		requireNotBlank(remoteName, "remoteName");
-		requireNotBlank(senderId, "senderId"); //TODO: (Nad) Figure out senderId ("platform" or "applicaton" level)
 		requireNotNull(listeners, "listeners");
 		this.address = new InetSocketAddress(host, port);
 		this.remoteName = remoteName;
-		this.senderId = senderId;
 		this.listeners = listeners;
 	}
 
@@ -243,7 +255,7 @@ public class Channel implements Closeable {
 				.setNamespace("urn:x-cast:com.google.cast.tp.deviceauth")
 				.setPayloadType(CastMessage.PayloadType.BINARY)
 				.setProtocolVersion(CastMessage.ProtocolVersion.CASTV2_1_0)
-				.setSourceId(senderId)
+				.setSourceId(PLATFORM_SENDER_ID)
 				.setPayloadBinary(authMessage.toByteString())
 				.build();
 
@@ -289,6 +301,7 @@ public class Channel implements Closeable {
 	//Doc: Closes the channel and any sessions on the channel
 	@Override
 	public void close() throws IOException {
+		Set<Session> closedSessions = null;
 		synchronized (socketLock) {
 			if (socket == null || socket.isClosed() || !socket.isConnected()) {
 				// Already closed
@@ -296,7 +309,10 @@ public class Channel implements Closeable {
 			}
 
 			synchronized (sessionsLock) {
-				sessions.clear();
+				if (!sessions.isEmpty()) {
+					closedSessions = new HashSet<>(sessions);
+					sessions.clear();
+				}
 			}
 
 			if (pingTimer != null) {
@@ -311,6 +327,17 @@ public class Channel implements Closeable {
 
 			socket.close();
 		}
+
+		if (closedSessions != null) {
+			SessionClosedListener closedListener;
+			for (Session session : closedSessions) {
+				closedListener = session.getSessionClosedListener();
+				if (closedListener != null) {
+					closedListener.closed(session);
+				}
+			}
+		}
+
 		// Send disconnect event
 		if (!listeners.isEmpty()) {
 			EXECUTOR.execute(new Runnable() {
@@ -406,19 +433,20 @@ public class Channel implements Closeable {
 		write(msg);
 	}
 
-	private void write(CastMessage message) throws IOException {
+	protected void write(CastMessage message) throws IOException {
 		OutputStream os;
 		synchronized (socketLock) {
 			if (socket == null) {
 				throw new SocketException("Socket is null");
 			}
 			os = socket.getOutputStream();
+			// Include in synchronized section to force serialization of outgoing messages
+			writeB32Int(message.getSerializedSize(), os);
+			message.writeTo(os);
 		}
-		writeB32Int(message.getSerializedSize(), os);
-		message.writeTo(os);
 	}
 
-	private static CastMessage readMessage(InputStream inputStream) throws IOException {
+	protected static CastMessage readMessage(InputStream inputStream) throws IOException { //TODO: (Nad) Move
 		int size = readB32Int(inputStream);
 		byte[] buf = new byte[size];
 		int read = 0;
@@ -440,7 +468,12 @@ public class Channel implements Closeable {
 			PLATFORM_RECEIVER_ID,
 			true
 		);
-		return status == null ? null : status.getStatus();
+		ReceiverStatus result;
+		if (status == null || (result = status.getStatus()) == null) {
+			return null;
+		}
+		cacheVolume(result);
+		return result;
 	}
 
 	public boolean isApplicationAvailable(String applicationId) throws IOException {
@@ -463,7 +496,12 @@ public class Channel implements Closeable {
 			PLATFORM_RECEIVER_ID,
 			synchronous
 		);
-		return status == null ? null : status.getStatus();
+		ReceiverStatus result;
+		if (status == null || (result = status.getStatus()) == null) {
+			return null;
+		}
+		cacheVolume(result);
+		return result;
 	}
 
 	public ReceiverStatus stopApplication(@Nonnull Application application, boolean synchronous) throws IOException {
@@ -474,7 +512,12 @@ public class Channel implements Closeable {
 			PLATFORM_RECEIVER_ID,
 			synchronous
 		);
-		return status == null ? null : status.getStatus();
+		ReceiverStatus result;
+		if (status == null || (result = status.getStatus()) == null) {
+			return null;
+		}
+		cacheVolume(result);
+		return result;
 	}
 
 	@Nonnull
@@ -522,6 +565,10 @@ public class Channel implements Closeable {
 				return false;
 			}
 		}
+		SessionClosedListener listener = session.getSessionClosedListener();
+		if (listener != null) {
+			listener.closed(session);
+		}
 		write(
 			"urn:x-cast:com.google.cast.tp.connection",
 			StandardMessage.closeConnection(),
@@ -537,6 +584,23 @@ public class Channel implements Closeable {
 		}
 		synchronized (sessionsLock) {
 			return !sessions.contains(session);
+		}
+	}
+
+	protected void cacheVolume(@Nullable ReceiverStatus receiverStatus) {
+		Volume volume;
+		if (receiverStatus != null && (volume = receiverStatus.getVolume()) != null) {
+			cacheVolume(volume);
+		}
+	}
+
+	protected void cacheVolume(@Nullable Volume volume) {
+		if (volume == null) {
+			return;
+		}
+		LOGGER.error("Cached volume: {}", volume); //TODO: (Nad) Temp test
+		synchronized (cachedVolumeLock) {
+			cachedVolume = volume;
 		}
 	}
 
@@ -708,6 +772,23 @@ public class Channel implements Closeable {
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
+	@Nullable
+	public MediaStatus stopMedia( //TODO: (Nad) Temp test, javadocs if keep
+		@Nonnull String senderId,
+		@Nonnull String destinationId,
+		long mediaSessionId,
+		boolean synchronous
+	) throws IOException {
+		MediaStatusResponse status = send(
+			"urn:x-cast:com.google.cast.media",
+			StandardRequest.stopMedia(mediaSessionId, null),
+			senderId,
+			destinationId,
+			synchronous ? MediaStatusResponse.class : null
+		);
+		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+	}
+
 	/**
 	 * Asks the remote application to change the volume level or mute state of
 	 * the stream of the specified media session. Please note that this is
@@ -754,7 +835,122 @@ public class Channel implements Closeable {
 	}
 
 	@Nullable
-	public ReceiverStatus setVolume(Volume volume, boolean synchronous) throws IOException {
+	public void setVolume(Volume volume) throws IOException {
+		if (volume == null) {
+			return;
+		}
+		Volume lastVolume;
+		synchronized (cachedVolumeLock) {
+			lastVolume = cachedVolume;
+		}
+		if (lastVolume != null) {
+			if (lastVolume.getControlType() == VolumeControlType.FIXED) {
+				throw new ChromeCastException("Cannot set volume level or mute since the device has a fixed volume");
+			}
+			Double currentLevelObj, targetLevelObj, stepIntervalObj;
+			if (
+				(currentLevelObj = lastVolume.getLevel()) != null &&
+				(targetLevelObj = volume.getLevel()) != null &&
+//				lastVolume.getControlType() == VolumeControlType.MASTER && //TODO: (Nad) Temp test
+				(stepIntervalObj = lastVolume.getStepInterval()) != null
+			) {
+				GradualVolumeTask task = null;
+				double currentLevel, targetLevel, stepInterval, diff;
+				if (
+					(currentLevel = currentLevelObj.doubleValue()) != (targetLevel = targetLevelObj.doubleValue()) &&
+					(diff = Math.abs(targetLevel - currentLevel)) > (stepInterval = stepIntervalObj.doubleValue())
+				) {
+					int steps = (int) Math.ceil(diff / stepInterval);
+					if (steps > 1) {
+						if (targetLevel < currentLevel) {
+							stepInterval = -stepInterval;
+						}
+						task = new GradualVolumeTask(stepInterval, targetLevel);
+						volume = volume.modify().level(Double.valueOf(currentLevel + stepInterval)).build();
+					}
+				}
+
+				//TODO (Nad) Make
+				synchronized (gradualVolumeLock) {
+					if (gradualVolumeTask != null) {
+						gradualVolumeTask.cancel();
+					}
+					if (task != null) {
+						if (gradualVolumeTimer == null) {
+							gradualVolumeTimer = new Timer(remoteName + " gradual volume timer");
+						}
+						gradualVolumeTask = task;
+						gradualVolumeTimer.schedule(task, 500, 500);
+					} else if (gradualVolumeTimer != null) {
+						gradualVolumeTimer.cancel();
+						gradualVolumeTimer = null;
+					}
+				}
+			}
+		}
+		doSetVolume(volume, false);
+	}
+
+	protected class GradualVolumeTask extends TimerTask { //TODO: (Nad) MOve
+
+		private final double interval;
+
+		private final double target;
+
+		public GradualVolumeTask(double interval, double target) {
+			this.interval = interval;
+			this.target = target;
+		}
+
+		@Override
+		public void run() {
+			Volume currentVolume;
+			synchronized (cachedVolumeLock) {
+				currentVolume = cachedVolume;
+			}
+			if (currentVolume == null || currentVolume.getLevel() == null) {
+				shutdownTask();
+			} else {
+				double currentLevel = currentVolume.getLevel().doubleValue();
+				double newLevel = currentLevel + interval;
+				if (interval > 0d) {
+					if (newLevel > target) {
+						newLevel = target;
+						shutdownTask();
+					}
+				} else {
+					if (newLevel < target) {
+						newLevel = target;
+						shutdownTask();
+					}
+				}
+				Volume newVolume = new Volume(null, Double.valueOf(newLevel), null, null);
+				try {
+					doSetVolume(newVolume, false);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					shutdownTask();
+				}
+			}
+		}
+
+		private void shutdownTask() {
+			cancel();
+			synchronized (gradualVolumeLock) {
+				if (gradualVolumeTask == this) {
+					gradualVolumeTask = null;
+					if (gradualVolumeTimer != null) {
+						gradualVolumeTimer.cancel();
+						gradualVolumeTimer = null;
+					}
+				}
+			}
+		}
+	}
+
+	@Nullable
+	protected ReceiverStatus doSetVolume(Volume volume, boolean synchronous) throws IOException {
 		ReceiverStatusResponse status = sendStandard(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.setVolume(volume),
@@ -762,7 +958,12 @@ public class Channel implements Closeable {
 			PLATFORM_RECEIVER_ID,
 			synchronous
 		);
-		return status == null ? null : status.getStatus();
+		ReceiverStatus result;
+		if (status == null || (result = status.getStatus()) == null) {
+			return null;
+		}
+		cacheVolume(result);
+		return result;
 	}
 
 	@Nullable
@@ -860,7 +1061,7 @@ public class Channel implements Closeable {
 			}
 			message = CastMessage.newBuilder()
 				.setProtocolVersion(CastMessage.ProtocolVersion.CASTV2_1_0)
-				.setSourceId(senderId)
+				.setSourceId(PLATFORM_SENDER_ID)
 				.setDestinationId(PLATFORM_RECEIVER_ID)
 				.setNamespace("urn:x-cast:com.google.cast.tp.heartbeat")
 				.setPayloadType(CastMessage.PayloadType.STRING)
@@ -910,7 +1111,7 @@ public class Channel implements Closeable {
 			}
 			pongMessage = CastMessage.newBuilder()
 				.setProtocolVersion(CastMessage.ProtocolVersion.CASTV2_1_0)
-				.setSourceId(senderId)
+				.setSourceId(PLATFORM_SENDER_ID)
 				.setDestinationId(PLATFORM_RECEIVER_ID)
 				.setNamespace("urn:x-cast:com.google.cast.tp.heartbeat")
 				.setPayloadType(CastMessage.PayloadType.STRING)
@@ -1144,9 +1345,9 @@ public class Channel implements Closeable {
 								}
 							}
 							if (!closedNow.isEmpty()) {
-								ClosedByPeerListener closedListener;
+								SessionClosedListener closedListener;
 								for (Session session : closedNow) {
-									closedListener = session.getClosedByPeerListener();
+									closedListener = session.getSessionClosedListener();
 									if (closedListener != null) {
 										closedListener.closed(session);
 									}
@@ -1173,6 +1374,13 @@ public class Channel implements Closeable {
 
 					if (response instanceof StandardResponse) {
 //						LOGGER.error(CHROMECAST_API_MARKER, "Received unhandled standard response of type {}: {}", response.getClass().getSimpleName(), response); //TODO: (Nad) Log anything? Maybe in "CastEvent"?
+						ReceiverStatus receiverStatus;
+						if (
+							response instanceof ReceiverStatusResponse &&
+							(receiverStatus = ((ReceiverStatusResponse) response).getStatus()) != null
+						) {
+							cacheVolume(receiverStatus);
+						}
 						listeners.fire(new DefaultCastEvent<>(response.getEventType(), response));
 					} else {
 						LOGGER.error(

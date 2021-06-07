@@ -60,7 +60,7 @@ public final class ChromeCasts {
 		@Override
 		public void serviceAdded(ServiceEvent se) {
 			if (se.getInfo() != null) {
-				ChromeCast device = new ChromeCast(mDNS, se.getInfo().getName(), null, true);
+				ChromeCast device = new ChromeCast(mDNS, se.getInfo().getName(), true);
 				chromeCasts.add(device);
 				for (ChromeCastsListener nextListener : listeners) {
 					nextListener.newChromeCastDiscovered(device);

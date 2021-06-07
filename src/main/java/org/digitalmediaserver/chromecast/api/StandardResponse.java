@@ -15,6 +15,7 @@
  */
 package org.digitalmediaserver.chromecast.api;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -25,7 +26,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -41,12 +44,15 @@ import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 	@JsonSubTypes.Type(name = "PONG", value = StandardResponse.PongResponse.class),
 	@JsonSubTypes.Type(name = "RECEIVER_STATUS", value = StandardResponse.ReceiverStatusResponse.class),
 	@JsonSubTypes.Type(name = "GET_APP_AVAILABILITY", value = StandardResponse.AppAvailabilityResponse.class),
-	@JsonSubTypes.Type(name = "INVALID_REQUEST", value = StandardResponse.InvalidResponse.class),
+//	@JsonSubTypes.Type(name = "INVALID_REQUEST", value = StandardResponse.InvalidResponse.class),
+	@JsonSubTypes.Type(name = "INVALID_REQUEST", value = StandardResponse.ErrorResponse.class),
 	@JsonSubTypes.Type(name = "MEDIA_STATUS", value = StandardResponse.MediaStatusResponse.class),
 	@JsonSubTypes.Type(name = "MULTIZONE_STATUS", value = StandardResponse.MultizoneStatusResponse.class),
 	@JsonSubTypes.Type(name = "CLOSE", value = StandardResponse.CloseResponse.class),
-	@JsonSubTypes.Type(name = "LOAD_CANCELLED", value = StandardResponse.LoadCancelledResponse.class),
-	@JsonSubTypes.Type(name = "LOAD_FAILED", value = StandardResponse.LoadFailedResponse.class),
+//	@JsonSubTypes.Type(name = "LOAD_CANCELLED", value = StandardResponse.LoadCancelledResponse.class),
+//	@JsonSubTypes.Type(name = "LOAD_FAILED", value = StandardResponse.LoadFailedResponse.class),
+	@JsonSubTypes.Type(name = "LOAD_CANCELLED", value = StandardResponse.ErrorResponse.class),
+	@JsonSubTypes.Type(name = "LOAD_FAILED", value = StandardResponse.ErrorResponse.class),
 	@JsonSubTypes.Type(name = "LAUNCH_ERROR", value = StandardResponse.LaunchErrorResponse.class),
 	@JsonSubTypes.Type(name = "DEVICE_ADDED", value = StandardResponse.DeviceAddedResponse.class),
 	@JsonSubTypes.Type(name = "DEVICE_UPDATED", value = StandardResponse.DeviceUpdatedResponse.class),
@@ -55,7 +61,7 @@ import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 @Immutable
 public abstract class StandardResponse implements Response {
 
-	private final long requestId;
+	protected final long requestId;
 
 	protected StandardResponse(@JsonProperty("requestId") long requestId) {
 		this.requestId = requestId;
@@ -215,14 +221,15 @@ public abstract class StandardResponse implements Response {
 	@Immutable
 	public static class InvalidResponse extends StandardResponse {
 
-		private final String reason;
+		@JsonProperty
+		private final ErrorReason reason;
 
-		public InvalidResponse(@JsonProperty("requestId") long requestId, @JsonProperty("reason") String reason) {
+		public InvalidResponse(@JsonProperty("requestId") long requestId, @JsonProperty("reason") ErrorReason reason) {
 			super(requestId);
 			this.reason = reason;
 		}
 
-		public String getReason() {
+		public ErrorReason getReason() {
 			return reason;
 		}
 
@@ -240,6 +247,102 @@ public abstract class StandardResponse implements Response {
 				builder.append(", reason=").append(reason);
 			}
 			builder.append("]");
+			return builder.toString();
+		}
+	}
+
+	@Immutable
+	public static class ErrorResponse extends StandardResponse {
+
+		@Nullable
+		protected final Map<String, Object> customData;
+
+		@Nullable
+		protected final Integer detailedErrorCode;
+
+		@Nullable
+		protected final ErrorReason reason;
+
+		@Nullable
+		protected final ErrorType type; //TODO: (NAd) JavaDocs...
+
+		public ErrorResponse(
+			@JsonProperty("customData") Map<String, Object> customData,
+			@JsonProperty("detailedErrorCode") Integer detailedErrorCode,
+			@JsonProperty("reason") ErrorReason reason,
+			@JsonProperty("requestId") long requestId,
+			@JsonProperty("responseType") ErrorType type
+		) {
+			super(requestId);
+			this.customData = customData;
+			this.detailedErrorCode = detailedErrorCode;
+			this.reason = reason;
+			this.type = type;
+		}
+
+		@Nullable
+		public Map<String, Object> getCustomData() {
+			return customData;
+		}
+
+		@Nullable
+		public Integer getDetailedErrorCode() {
+			return detailedErrorCode;
+		}
+
+		public ErrorReason getReason() {
+			return reason;
+		}
+
+		public ErrorType getType() {
+			return type;
+		}
+
+		@JsonIgnore
+		@Override
+		public CastEventType getEventType() {
+			return CastEventType.INVALID; //TODO: (Nad) Fix
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(requestId, customData, detailedErrorCode, reason, type);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (!(obj instanceof ErrorResponse)) {
+				return false;
+			}
+			ErrorResponse other = (ErrorResponse) obj;
+			return
+				Objects.equals(requestId, other.requestId) &&
+				Objects.equals(customData, other.customData) &&
+				Objects.equals(detailedErrorCode, other.detailedErrorCode) &&
+				reason == other.reason &&
+				type == other.type;
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+			builder.append("ErrorResponse [");
+			if (customData != null) {
+				builder.append("customData=").append(customData).append(", ");
+			}
+			if (detailedErrorCode != null) {
+				builder.append("detailedErrorCode=").append(detailedErrorCode).append(", ");
+			}
+			if (reason != null) {
+				builder.append("reason=").append(reason).append(", ");
+			}
+			if (type != null) {
+				builder.append("type=").append(type).append(", ");
+			}
+			builder.append("requestId=").append(requestId).append("]");
 			return builder.toString();
 		}
 	}
@@ -547,6 +650,157 @@ public abstract class StandardResponse implements Response {
 			}
 			builder.append("]");
 			return builder.toString();
+		}
+	}
+
+	/**
+	 * Represents media error message reasons.
+	 */
+	public enum ErrorReason {
+
+		/** Returned when the command is not valid or not implemented */
+		INVALID_COMMAND,
+
+		/**
+		 * Returned when the params are not valid or a non optional param is
+		 * missing
+		 */
+		INVALID_PARAMS,
+
+		/** Returned when the media session does not exist */
+		INVALID_MEDIA_SESSION_ID,
+
+		/** Returned when cannot skip more items due to reaching skip limit */
+		SKIP_LIMIT_REACHED,
+
+		/** Returned when the request is not supported by the application */
+		NOT_SUPPORTED,
+
+		/** Returned when the requested language is not supported */
+		LANGUAGE_NOT_SUPPORTED,
+
+		/**
+		 * Returned when skip is not possible due to going back beyond the first
+		 * item or forward beyond the last item in the queue
+		 */
+		END_OF_QUEUE,
+
+		/**
+		 * Returned when the request ID is not unique (the receiver is
+		 * processing a request with the same ID)
+		 */
+		DUPLICATE_REQUEST_ID,
+
+		/**
+		 * Returned when the request cannot be completed because a video-capable
+		 * device is required
+		 */
+		VIDEO_DEVICE_REQUIRED,
+
+		/**
+		 * Returned when premium account is required for the request to succeed
+		 */
+		PREMIUM_ACCOUNT_REQUIRED,
+
+		/** Returned when the application state is invalid to fulfill the request */
+		APP_ERROR,
+
+		/**
+		 * Returned when a request cannot be performed because authentication
+		 * has expired, e.g. user changed password or the token was revoked
+		 */
+		AUTHENTICATION_EXPIRED,
+
+		/** Returned when too many concurrent streams are detected */
+		CONCURRENT_STREAM_LIMIT,
+
+		/** Returned when the content is blocked due to parental controls */
+		PARENTAL_CONTROL_RESTRICTED,
+
+		/** Returned when the content is blocked due to filter */
+		CONTENT_FILTERED,
+
+		/**
+		 * Returned when the content is blocked due to being regionally
+		 * unavailable
+		 */
+		NOT_AVAILABLE_IN_REGION,
+
+		/** Returned when the requested content is already playing */
+		CONTENT_ALREADY_PLAYING,
+
+		/** Returned when the request is not valid */
+		INVALID_REQUEST,
+
+		/** Returned when the load request encounter intermittent issue */
+		GENERIC_LOAD_ERROR;
+
+		/**
+		 * Parses the specified string and returns the corresponding
+		 * {@link ErrorReason}, or {@code null} if no match could be found.
+		 *
+		 * @param errorReason the string to parse.
+		 * @return The resulting {@link ErrorReason} or {@code null}.
+		 */
+		@Nullable
+		@JsonCreator
+		public static ErrorReason typeOf(String errorReason) {
+			if (Util.isBlank(errorReason)) {
+				return null;
+			}
+			String typeString = errorReason.toUpperCase(Locale.ROOT);
+			for (ErrorReason type : values()) {
+				if (typeString.equals(type.name())) {
+					return type;
+				}
+			}
+			return null;
+		}
+	}
+
+	/**
+	 * Represents media error message types.
+	 */
+	public enum ErrorType {
+
+		/** Returned when the player state is invalid to fulfill the request */
+		INVALID_PLAYER_STATE,
+
+		/** Returned when the LOAD request failed */
+		LOAD_FAILED,
+
+		/**
+		 * Returned when the LOAD request is cancelled by a second incoming LOAD
+		 * request
+		 */
+		LOAD_CANCELLED,
+
+		/** Returned when the request is not valid */
+		INVALID_REQUEST,
+
+		/** Generic error, for any other error case */
+		ERROR;
+
+		/**
+		 * Parses the specified string and returns the corresponding
+		 * {@link ErrorType}, or {@code null} if no match could be found.
+		 *
+		 * @param errorType the string to parse.
+		 * @return The resulting {@link ErrorType} or {@code null}.
+		 */
+		@Nullable
+		@JsonCreator
+		public static ErrorType typeOf(String errorType) {
+			if (Util.isBlank(errorType)) {
+				return null;
+			}
+			String typeString = errorType.toUpperCase(Locale.ROOT);
+			for (ErrorType type : values()) {
+				if (typeString.equals(type.name())) {
+					return type;
+				}
+			}
+			return null;
 		}
 	}
 }

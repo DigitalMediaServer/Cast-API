@@ -27,14 +27,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.GuardedBy;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListener;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListenerList;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 import org.digitalmediaserver.chromecast.api.CastEvent.SimpleCastEventListenerList;
-import org.digitalmediaserver.chromecast.api.StandardRequest.SetVolume;
 import org.digitalmediaserver.chromecast.api.Volume.VolumeBuilder;
 
 /**
@@ -84,20 +82,14 @@ public class ChromeCast {
 	protected final String displayName;
 
 	@Nonnull
-	protected final String senderId;
-
-	@Nonnull
-	protected final Object channelLock = new Object();
-
-	@GuardedBy("channelLock")
-	protected Channel channel;
+	protected final Channel channel;
 	protected final boolean autoReconnect;
 
-	public ChromeCast(@Nonnull JmDNS mDNS, @Nonnull String dnsName, @Nullable String senderId, boolean autoReconnect) {
-		this(mDNS.getServiceInfo(SERVICE_TYPE, dnsName), senderId, autoReconnect);
+	public ChromeCast(@Nonnull JmDNS mDNS, @Nonnull String dnsName, boolean autoReconnect) {
+		this(mDNS.getServiceInfo(SERVICE_TYPE, dnsName), autoReconnect);
 	}
 
-	public ChromeCast(@Nonnull ServiceInfo serviceInfo, @Nullable String senderId, boolean autoReconnect) {
+	public ChromeCast(@Nonnull ServiceInfo serviceInfo, boolean autoReconnect) {
 		this.dnsName = serviceInfo.getName();
 		if (serviceInfo.getInet4Addresses().length > 0) {
 			this.address = serviceInfo.getInet4Addresses()[0].getHostAddress();
@@ -140,7 +132,7 @@ public class ChromeCast {
 		}
 		this.iconPath = serviceInfo.getPropertyString("ic");
 		this.displayName = generateDisplayName();
-		this.senderId = Util.isBlank(senderId) ? "sender-" + new RandomString(10).nextString() : senderId;
+		this.channel = new Channel(address, port, displayName, listeners);
 	}
 
 	public ChromeCast(
@@ -155,7 +147,6 @@ public class ChromeCast {
 		@Nullable String modelName,
 		int protocolVersion,
 		@Nullable String iconPath,
-		@Nullable String senderId,
 		boolean autoReconnect
 	) {
 		this(
@@ -171,7 +162,6 @@ public class ChromeCast {
 			modelName,
 			protocolVersion,
 			iconPath,
-			senderId,
 			autoReconnect
 		);
 	}
@@ -189,7 +179,6 @@ public class ChromeCast {
 		@Nullable String modelName,
 		int protocolVersion,
 		@Nullable String iconPath,
-		@Nullable String senderId,
 		boolean autoReconnect
 	) {
 		if (Util.isBlank(dnsName)) {
@@ -214,7 +203,7 @@ public class ChromeCast {
 		this.protocolVersion = protocolVersion;
 		this.iconPath = iconPath;
 		this.displayName = generateDisplayName();
-		this.senderId = Util.isBlank(senderId) ? "sender-" + new RandomString(10).nextString() : senderId;
+		this.channel = new Channel(address, port, displayName, listeners);
 	}
 
 	/**
@@ -331,64 +320,30 @@ public class ChromeCast {
 	 * @return an open channel. //TODO: (Nad) Fix JavaDoc
 	 */
 	@Nonnull
-	public Channel channel() throws IOException { //TODO: (Nad) Temp public, should be protected
-		Channel tmpChannel;
-		synchronized (channelLock) {
-			tmpChannel = channel;
-		}
-		if (tmpChannel == null || tmpChannel.isClosed()) {
+	protected Channel channel() throws IOException {
+		if (channel.isClosed()) {
 			if (!autoReconnect) {
 				throw new SocketException("Channel is closed");
 			}
-			synchronized (channelLock) {
-				if (channel == null || channel.isClosed()) {
-					try {
-						connect();
-					} catch (GeneralSecurityException e) {
-						throw new IOException("Security error: " + e.getMessage(), e);
-					}
-				}
-				tmpChannel = channel;
+			try {
+				connect();
+			} catch (GeneralSecurityException e) {
+				throw new IOException("Security error: " + e.getMessage(), e);
 			}
 		}
-		return tmpChannel;
-	}
-
-	private String getTransportId(Application runningApp) {
-		return runningApp.getTransportId() == null ? runningApp.getSessionId() : runningApp.getTransportId();
+		return channel;
 	}
 
 	public void connect() throws IOException, KeyManagementException, NoSuchAlgorithmException {
-		synchronized (channelLock) {
-			if (channel != null && !channel.isClosed()) {
-				return;
-			}
-			channel = new Channel(address, port, displayName, senderId, listeners);
-			channel.connect();
-		}
+		channel.connect();
 	}
 
 	public void disconnect() throws IOException {
-		Channel tmpChannel;
-		synchronized (channelLock) {
-			tmpChannel = channel;
-			if (tmpChannel == null) {
-				return;
-			}
-			channel = null;
-		}
-		tmpChannel.close();
+		channel.close();
 	}
 
 	public boolean isConnected() {
-		Channel tmpChannel;
-		synchronized (channelLock) {
-			tmpChannel = channel;
-			if (tmpChannel == null) {
-				return false;
-			}
-		}
-		return !tmpChannel.isClosed();
+		return !channel.isClosed();
 	}
 
 	/**
@@ -411,13 +366,7 @@ public class ChromeCast {
 	 *            waiting for response
 	 */
 	public void setRequestTimeout(long requestTimeout) { //TODO: (Nad) Figure out, pointless as Channel's are cycled
-		Channel tmpChannel;
-		synchronized (channelLock) {
-			tmpChannel = channel;
-		}
-		if (tmpChannel != null) {
-			tmpChannel.setRequestTimeout(requestTimeout);
-		}
+		channel.setRequestTimeout(requestTimeout);
 	}
 
 	/**
@@ -516,46 +465,29 @@ public class ChromeCast {
 	 * specified to this method.
 	 *
 	 * @param volume the {@link Volume} instance to set.
-	 * @param synchronous if {@code true} the method will block and wait for a
-	 *            response. If {@code false} it will return immediately and
-	 *            always return {@code null}.
-	 * @return The resulting {@link ReceiverStatus} if {@code synchronous} is
-	 *         {@code true} and a response is received in time, or {@code null}
-	 *         if {@code synchronous} is {@code false} or waiting for the
-	 *         response times out.
 	 * @throws IOException If an error occurs during the operation.
 	 */
 	@Nullable
-	public ReceiverStatus setVolume(@Nullable Volume volume, boolean synchronous) throws IOException {
+	public void setVolume(@Nullable Volume volume) throws IOException {
 		if (volume == null) {
-			return null;
+			return;
 		}
-		return channel.setVolume(volume, synchronous);
+		channel.setVolume(volume);
 	}
 
 	//TODO: (Nad) JavaDocs
-	@Nullable //Doc: Ineffective if a Volume instance is already held
-	public ReceiverStatus setVolumeLevel(double level, boolean synchronous) throws IOException {
-		if (level < 0.0 || level > 1.0) {
-			throw new IllegalArgumentException("Invalid volume level " + level + " (range is 0 to 1)");
+	public void setVolumeLevel(double level) throws IOException { //TODO: (Nad) Move above "main" setVolume
+		if (level < 0.0) {
+			level = 0.0;
+		} else if (level > 1.0) {
+			level = 1.0;
 		}
-		ReceiverStatus status = channel.getReceiverStatus();
-		Volume volume;
-		if (status == null || (volume = status.getVolume()) == null ) {
-			throw new ChromeCastException("Couldn't set volume level because the current volume couldn't be acquired");
-		}
-		return setVolume(volume.modify().level(Double.valueOf(level)).build(), synchronous);
+		channel.setVolume(new Volume(null, Double.valueOf(level), null, null));
 	}
 
 	//TODO: (Nad) JavaDocs
-	@Nullable //Doc: Ineffective if a Volume instance is already held
-	public ReceiverStatus setMuteState(boolean muteState, boolean synchronous) throws IOException {
-		ReceiverStatus status = channel.getReceiverStatus();
-		Volume volume;
-		if (status == null || (volume = status.getVolume()) == null ) {
-			throw new ChromeCastException("Couldn't set mute state because the current volume couldn't be acquired");
-		}
-		return setVolume(volume.modify().muted(Boolean.valueOf(muteState)).build(), synchronous);
+	public void setMuteState(boolean muteState) throws IOException {
+		channel.setVolume(new Volume(null, null, Boolean.valueOf(muteState), null));
 	}
 
 //	/**
