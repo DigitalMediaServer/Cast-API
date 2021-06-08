@@ -93,10 +93,8 @@ public class Channel implements Closeable {
 	 */
 	protected static final long PING_PERIOD = 10 * 1000; //TODO: (Nad) 5 sec suggested in doc, was 30
 
-	/**
-	 * Default value of much time to wait until request is processed
-	 */
-	protected static final long DEFAULT_REQUEST_TIMEOUT = 30 * 1000;
+	/** The default response timeout in milliseconds */
+	public static final long DEFAULT_RESPONSE_TIMEOUT = 30 * 1000;
 
 	public static final String PLATFORM_RECEIVER_ID = "receiver-0";
 	public static final String PLATFORM_SENDER_ID = "sender-0";
@@ -191,11 +189,6 @@ public class Channel implements Closeable {
 	@Nullable
 	@GuardedBy("cachedVolumeLock")
 	protected TimerTask gradualVolumeTask;
-
-	/**
-	 * How much time to wait until request is processed
-	 */
-	private volatile long requestTimeout = DEFAULT_REQUEST_TIMEOUT; //TODO: (Nad) Check - can it be final?
 
 	public Channel(
 		@Nonnull String host,
@@ -354,12 +347,35 @@ public class Channel implements Closeable {
 		}
 	}
 
+	/**
+	 * Sends the specified {@link Request} to the specified destination using
+	 * the specified parameters.
+	 *
+	 * @param <T> the class of the {@link Response} object.
+	 * @param namespace the namespace to use.
+	 * @param message the {@link Request} to send.
+	 * @param senderId the sender ID to use.
+	 * @param destinationId the destination ID to use.
+	 * @param responseClass the class of the expected response for synchronous
+	 *            (blocking) behavior, or {@code null} for asynchronous behavior
+	 *            that returns {@code null} immediately.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code responseClass} is non-{@code null}. If zero or
+	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The {@link Response} object of the specified type if
+	 *         {@code responseClass} is non-{@code null}, {@code null} if
+	 *         {@code responseClass} is {@code null}.
+	 * @throws IOException If {@code responseClass} is non-{@code null} and the
+	 *             response from the cast device what different than what was
+	 *             expected, or if an error occurs during the operation.
+	 */
 	public <T extends Response> T send(
 		String namespace,
 		Request message,
 		String senderId,
 		String destinationId,
-		Class<T> responseClass
+		Class<T> responseClass,
+		long responseTimeout
 	) throws IOException {
 		Long requestId = requestCounter.getAndIncrement();
 		message.setRequestId(requestId);
@@ -372,7 +388,7 @@ public class Channel implements Closeable {
 			return null;
 		}
 
-		ResultProcessor<T> rp = new ResultProcessor<>(responseClass);
+		ResultProcessor<T> rp = new ResultProcessor<>(responseClass, responseTimeout);
 		synchronized (requests) {
 			requests.put(requestId, rp);
 		}
@@ -460,13 +476,27 @@ public class Channel implements Closeable {
 		return CastMessage.parseFrom(buf);
 	}
 
-	public ReceiverStatus getReceiverStatus() throws IOException {
+	public ReceiverStatus getReceiverStatus() throws IOException { //TODO: (Nad) DO the same in Session..? (responseTimeout)
+		return getReceiverStatus(DEFAULT_RESPONSE_TIMEOUT);
+	}
+
+	/**
+	 * Request a {@link ReceiverStatus} from the cast device.
+	 *
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link ReceiverStatus}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	public ReceiverStatus getReceiverStatus(long responseTimeout) throws IOException {
 		ReceiverStatusResponse status = send(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.status(),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			ReceiverStatusResponse.class
+			ReceiverStatusResponse.class,
+			responseTimeout
 		);
 		ReceiverStatus result;
 		if (status == null || (result = status.getStatus()) == null) {
@@ -477,24 +507,47 @@ public class Channel implements Closeable {
 	}
 
 	public boolean isApplicationAvailable(String applicationId) throws IOException {
+		return isApplicationAvailable(applicationId, DEFAULT_RESPONSE_TIMEOUT);
+	}
+
+	public boolean isApplicationAvailable(String applicationId, long responseTimeout) throws IOException {
 		AppAvailabilityResponse availability = send(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.getAppAvailability(applicationId),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			AppAvailabilityResponse.class
+			AppAvailabilityResponse.class,
+			responseTimeout
 		);
 		return availability != null && "APP_AVAILABLE".equals(availability.getAvailability().get(applicationId));
 	}
 
-	@Nullable
 	public ReceiverStatus launch(String applicationId, boolean synchronous) throws IOException {
+		return launch(applicationId, synchronous, DEFAULT_RESPONSE_TIMEOUT);
+	}
+
+	/**
+	 * //TODO: (Nad) The rest
+	 *
+	 * @param applicationId
+	 * @param synchronous
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link ReceiverStatus} or {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public ReceiverStatus launch(String applicationId, boolean synchronous, long responseTimeout) throws IOException {
 		ReceiverStatusResponse status = send(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.launch(applicationId),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			synchronous ? ReceiverStatusResponse.class : null
+			synchronous ? ReceiverStatusResponse.class : null,
+			responseTimeout
 		);
 		ReceiverStatus result;
 		if (status == null || (result = status.getStatus()) == null) {
@@ -505,12 +558,21 @@ public class Channel implements Closeable {
 	}
 
 	public ReceiverStatus stopApplication(@Nonnull Application application, boolean synchronous) throws IOException {
+		return stopApplication(application, synchronous, DEFAULT_RESPONSE_TIMEOUT);
+	}
+
+	public ReceiverStatus stopApplication(
+		@Nonnull Application application,
+		boolean synchronous,
+		long responseTimeout
+	) throws IOException {
 		ReceiverStatusResponse status = send(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.stop(application.getSessionId()),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			synchronous ? ReceiverStatusResponse.class : null
+			synchronous ? ReceiverStatusResponse.class : null,
+			responseTimeout
 		);
 		ReceiverStatus result;
 		if (status == null || (result = status.getStatus()) == null) {
@@ -587,7 +649,7 @@ public class Channel implements Closeable {
 		}
 	}
 
-	protected void cacheVolume(@Nullable ReceiverStatus receiverStatus) {
+	protected void cacheVolume(@Nullable ReceiverStatus receiverStatus) { //TODO: (Nad) Move
 		Volume volume;
 		if (receiverStatus != null && (volume = receiverStatus.getVolume()) != null) {
 			cacheVolume(volume);
@@ -601,6 +663,30 @@ public class Channel implements Closeable {
 		synchronized (cachedVolumeLock) {
 			cachedVolume = volume;
 		}
+	}
+
+	@Nullable
+	public MediaStatus load(
+		@Nonnull String senderId,
+		@Nonnull String destinationId,
+		@Nonnull String sessionId,
+		Media media,
+		boolean autoplay,
+		double currentTime,
+		boolean synchronous,
+		@Nullable Map<String, Object> customData
+	) throws IOException {
+		return load(
+			senderId,
+			destinationId,
+			sessionId,
+			media,
+			autoplay,
+			currentTime,
+			synchronous,
+			DEFAULT_RESPONSE_TIMEOUT,
+			customData
+		);
 	}
 
 	/**
@@ -639,6 +725,7 @@ public class Channel implements Closeable {
 		boolean autoplay,
 		double currentTime,
 		boolean synchronous,
+		long responseTimeout,
 		@Nullable Map<String, Object> customData
 	) throws IOException {
 		MediaStatusResponse status = send(
@@ -646,9 +733,21 @@ public class Channel implements Closeable {
 			StandardRequest.load(sessionId, media, autoplay, currentTime, customData),
 			senderId,
 			destinationId,
-			synchronous ? MediaStatusResponse.class : null
+			synchronous ? MediaStatusResponse.class : null,
+			responseTimeout
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+	}
+
+	@Nullable
+	public MediaStatus play(
+		@Nonnull String senderId,
+		@Nonnull String destinationId,
+		@Nonnull String sessionId,
+		long mediaSessionId,
+		boolean synchronous
+	) throws IOException {
+		return play(senderId, destinationId, sessionId, mediaSessionId, synchronous, DEFAULT_RESPONSE_TIMEOUT);
 	}
 
 	/**
@@ -677,16 +776,29 @@ public class Channel implements Closeable {
 		@Nonnull String destinationId,
 		@Nonnull String sessionId,
 		long mediaSessionId,
-		boolean synchronous
+		boolean synchronous,
+		long responseTimeout
 	) throws IOException {
 		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.play(sessionId, mediaSessionId),
 			senderId,
 			destinationId,
-			synchronous ? MediaStatusResponse.class : null
+			synchronous ? MediaStatusResponse.class : null,
+			responseTimeout
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+	}
+
+	@Nullable
+	public MediaStatus pause(
+		@Nonnull String senderId,
+		@Nonnull String destinationId,
+		@Nonnull String sessionId,
+		long mediaSessionId,
+		boolean synchronous
+	) throws IOException {
+		return pause(senderId, destinationId, sessionId, mediaSessionId, synchronous, DEFAULT_RESPONSE_TIMEOUT);
 	}
 
 	/**
@@ -715,16 +827,40 @@ public class Channel implements Closeable {
 		@Nonnull String destinationId,
 		@Nonnull String sessionId,
 		long mediaSessionId,
-		boolean synchronous
+		boolean synchronous,
+		long responseTimeout
 	) throws IOException {
 		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.pause(sessionId, mediaSessionId),
 			senderId,
 			destinationId,
-			synchronous ? MediaStatusResponse.class : null
+			synchronous ? MediaStatusResponse.class : null,
+			responseTimeout
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+	}
+
+	@Nullable
+	public MediaStatus seek(
+		@Nonnull String senderId,
+		@Nonnull String destinationId,
+		@Nonnull String sessionId,
+		long mediaSessionId,
+		double currentTime,
+		@Nullable ResumeState resumeState,
+		boolean synchronous
+	) throws IOException {
+		return seek(
+			senderId,
+			destinationId,
+			sessionId,
+			mediaSessionId,
+			currentTime,
+			resumeState,
+			synchronous,
+			DEFAULT_RESPONSE_TIMEOUT
+		);
 	}
 
 	/**
@@ -759,16 +895,28 @@ public class Channel implements Closeable {
 		long mediaSessionId,
 		double currentTime,
 		@Nullable ResumeState resumeState,
-		boolean synchronous
+		boolean synchronous,
+		long responseTimeout
 	) throws IOException {
 		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.seek(sessionId, mediaSessionId, currentTime, resumeState),
 			senderId,
 			destinationId,
-			synchronous ? MediaStatusResponse.class : null
+			synchronous ? MediaStatusResponse.class : null,
+			responseTimeout
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+	}
+
+	@Nullable
+	public MediaStatus stopMedia(
+		@Nonnull String senderId,
+		@Nonnull String destinationId,
+		long mediaSessionId,
+		boolean synchronous
+	) throws IOException {
+		return stopMedia(senderId, destinationId, mediaSessionId, synchronous, DEFAULT_RESPONSE_TIMEOUT);
 	}
 
 	/**
@@ -797,16 +945,38 @@ public class Channel implements Closeable {
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
 		long mediaSessionId,
-		boolean synchronous
+		boolean synchronous,
+		long responseTimeout
 	) throws IOException {
 		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.stopMedia(mediaSessionId, null),
 			senderId,
 			destinationId,
-			synchronous ? MediaStatusResponse.class : null
+			synchronous ? MediaStatusResponse.class : null,
+			responseTimeout
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+	}
+
+	@Nullable
+	public MediaStatus setMediaVolume(
+		@Nonnull String senderId,
+		@Nonnull String destinationId,
+		@Nonnull String sessionId,
+		long mediaSessionId,
+		@Nonnull MediaVolume volume,
+		boolean synchronous
+	) throws IOException {
+		return setMediaVolume(
+			senderId,
+			destinationId,
+			sessionId,
+			mediaSessionId,
+			volume,
+			synchronous,
+			DEFAULT_RESPONSE_TIMEOUT
+		);
 	}
 
 	/**
@@ -842,14 +1012,16 @@ public class Channel implements Closeable {
 		@Nonnull String sessionId,
 		long mediaSessionId,
 		@Nonnull MediaVolume volume,
-		boolean synchronous
+		boolean synchronous,
+		long responseTimeout
 	) throws IOException {
 		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.volumeRequest(sessionId, mediaSessionId, volume, null),
 			senderId,
 			destinationId,
-			synchronous ? MediaStatusResponse.class : null
+			synchronous ? MediaStatusResponse.class : null,
+			responseTimeout
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
@@ -907,7 +1079,7 @@ public class Channel implements Closeable {
 				}
 			}
 		}
-		doSetVolume(volume, false);
+		doSetVolume(volume, false, DEFAULT_RESPONSE_TIMEOUT);
 	}
 
 	protected class GradualVolumeTask extends TimerTask { //TODO: (Nad) MOve
@@ -945,7 +1117,7 @@ public class Channel implements Closeable {
 				}
 				Volume newVolume = new Volume(null, Double.valueOf(newLevel), null, null);
 				try {
-					doSetVolume(newVolume, false);
+					doSetVolume(newVolume, false, DEFAULT_RESPONSE_TIMEOUT);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block //TODO: (Nad) Make
 					e.printStackTrace();
@@ -969,13 +1141,14 @@ public class Channel implements Closeable {
 	}
 
 	@Nullable
-	protected ReceiverStatus doSetVolume(Volume volume, boolean synchronous) throws IOException {
+	protected ReceiverStatus doSetVolume(Volume volume, boolean synchronous, long responseTimeout) throws IOException {
 		ReceiverStatusResponse status = send(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.setVolume(volume),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			synchronous ? ReceiverStatusResponse.class : null
+			synchronous ? ReceiverStatusResponse.class : null,
+			responseTimeout
 		);
 		ReceiverStatus result;
 		if (status == null || (result = status.getStatus()) == null) {
@@ -987,12 +1160,22 @@ public class Channel implements Closeable {
 
 	@Nullable
 	public MediaStatus getMediaStatus(@Nonnull String senderId, @Nonnull String destinationId) throws IOException {
+		return getMediaStatus(senderId, destinationId, DEFAULT_RESPONSE_TIMEOUT);
+	}
+
+	@Nullable
+	public MediaStatus getMediaStatus(
+		@Nonnull String senderId,
+		@Nonnull String destinationId,
+		long responseTimeout
+	) throws IOException {
 		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.status(),
 			senderId,
 			destinationId,
-			MediaStatusResponse.class
+			MediaStatusResponse.class,
+			responseTimeout
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
@@ -1004,11 +1187,18 @@ public class Channel implements Closeable {
 		Request request,
 		Class<T> responseClass
 	) throws IOException {
-		return send(namespace, request, senderId, destinationId, responseClass);
+		return send(namespace, request, senderId, destinationId, responseClass, DEFAULT_RESPONSE_TIMEOUT);
 	}
 
-	public void setRequestTimeout(long requestTimeout) {
-		this.requestTimeout = requestTimeout;
+	public <T extends Response> T sendGenericRequest(
+		@Nonnull String senderId,
+		@Nonnull String destinationId,
+		@Nonnull String namespace,
+		Request request,
+		Class<T> responseClass,
+		long responseTimeout
+	) throws IOException {
+		return send(namespace, request, senderId, destinationId, responseClass, responseTimeout);
 	}
 
 	@Nullable
@@ -1447,13 +1637,15 @@ public class Channel implements Closeable {
 	protected class ResultProcessor<T extends Response> {
 
 		private final Class<T> responseClass;
+		private final long requestTimeout;
 		private ResultProcessorResult<T> result;
 
-		private ResultProcessor(Class<T> responseClass) {
+		private ResultProcessor(Class<T> responseClass, long requestTimeout) {
 			if (responseClass == null) {
 				throw new NullPointerException();
 			}
 			this.responseClass = responseClass;
+			this.requestTimeout = requestTimeout < 1 ? DEFAULT_RESPONSE_TIMEOUT : requestTimeout;
 		}
 
 		@SuppressWarnings("unchecked")
