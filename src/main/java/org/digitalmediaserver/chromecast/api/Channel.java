@@ -57,17 +57,15 @@ import org.digitalmediaserver.chromecast.api.CastChannel.CastMessage.PayloadType
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListenerList;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 import org.digitalmediaserver.chromecast.api.CastEvent.DefaultCastEvent;
-import org.digitalmediaserver.chromecast.api.ChromeCastException.InvalidCastException;
+import org.digitalmediaserver.chromecast.api.ChromeCastException.ErrorResponseChromeCastException;
 import org.digitalmediaserver.chromecast.api.ChromeCastException.LaunchErrorCastException;
-import org.digitalmediaserver.chromecast.api.ChromeCastException.LoadCancelledCastException;
-import org.digitalmediaserver.chromecast.api.ChromeCastException.LoadFailedCastException;
+import org.digitalmediaserver.chromecast.api.ChromeCastException.UnprocessedChromeCastException;
+import org.digitalmediaserver.chromecast.api.ChromeCastException.UntypedChromeCastException;
 import org.digitalmediaserver.chromecast.api.Session.SessionClosedListener;
 import org.digitalmediaserver.chromecast.api.StandardRequest.ResumeState;
 import org.digitalmediaserver.chromecast.api.StandardResponse.AppAvailabilityResponse;
-import org.digitalmediaserver.chromecast.api.StandardResponse.InvalidResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.ErrorResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.LaunchErrorResponse;
-import org.digitalmediaserver.chromecast.api.StandardResponse.LoadCancelledResponse;
-import org.digitalmediaserver.chromecast.api.StandardResponse.LoadFailedResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MediaStatusResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.ReceiverStatusResponse;
 import org.digitalmediaserver.chromecast.api.Volume.VolumeControlType;
@@ -356,22 +354,12 @@ public class Channel implements Closeable {
 		}
 	}
 
-	public <T extends StandardResponse> T sendStandard(
-		String namespace,
-		StandardRequest message,
-		String senderId,
-		String destinationId,
-		boolean synchronous
-	) throws IOException {
-		return send(namespace, message, senderId, destinationId, synchronous ? (Class<T>) StandardResponse.class : null);
-	}
-
 	public <T extends Response> T send(
 		String namespace,
 		Request message,
 		String senderId,
 		String destinationId,
-		Class<T> responseClass //TODO: (Nad) Look into this, does it actually "work"?
+		Class<T> responseClass
 	) throws IOException {
 		Long requestId = requestCounter.getAndIncrement();
 		message.setRequestId(requestId);
@@ -391,20 +379,32 @@ public class Channel implements Closeable {
 
 		write(namespace, message, senderId, destinationId);
 		try {
-			T response = rp.get();
-			if (response instanceof InvalidResponse) {
-				throw new InvalidCastException("Invalid request: " + ((InvalidResponse) response).getReason());
-			} else if (response instanceof LoadCancelledResponse) {
-				throw new LoadCancelledCastException(
-					"Loading of media was cancelled",
-					((LoadCancelledResponse) response).getItemId()
-				);
-			} else if (response instanceof LoadFailedResponse) {
-				throw new LoadFailedCastException("Unable to load media");
-			} else if (response instanceof LaunchErrorResponse) {
-				throw new LaunchErrorCastException("Application launch error: " + ((LaunchErrorResponse) response).getReason());
+			ResultProcessorResult<T> response = rp.get();
+			if (response.typedResult != null) {
+				return response.typedResult;
 			}
-			return response;
+			if (response.untypedResult instanceof ErrorResponse) {
+				throw new ErrorResponseChromeCastException(
+					"Cast device returned an error: " + response.untypedResult,
+					(ErrorResponse) response.untypedResult
+				);
+			}
+			if (response.untypedResult instanceof LaunchErrorResponse) {
+				throw new LaunchErrorCastException(
+					"Application launch error: " + ((LaunchErrorResponse) response.untypedResult).getReason()
+				);
+			}
+			if (response.untypedResult != null) {
+				throw new UntypedChromeCastException(
+					"Cast device returned " + response.untypedResult.getClass().getSimpleName() +
+					" instead of the expected " + responseClass.getSimpleName(),
+					response.untypedResult
+				);
+			}
+			throw new UnprocessedChromeCastException(
+				"Failed to deserialize response to " + responseClass.getSimpleName(),
+				response.unprocessedResult
+			);
 		} catch (InterruptedException e) {
 			throw new ChromeCastException("Interrupted while waiting for response", e);
 		} catch (TimeoutException e) {
@@ -461,12 +461,12 @@ public class Channel implements Closeable {
 	}
 
 	public ReceiverStatus getReceiverStatus() throws IOException {
-		ReceiverStatusResponse status = sendStandard(
+		ReceiverStatusResponse status = send(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.status(),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			true
+			ReceiverStatusResponse.class
 		);
 		ReceiverStatus result;
 		if (status == null || (result = status.getStatus()) == null) {
@@ -477,24 +477,24 @@ public class Channel implements Closeable {
 	}
 
 	public boolean isApplicationAvailable(String applicationId) throws IOException {
-		AppAvailabilityResponse availability = sendStandard(
+		AppAvailabilityResponse availability = send(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.getAppAvailability(applicationId),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			true
+			AppAvailabilityResponse.class
 		);
 		return availability != null && "APP_AVAILABLE".equals(availability.getAvailability().get(applicationId));
 	}
 
 	@Nullable
 	public ReceiverStatus launch(String applicationId, boolean synchronous) throws IOException {
-		ReceiverStatusResponse status = sendStandard(
+		ReceiverStatusResponse status = send(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.launch(applicationId),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			synchronous
+			synchronous ? ReceiverStatusResponse.class : null
 		);
 		ReceiverStatus result;
 		if (status == null || (result = status.getStatus()) == null) {
@@ -505,12 +505,12 @@ public class Channel implements Closeable {
 	}
 
 	public ReceiverStatus stopApplication(@Nonnull Application application, boolean synchronous) throws IOException {
-		ReceiverStatusResponse status = sendStandard(
+		ReceiverStatusResponse status = send(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.stop(application.getSessionId()),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			synchronous
+			synchronous ? ReceiverStatusResponse.class : null
 		);
 		ReceiverStatus result;
 		if (status == null || (result = status.getStatus()) == null) {
@@ -598,7 +598,6 @@ public class Channel implements Closeable {
 		if (volume == null) {
 			return;
 		}
-		LOGGER.error("Cached volume: {}", volume); //TODO: (Nad) Temp test
 		synchronized (cachedVolumeLock) {
 			cachedVolume = volume;
 		}
@@ -611,7 +610,7 @@ public class Channel implements Closeable {
 	 * This can only succeed if the remote application supports the
 	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
-	 * @param senderId the session ID to use.
+	 * @param senderId the sender ID to use.
 	 * @param destinationId the destination ID to use.
 	 * @param sessionId the session ID to use.
 	 * @param media the {@link Media} to load.
@@ -640,14 +639,14 @@ public class Channel implements Closeable {
 		boolean autoplay,
 		double currentTime,
 		boolean synchronous,
-		@Nullable Map<String, String> customData
+		@Nullable Map<String, Object> customData
 	) throws IOException {
-		MediaStatusResponse status = sendStandard(
+		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.load(sessionId, media, autoplay, currentTime, customData),
 			senderId,
 			destinationId,
-			synchronous
+			synchronous ? MediaStatusResponse.class : null
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
@@ -659,7 +658,7 @@ public class Channel implements Closeable {
 	 * This can only succeed if the remote application supports the
 	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
-	 * @param senderId the session ID to use.
+	 * @param senderId the sender ID to use.
 	 * @param destinationId the destination ID to use.
 	 * @param sessionId the session ID to use.
 	 * @param mediaSessionId the media session ID for which the play request
@@ -680,12 +679,12 @@ public class Channel implements Closeable {
 		long mediaSessionId,
 		boolean synchronous
 	) throws IOException {
-		MediaStatusResponse status = sendStandard(
+		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.play(sessionId, mediaSessionId),
 			senderId,
 			destinationId,
-			synchronous
+			synchronous ? MediaStatusResponse.class : null
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
@@ -697,7 +696,7 @@ public class Channel implements Closeable {
 	 * This can only succeed if the remote application supports the
 	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
-	 * @param senderId the session ID to use.
+	 * @param senderId the sender ID to use.
 	 * @param destinationId the destination ID to use.
 	 * @param sessionId the session ID to use.
 	 * @param mediaSessionId the media session ID for which the pause request
@@ -718,12 +717,12 @@ public class Channel implements Closeable {
 		long mediaSessionId,
 		boolean synchronous
 	) throws IOException {
-		MediaStatusResponse status = sendStandard(
+		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.pause(sessionId, mediaSessionId),
 			senderId,
 			destinationId,
-			synchronous
+			synchronous ? MediaStatusResponse.class : null
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
@@ -735,7 +734,7 @@ public class Channel implements Closeable {
 	 * This can only succeed if the remote application supports the
 	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
-	 * @param senderId the session ID to use.
+	 * @param senderId the sender ID to use.
 	 * @param destinationId the destination ID to use.
 	 * @param sessionId the session ID to use.
 	 * @param mediaSessionId the media session ID for which the pause request
@@ -762,18 +761,39 @@ public class Channel implements Closeable {
 		@Nullable ResumeState resumeState,
 		boolean synchronous
 	) throws IOException {
-		MediaStatusResponse status = sendStandard(
+		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.seek(sessionId, mediaSessionId, currentTime, resumeState),
 			senderId,
 			destinationId,
-			synchronous
+			synchronous ? MediaStatusResponse.class : null
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
+	/**
+	 * Asks the remote application to stop playback and unload the media
+	 * referenced by the specified media session ID.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param senderId the sender ID to use.
+	 * @param destinationId the destination ID to use.
+	 * @param mediaSessionId the media session ID for which the
+	 *            {@link MediaVolume} request applies.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 * @throws IllegalArgumentException If {@code senderId} or
+	 *             {@code destinationId} is {@code null}.
+	 * @throws IOException If an error occurs during the operation.
+	 */
 	@Nullable
-	public MediaStatus stopMedia( //TODO: (Nad) Temp test, javadocs if keep
+	public MediaStatus stopMedia(
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
 		long mediaSessionId,
@@ -798,7 +818,7 @@ public class Channel implements Closeable {
 	 * This can only succeed if the remote application supports the
 	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
-	 * @param senderId the session ID to use.
+	 * @param senderId the sender ID to use.
 	 * @param destinationId the destination ID to use.
 	 * @param sessionId the session ID to use.
 	 * @param mediaSessionId the media session ID for which the
@@ -870,7 +890,6 @@ public class Channel implements Closeable {
 					}
 				}
 
-				//TODO (Nad) Make
 				synchronized (gradualVolumeLock) {
 					if (gradualVolumeTask != null) {
 						gradualVolumeTask.cancel();
@@ -928,7 +947,7 @@ public class Channel implements Closeable {
 				try {
 					doSetVolume(newVolume, false);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
+					// TODO Auto-generated catch block //TODO: (Nad) Make
 					e.printStackTrace();
 					shutdownTask();
 				}
@@ -951,12 +970,12 @@ public class Channel implements Closeable {
 
 	@Nullable
 	protected ReceiverStatus doSetVolume(Volume volume, boolean synchronous) throws IOException {
-		ReceiverStatusResponse status = sendStandard(
+		ReceiverStatusResponse status = send(
 			"urn:x-cast:com.google.cast.receiver",
 			StandardRequest.setVolume(volume),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
-			synchronous
+			synchronous ? ReceiverStatusResponse.class : null
 		);
 		ReceiverStatus result;
 		if (status == null || (result = status.getStatus()) == null) {
@@ -968,12 +987,12 @@ public class Channel implements Closeable {
 
 	@Nullable
 	public MediaStatus getMediaStatus(@Nonnull String senderId, @Nonnull String destinationId) throws IOException {
-		MediaStatusResponse status = sendStandard(
+		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
 			StandardRequest.status(),
 			senderId,
 			destinationId,
-			true
+			MediaStatusResponse.class
 		);
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
@@ -1425,10 +1444,10 @@ public class Channel implements Closeable {
 		}
 	}
 
-	private class ResultProcessor<T extends Response> {
+	protected class ResultProcessor<T extends Response> {
 
 		private final Class<T> responseClass;
-		private T result;
+		private ResultProcessorResult<T> result;
 
 		private ResultProcessor(Class<T> responseClass) {
 			if (responseClass == null) {
@@ -1437,14 +1456,36 @@ public class Channel implements Closeable {
 			this.responseClass = responseClass;
 		}
 
+		@SuppressWarnings("unchecked")
 		public void process(String jsonMSG) throws JsonMappingException, JsonProcessingException {
+			Class<?> deserializeTo;
+			if (StandardResponse.class.isAssignableFrom(responseClass)) {
+				deserializeTo = StandardResponse.class;
+			} else {
+				deserializeTo = responseClass;
+			}
+			Object object;
+			try {
+				object = jsonMapper.readValue(jsonMSG, deserializeTo);
+			} catch (IllegalArgumentException e) {
+				synchronized (this) {
+					this.result = new ResultProcessorResult<>(null, null, jsonMSG);
+					this.notify();
+					return;
+				}
+			}
 			synchronized (this) {
-				this.result = jsonMapper.readValue(jsonMSG, responseClass);
+				if (responseClass.isInstance(object)) {
+					this.result = new ResultProcessorResult<>((T) object, null, null);
+				} else {
+					this.result = new ResultProcessorResult<>(null, (StandardResponse) object, null);
+				}
 				this.notify();
 			}
 		}
 
-		public T get() throws InterruptedException, TimeoutException {
+		@Nonnull
+		public ResultProcessorResult<T> get() throws InterruptedException, TimeoutException {
 			synchronized (this) {
 				if (result != null) {
 					return result;
@@ -1455,6 +1496,24 @@ public class Channel implements Closeable {
 				}
 				return result;
 			}
+		}
+	}
+
+	protected class ResultProcessorResult<T extends Response> {
+
+		@Nullable
+		protected final T typedResult;
+
+		@Nullable
+		protected final StandardResponse untypedResult;
+
+		@Nullable
+		protected final String unprocessedResult;
+
+		public ResultProcessorResult(T typedResult, StandardResponse untypedResult, String unprocessedResult) {
+			this.typedResult = typedResult;
+			this.untypedResult = untypedResult;
+			this.unprocessedResult = unprocessedResult;
 		}
 	}
 }

@@ -37,10 +37,8 @@ import org.digitalmediaserver.chromecast.api.StandardResponse.CloseResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.DeviceAddedResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.DeviceRemovedResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.DeviceUpdatedResponse;
-import org.digitalmediaserver.chromecast.api.StandardResponse.InvalidResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.ErrorResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.LaunchErrorResponse;
-import org.digitalmediaserver.chromecast.api.StandardResponse.LoadCancelledResponse;
-import org.digitalmediaserver.chromecast.api.StandardResponse.LoadFailedResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MediaStatusResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MultizoneStatusResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.PingResponse;
@@ -386,13 +384,9 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 
 		DEVICE_UPDATED(DeviceUpdatedResponse.class),
 
-		INVALID(InvalidResponse.class),
+		ERROR_RESPONSE(ErrorResponse.class),
 
 		LAUNCH_ERROR(LaunchErrorResponse.class),
-
-		LOAD_CANCELLED(LoadCancelledResponse.class),
-
-		LOAD_FAILED(LoadFailedResponse.class),
 
 		/** Data type will be {@link MediaStatus} */
 		MEDIA_STATUS(MediaStatusResponse.class),

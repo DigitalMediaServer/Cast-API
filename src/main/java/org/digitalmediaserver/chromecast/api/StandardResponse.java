@@ -38,19 +38,18 @@ import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
  * Parent class for transport object representing messages received FROM
  * ChromeCast device.
  */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "responseType")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "responseType", visible = true)
 @JsonSubTypes({
 	@JsonSubTypes.Type(name = "PING", value = StandardResponse.PingResponse.class),
 	@JsonSubTypes.Type(name = "PONG", value = StandardResponse.PongResponse.class),
 	@JsonSubTypes.Type(name = "RECEIVER_STATUS", value = StandardResponse.ReceiverStatusResponse.class),
+	@JsonSubTypes.Type(name = "ERROR", value = StandardResponse.ErrorResponse.class),
 	@JsonSubTypes.Type(name = "GET_APP_AVAILABILITY", value = StandardResponse.AppAvailabilityResponse.class),
-//	@JsonSubTypes.Type(name = "INVALID_REQUEST", value = StandardResponse.InvalidResponse.class),
+	@JsonSubTypes.Type(name = "INVALID_PLAYER_STATE", value = StandardResponse.ErrorResponse.class),
 	@JsonSubTypes.Type(name = "INVALID_REQUEST", value = StandardResponse.ErrorResponse.class),
 	@JsonSubTypes.Type(name = "MEDIA_STATUS", value = StandardResponse.MediaStatusResponse.class),
 	@JsonSubTypes.Type(name = "MULTIZONE_STATUS", value = StandardResponse.MultizoneStatusResponse.class),
 	@JsonSubTypes.Type(name = "CLOSE", value = StandardResponse.CloseResponse.class),
-//	@JsonSubTypes.Type(name = "LOAD_CANCELLED", value = StandardResponse.LoadCancelledResponse.class),
-//	@JsonSubTypes.Type(name = "LOAD_FAILED", value = StandardResponse.LoadFailedResponse.class),
 	@JsonSubTypes.Type(name = "LOAD_CANCELLED", value = StandardResponse.ErrorResponse.class),
 	@JsonSubTypes.Type(name = "LOAD_FAILED", value = StandardResponse.ErrorResponse.class),
 	@JsonSubTypes.Type(name = "LAUNCH_ERROR", value = StandardResponse.LaunchErrorResponse.class),
@@ -59,7 +58,7 @@ import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 	@JsonSubTypes.Type(name = "DEVICE_REMOVED", value = StandardResponse.DeviceRemovedResponse.class)
 })
 @Immutable
-public abstract class StandardResponse implements Response {
+public abstract class StandardResponse implements Response { //TODO: (Nad) JavaDocs
 
 	protected final long requestId;
 
@@ -159,141 +158,96 @@ public abstract class StandardResponse implements Response {
 		}
 	}
 
-	@Immutable
-	public static class LoadCancelledResponse extends StandardResponse {
-
-		private final Integer itemId;
-
-		protected LoadCancelledResponse(@JsonProperty("requestId") long requestId, @JsonProperty("itemId") Integer itemId) {
-			super(requestId);
-			this.itemId = itemId;
-		}
-
-		public Integer getItemId() {
-			return itemId;
-		}
-
-		@JsonIgnore
-		@Override
-		public CastEventType getEventType() {
-			return CastEventType.LOAD_CANCELLED;
-		}
-
-		@Override
-		public String toString() {
-			StringBuilder builder = new StringBuilder(getClass().getSimpleName());
-			builder.append(" [").append("requestId=").append(getRequestId());
-			if (itemId != null) {
-				builder.append(", itemId=").append(itemId);
-			}
-			builder.append("]");
-			return builder.toString();
-		}
-	}
-
 	/**
-	 * Identifies that loading of media has failed.
+	 * An error response from the cast device.
+	 *
+	 * @author Nadahar
 	 */
-	@Immutable
-	public static class LoadFailedResponse extends StandardResponse {
-
-		protected LoadFailedResponse(@JsonProperty("requestId") long requestId) {
-			super(requestId);
-		}
-
-		@JsonIgnore
-		@Override
-		public CastEventType getEventType() {
-			return CastEventType.LOAD_FAILED;
-		}
-
-		@Override
-		public String toString() {
-			return new StringBuilder(getClass().getSimpleName())
-				.append(" [requestId=").append(getRequestId()).append("]")
-				.toString();
-		}
-	}
-
-	/**
-	 * Request was invalid for some <code>reason</code>.
-	 */
-	@Immutable
-	public static class InvalidResponse extends StandardResponse {
-
-		@JsonProperty
-		private final ErrorReason reason;
-
-		public InvalidResponse(@JsonProperty("requestId") long requestId, @JsonProperty("reason") ErrorReason reason) {
-			super(requestId);
-			this.reason = reason;
-		}
-
-		public ErrorReason getReason() {
-			return reason;
-		}
-
-		@JsonIgnore
-		@Override
-		public CastEventType getEventType() {
-			return CastEventType.INVALID;
-		}
-
-		@Override
-		public String toString() {
-			StringBuilder builder = new StringBuilder(getClass().getSimpleName());
-			builder.append(" [").append("requestId=").append(getRequestId());
-			if (reason != null) {
-				builder.append(", reason=").append(reason);
-			}
-			builder.append("]");
-			return builder.toString();
-		}
-	}
-
 	@Immutable
 	public static class ErrorResponse extends StandardResponse {
 
+		/** Application specific data */
 		@Nullable
 		protected final Map<String, Object> customData;
 
+		/** The {@link DetailedErrorCode} */
 		@Nullable
-		protected final Integer detailedErrorCode;
+		protected final DetailedErrorCode detailedErrorCode;
 
+		/** The item ID */
+		@Nullable
+		private final Integer itemId;
+
+		/** The {@link ErrorReason} */
 		@Nullable
 		protected final ErrorReason reason;
 
+		/** The {@link ErrorType} */
 		@Nullable
-		protected final ErrorType type; //TODO: (NAd) JavaDocs...
+		protected final ErrorType type;
 
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param customData the application specific data.
+		 * @param detailedErrorCode the {@link DetailedErrorCode}.
+		 * @param itemId the item ID.
+		 * @param reason the {@link ErrorReason}.
+		 * @param requestId the request ID.
+		 * @param type the {@link ErrorType}.
+		 */
 		public ErrorResponse(
-			@JsonProperty("customData") Map<String, Object> customData,
-			@JsonProperty("detailedErrorCode") Integer detailedErrorCode,
-			@JsonProperty("reason") ErrorReason reason,
+			@JsonProperty("customData") @Nullable Map<String, Object> customData,
+			@JsonProperty("detailedErrorCode") @Nullable DetailedErrorCode detailedErrorCode,
+			@JsonProperty("itemId") @Nullable Integer itemId,
+			@JsonProperty("reason") @Nullable ErrorReason reason,
 			@JsonProperty("requestId") long requestId,
-			@JsonProperty("responseType") ErrorType type
+			@JsonProperty("responseType") @Nullable ErrorType type
 		) {
 			super(requestId);
 			this.customData = customData;
 			this.detailedErrorCode = detailedErrorCode;
+			this.itemId = itemId;
 			this.reason = reason;
 			this.type = type;
 		}
 
+		/**
+		 * @return The application specific data or {@code null}.
+		 */
 		@Nullable
 		public Map<String, Object> getCustomData() {
 			return customData;
 		}
 
+		/**
+		 * @return The {@link DetailedErrorCode} or {@code null}.
+		 */
 		@Nullable
-		public Integer getDetailedErrorCode() {
+		public DetailedErrorCode getDetailedErrorCode() {
 			return detailedErrorCode;
 		}
 
+		/**
+		 * @return The item ID or {@code null}.
+		 */
+		@Nullable
+		public Integer getItemId() {
+			return itemId;
+		}
+
+		/**
+		 * @return The {@link ErrorReason} or {@code null}.
+		 */
+		@Nullable
 		public ErrorReason getReason() {
 			return reason;
 		}
 
+		/**
+		 * @return The {@link ErrorType} or {@code null}.
+		 */
+		@Nullable
 		public ErrorType getType() {
 			return type;
 		}
@@ -301,12 +255,12 @@ public abstract class StandardResponse implements Response {
 		@JsonIgnore
 		@Override
 		public CastEventType getEventType() {
-			return CastEventType.INVALID; //TODO: (Nad) Fix
+			return CastEventType.ERROR_RESPONSE;
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash(requestId, customData, detailedErrorCode, reason, type);
+			return Objects.hash(requestId, customData, detailedErrorCode, itemId, reason, type);
 		}
 
 		@Override
@@ -322,6 +276,7 @@ public abstract class StandardResponse implements Response {
 				Objects.equals(requestId, other.requestId) &&
 				Objects.equals(customData, other.customData) &&
 				Objects.equals(detailedErrorCode, other.detailedErrorCode) &&
+				Objects.equals(itemId, other.itemId) &&
 				reason == other.reason &&
 				type == other.type;
 		}
@@ -335,6 +290,9 @@ public abstract class StandardResponse implements Response {
 			}
 			if (detailedErrorCode != null) {
 				builder.append("detailedErrorCode=").append(detailedErrorCode).append(", ");
+			}
+			if (itemId != null) {
+				builder.append("itemId=").append(itemId).append(", ");
 			}
 			if (reason != null) {
 				builder.append("reason=").append(reason).append(", ");
@@ -798,6 +756,192 @@ public abstract class StandardResponse implements Response {
 			for (ErrorType type : values()) {
 				if (typeString.equals(type.name())) {
 					return type;
+				}
+			}
+			return null;
+		}
+	}
+
+	/**
+	 * Represents detailed error codes.
+	 */
+	public enum DetailedErrorCode {
+
+		/**
+		 * Returned when the HTMLMediaElement throws an error, but the specified
+		 * error isn't recognized
+		 */
+		MEDIA_UNKNOWN(100),
+
+		/**
+		 * Returned when the fetching process for the media resource was aborted
+		 * by the user agent at the user's request
+		 */
+		MEDIA_ABORTED(101),
+
+		/**
+		 * Returned when an error occurred while decoding the media resource,
+		 * after the resource was established to be usable
+		 */
+		MEDIA_DECODE(102),
+
+		/**
+		 * Returned when a network error caused the user agent to stop fetching
+		 * the media resource, after the resource was established to be usable
+		 */
+		MEDIA_NETWORK(103),
+
+		/**
+		 * Returned when the media resource indicated by the src attribute was
+		 * not suitable
+		 */
+		MEDIA_SRC_NOT_SUPPORTED(104),
+
+		/** Returned when a source buffer cannot be added to the MediaSource */
+		SOURCE_BUFFER_FAILURE(110),
+
+		/** Returned when there is an unknown error with media keys */
+		MEDIAKEYS_UNKNOWN(200),
+
+		/** Returned when there is a media keys failure due to a network issue */
+		MEDIAKEYS_NETWORK(201),
+
+		/** Returned when a MediaKeySession object cannot be created */
+		MEDIAKEYS_UNSUPPORTED(202),
+
+		/** Returned when crypto failed */
+		MEDIAKEYS_WEBCRYPTO(203),
+
+		/** Returned when there was an unknown network issue */
+		NETWORK_UNKNOWN(300),
+
+		/** Returned when a segment fails to download */
+		SEGMENT_NETWORK(301),
+
+		/** Returned when an HLS master playlist fails to download */
+		HLS_NETWORK_MASTER_PLAYLIST(311),
+
+		/** Returned when an HLS playlist fails to download */
+		HLS_NETWORK_PLAYLIST(312),
+
+		/** Returned when an HLS key fails to download */
+		HLS_NETWORK_NO_KEY_RESPONSE(313),
+
+		/** Returned when a request for an HLS key fails before it is sent */
+		HLS_NETWORK_KEY_LOAD(314),
+
+		/** Returned when an HLS segment is invalid */
+		HLS_NETWORK_INVALID_SEGMENT(315),
+
+		/** Returned when an HLS segment fails to parse */
+		HLS_SEGMENT_PARSING(316),
+
+		/**
+		 * Returned when an unknown network error occurs while handling a DASH
+		 * stream
+		 */
+		DASH_NETWORK(321),
+
+		/** Returned when a DASH stream is missing an init */
+		DASH_NO_INIT(322),
+
+		/**
+		 * Returned when an unknown network error occurs while handling a Smooth
+		 * stream
+		 */
+		SMOOTH_NETWORK(331),
+
+		/** Returned when a Smooth stream is missing media data */
+		SMOOTH_NO_MEDIA_DATA(332),
+
+		/** Returned when an unknown error occurs while parsing a manifest */
+		MANIFEST_UNKNOWN(400),
+
+		/**
+		 * Returned when an error occurs while parsing an HLS master manifest
+		 */
+		HLS_MANIFEST_MASTER(411),
+
+		/** Returned when an error occurs while parsing an HLS playlist */
+		HLS_MANIFEST_PLAYLIST(412),
+
+		/**
+		 * Returned when an unknown error occurs while parsing a DASH manifest
+		 */
+		DASH_MANIFEST_UNKNOWN(420),
+
+		/** Returned when a DASH manifest is missing periods */
+		DASH_MANIFEST_NO_PERIODS(421),
+
+		/** Returned when a DASH manifest is missing a MimeType */
+		DASH_MANIFEST_NO_MIMETYPE(422),
+
+		/** Returned when a DASH manifest contains invalid segment info */
+		DASH_INVALID_SEGMENT_INFO(423),
+
+		/** Returned when an error occurs while parsing a Smooth manifest */
+		SMOOTH_MANIFEST(431),
+
+		/** Returned when an unknown segment error occurs */
+		SEGMENT_UNKNOWN(500),
+
+		/** An unknown error occurred with a text stream */
+		TEXT_UNKNOWN(600),
+
+		/**
+		 * Returned when an error occurs outside of the framework (e.g., if an
+		 * event handler throws an error)
+		 */
+		APP(900),
+
+		/** Returned when break clip load interceptor fails */
+		BREAK_CLIP_LOADING_ERROR(901),
+
+		/** Returned when break seek interceptor fails */
+		BREAK_SEEK_INTERCEPTOR_ERROR(902),
+
+		/** Returned when an image fails to load */
+		IMAGE_ERROR(903),
+
+		/** A load was interrupted by an unload, or by another load */
+		LOAD_INTERRUPTED(904),
+
+		/** A load command failed */
+		LOAD_FAILED(905),
+
+		/** An error message was sent to the sender */
+		MEDIA_ERROR_MESSAGE(906),
+
+		/** Returned when an unknown error occurs */
+		GENERIC(999);
+
+		private final int code;
+
+		private DetailedErrorCode(int code) {
+			this.code = code;
+		}
+
+		/**
+		 * @return The numerical code of this {@link DetailedErrorCode}.
+		 */
+		public int getCode() {
+			return code;
+		}
+
+		/**
+		 * Returns the {@link DetailedErrorCode} that corresponds to the
+		 * specified integer code, or {@code null} if nothing corresponds.
+		 *
+		 * @param code the integer code whose corresponding
+		 *            {@link DetailedErrorCode} to find.
+		 * @return The {@link DetailedErrorCode} or {@code null}.
+		 */
+		@JsonCreator
+		@Nullable
+		public static DetailedErrorCode typeOf(int code) {
+			for (DetailedErrorCode errorCode : values()) {
+				if (errorCode.code == code) {
+					return errorCode;
 				}
 			}
 			return null;

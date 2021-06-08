@@ -157,8 +157,10 @@ public class Session {
 
 	/**
 	 * Asks the remote application to load the specified {@link Media} using the
-	 * specified parameters. This can only succeed if the remote application
-	 * supports the "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * specified parameters.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
 	 * @param mediaBuilder the {@link MediaBuilder} to use to create the
 	 *            {@link Media} to load.
@@ -197,8 +199,10 @@ public class Session {
 
 	/**
 	 * Asks the remote application to load the specified {@link Media} using the
-	 * specified parameters. This can only succeed if the remote application
-	 * supports the "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * specified parameters.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
 	 * @param media the {@link Media} to load.
 	 * @param autoplay {@code true} to ask the remote application to start
@@ -227,8 +231,10 @@ public class Session {
 
 	/**
 	 * Asks the remote application to load the specified {@link Media} using the
-	 * specified parameters. This can only succeed if the remote application
-	 * supports the "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * specified parameters.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
 	 * @param media the {@link Media} to load.
 	 * @param autoplay {@code true} to ask the remote application to start
@@ -253,16 +259,17 @@ public class Session {
 		boolean autoplay,
 		double currentTime,
 		boolean synchronous,
-		Map<String, String> customData
+		Map<String, Object> customData
 	) throws IOException {
 		return channel.load(senderId, destinationId, id, media, autoplay, currentTime, synchronous, customData);
 	}
 
 	/**
 	 * Asks the remote application to start playing the media referenced by the
-	 * specified media session ID. This can only succeed if the remote
-	 * application supports the "{@code urn:x-cast:com.google.cast.media}"
-	 * namespace.
+	 * specified media session ID.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
 	 * @param mediaSessionId the media session ID for which the play request
 	 *            applies.
@@ -281,9 +288,10 @@ public class Session {
 
 	/**
 	 * Asks the remote application to pause playback of the media referenced by
-	 * the specified media session ID. This can only succeed if the remote
-	 * application supports the "{@code urn:x-cast:com.google.cast.media}"
-	 * namespace.
+	 * the specified media session ID.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
 	 * @param mediaSessionId the media session ID for which the pause request
 	 *            applies.
@@ -303,6 +311,7 @@ public class Session {
 	/**
 	 * Asks the remote application to move the playback position of the media
 	 * referenced by the specified media session ID to the specified position.
+	 * <p>
 	 * This can only succeed if the remote application supports the
 	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
@@ -330,8 +339,25 @@ public class Session {
 		return channel.seek(senderId, destinationId, id, mediaSessionId, currentTime, resumeState, synchronous);
 	}
 
+	/**
+	 * Asks the remote application to stop playback and unload the media
+	 * referenced by the specified media session ID.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param mediaSessionId the media session ID for which the
+	 *            {@link MediaVolume} request applies.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 * @throws IOException If an error occurs during the operation.
+	 */
 	@Nullable
-	public MediaStatus stop( //TODO: (Nad) Temp test, JavaDocs if keep
+	public MediaStatus stop(
 		long mediaSessionId,
 		boolean synchronous
 	) throws IOException {
@@ -370,9 +396,10 @@ public class Session {
 
 	/**
 	 * Requests an updated {@link MediaStatus} from the remote application. This
-	 * method is always blocking. This can only succeed if the remote
-	 * application supports the "{@code urn:x-cast:com.google.cast.media}"
-	 * namespace.
+	 * method is always blocking.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
 	 * @return The resulting {@link MediaStatus} if a reply is received in time,
 	 *         or {@code null} if a timeout occurs.

@@ -111,8 +111,10 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		private final boolean autoplay;
 		@JsonProperty
 		private final double currentTime;
+
 		@JsonProperty
-		private final Object customData;
+		@JsonInclude(JsonInclude.Include.NON_EMPTY)
+		private final Map<String, Object> customData;
 
 		/**
 		 * Creates a new request to load the specified {@link Media}.
@@ -133,18 +135,13 @@ public abstract class StandardRequest extends StandardMessage implements Request
 			Media media,
 			boolean autoplay,
 			double currentTime,
-			final Map<String, String> customData
+			Map<String, Object> customData
 		) {
 			this.sessionId = sessionId;
 			this.media = media;
 			this.autoplay = autoplay;
 			this.currentTime = currentTime;
-
-			this.customData = customData == null ? null : new Object() {
-
-				@JsonProperty
-				Map<String, String> payload = customData;
-			};
+			this.customData = customData;
 		}
 
 		public String getSessionId() {
@@ -597,7 +594,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		Media media,
 		boolean autoplay,
 		double currentTime,
-		Map<String, String> customData
+		Map<String, Object> customData
 	) {
 		return new Load(sessionId, media, autoplay, currentTime, customData);
 	}
