@@ -53,7 +53,6 @@ import javax.annotation.concurrent.GuardedBy;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import org.digitalmediaserver.chromecast.api.CastChannel.CastMessage;
-import org.digitalmediaserver.chromecast.api.CastChannel.CastMessage.PayloadType;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListenerList;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 import org.digitalmediaserver.chromecast.api.CastEvent.DefaultCastEvent;
@@ -184,12 +183,12 @@ public class Channel implements Closeable {
 
 	/** The {@link Timer} used to handle gradual volume change */
 	@Nullable
-	@GuardedBy("cachedVolumeLock")
+	@GuardedBy("gradualVolumeLock")
 	protected Timer gradualVolumeTimer;
 
 	/** The {@link TimerTask} that executes the gradual volume change */
 	@Nullable
-	@GuardedBy("cachedVolumeLock")
+	@GuardedBy("gradualVolumeLock")
 	protected TimerTask gradualVolumeTask;
 
 	public Channel(
@@ -305,30 +304,30 @@ public class Channel implements Closeable {
 	@Override
 	public void close() throws IOException {
 		Set<Session> closedSessions = null;
-		synchronized (socketLock) {
-			if (socket == null || socket.isClosed() || !socket.isConnected()) {
-				// Already closed
-				return;
-			}
+		synchronized (sessionsLock) {
+			synchronized (socketLock) {
+				if (socket == null || socket.isClosed() || !socket.isConnected()) {
+					// Already closed
+					return;
+				}
 
-			synchronized (sessionsLock) {
 				if (!sessions.isEmpty()) {
 					closedSessions = new HashSet<>(sessions);
 					sessions.clear();
 				}
-			}
 
-			if (pingTimer != null) {
-				pingTimer.cancel();
-				pingTimer = null;
-			}
+				if (pingTimer != null) {
+					pingTimer.cancel();
+					pingTimer = null;
+				}
 
-			if (inputHandler != null) {
-				inputHandler.stopProcessing();
-				inputHandler = null;
-			}
+				if (inputHandler != null) {
+					inputHandler.stopProcessing();
+					inputHandler = null;
+				}
 
-			socket.close();
+				socket.close();
+			}
 		}
 
 		if (closedSessions != null) {
@@ -1711,7 +1710,6 @@ public class Channel implements Closeable {
 		public void run() {
 			String jsonMessage;
 			ImmutableCastMessage message = null;
-			PayloadType payloadType;
 			try {
 				while (running) {
 					message = null;
