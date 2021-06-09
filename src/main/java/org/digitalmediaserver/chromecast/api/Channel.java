@@ -61,6 +61,8 @@ import org.digitalmediaserver.chromecast.api.ChromeCastException.ErrorResponseCh
 import org.digitalmediaserver.chromecast.api.ChromeCastException.LaunchErrorCastException;
 import org.digitalmediaserver.chromecast.api.ChromeCastException.UnprocessedChromeCastException;
 import org.digitalmediaserver.chromecast.api.ChromeCastException.UntypedChromeCastException;
+import org.digitalmediaserver.chromecast.api.ImmutableCastMessage.ImmutableBinaryCastMessage;
+import org.digitalmediaserver.chromecast.api.ImmutableCastMessage.ImmutableStringCastMessage;
 import org.digitalmediaserver.chromecast.api.Session.SessionClosedListener;
 import org.digitalmediaserver.chromecast.api.StandardRequest.ResumeState;
 import org.digitalmediaserver.chromecast.api.StandardResponse.AppAvailabilityResponse;
@@ -256,8 +258,8 @@ public class Channel implements Closeable {
 				.build();
 
 			write(msg);
-			CastMessage response = readMessage(socket.getInputStream());
-			CastChannel.DeviceAuthMessage authResponse = CastChannel.DeviceAuthMessage.parseFrom(response.getPayloadBinary());
+			ImmutableBinaryCastMessage response = (ImmutableBinaryCastMessage) readMessage(socket.getInputStream());
+			CastChannel.DeviceAuthMessage authResponse = CastChannel.DeviceAuthMessage.parseFrom(response.getPayload());
 			if (authResponse.hasError()) {
 				throw new ChromeCastException("Authentication failed: " + authResponse.getError().getErrorType().toString());
 			}
@@ -1487,11 +1489,11 @@ public class Channel implements Closeable {
 	 * is thrown.
 	 *
 	 * @param inputStream the {@link InputStream} from which to read.
-	 * @return The resulting {@link CastMessage}.
+	 * @return The resulting {@link ImmutableCastMessage}.
 	 * @throws IOException If {@code EOF} is reached or an error occurs-.
 	 */
 	@Nonnull
-	protected static CastMessage readMessage(InputStream inputStream) throws IOException {
+	protected static ImmutableCastMessage readMessage(InputStream inputStream) throws IOException {
 		int size = readB32Int(inputStream);
 		byte[] buf = new byte[size];
 		int read = 0;
@@ -1502,7 +1504,7 @@ public class Channel implements Closeable {
 			}
 			read += readNow;
 		}
-		return CastMessage.parseFrom(buf);
+		return ImmutableCastMessage.create(CastMessage.parseFrom(buf));
 	}
 
 	protected static boolean isCustomMessage(@Nullable JsonNode parsedMessage) {
@@ -1708,7 +1710,7 @@ public class Channel implements Closeable {
 		@Override
 		public void run() {
 			String jsonMessage;
-			CastMessage message = null;
+			ImmutableCastMessage message = null;
 			PayloadType payloadType;
 			try {
 				while (running) {
@@ -1728,76 +1730,58 @@ public class Channel implements Closeable {
 							break;
 						}
 					}
-					if (message != null && (payloadType = message.getPayloadType()) != null) {
-						switch (payloadType) {
-							case BINARY:
-								LOGGER.trace(
-									CHROMECAST_API_MARKER,
-									"{} InputHandler: Received message with binary payload ({} bytes)",
-									remoteName,
-									message.getPayloadBinary() == null ? "unknown number of" : message.getPayloadBinary().size()
-								);
-								EXECUTOR.execute(new BinaryMessageHandler(message));
-								break;
-							case STRING:
-								jsonMessage = message.getPayloadUtf8();
-								if (isBlank(jsonMessage)) {
-									LOGGER.trace(
-										CHROMECAST_API_MARKER,
-										"{} InputHandler: Received an empty string message - ignoring",
-										remoteName
-									);
-									continue;
-								}
-								jsonMessage = jsonMessage.replaceFirst("\"type\"", "\"responseType\"");
-								if ("urn:x-cast:com.google.cast.tp.heartbeat".equals(message.getNamespace())) {
-									// Deal with PING/PONG directly
-									JsonNode parsedMessage = jsonMapper.readTree(jsonMessage);
-									JsonNode tmpNode = parsedMessage.get("responseType");
-									String responseType = tmpNode == null ? "" : tmpNode.asText("");
-									if ("PING".equals(responseType)) {
-										LOGGER.trace(
-											CHROMECAST_API_MARKER,
-											"Received PING from {}, replying with PONG",
-											remoteName
-										);
-										write(pongMessage);
-									} else if ("PONG".equals(responseType)) {
-										LOGGER.trace(CHROMECAST_API_MARKER, "Received PONG from {}", remoteName);
-									} else {
-										LOGGER.trace(
-											CHROMECAST_API_MARKER,
-											"Received unexpected heartbeat message of type \"{}\" from {}",
-											responseType,
-											remoteName
-										);
-									}
-									continue;
-								}
-								LOGGER.trace(
-									CHROMECAST_API_MARKER,
-									"{} InputHandler: Received string message \"{}\"",
-									remoteName,
-									jsonMessage
-								);
-								EXECUTOR.execute(new StringMessageHandler(message, jsonMessage));
-								break;
-							default:
-								LOGGER.warn(
-									CHROMECAST_API_MARKER,
-									"{} InputHandler: Received a message with an unknown payload type '{}'",
-									remoteName,
-									payloadType
-								);
-								break;
-
+					if (message instanceof ImmutableStringCastMessage) {
+						jsonMessage = ((ImmutableStringCastMessage)message).getPayload();
+						if (isBlank(jsonMessage)) {
+							LOGGER.trace(
+								CHROMECAST_API_MARKER,
+								"{} InputHandler: Received an empty string message - ignoring",
+								remoteName
+							);
+							continue;
 						}
-					} else if (message != null) {
-						LOGGER.warn(
+						jsonMessage = jsonMessage.replaceFirst("\"type\"", "\"responseType\"");
+						if ("urn:x-cast:com.google.cast.tp.heartbeat".equals(message.getNamespace())) {
+							// Deal with PING/PONG directly
+							JsonNode parsedMessage = jsonMapper.readTree(jsonMessage);
+							JsonNode tmpNode = parsedMessage.get("responseType");
+							String responseType = tmpNode == null ? "" : tmpNode.asText("");
+							if ("PING".equals(responseType)) {
+								LOGGER.trace(
+									CHROMECAST_API_MARKER,
+									"Received PING from {}, replying with PONG",
+									remoteName
+								);
+								write(pongMessage);
+							} else if ("PONG".equals(responseType)) {
+								LOGGER.trace(CHROMECAST_API_MARKER, "Received PONG from {}", remoteName);
+							} else {
+								LOGGER.trace(
+									CHROMECAST_API_MARKER,
+									"Received unexpected heartbeat message of type \"{}\" from {}",
+									responseType,
+									remoteName
+								);
+							}
+							continue;
+						}
+						LOGGER.trace(
 							CHROMECAST_API_MARKER,
-							"{} InputHandler: Received a message without a payload type",
-							remoteName
+							"{} InputHandler: Received string message \"{}\"",
+							remoteName,
+							jsonMessage
 						);
+						EXECUTOR.execute(new StringMessageHandler((ImmutableStringCastMessage) message, jsonMessage));
+					} else if (message != null) {
+						LOGGER.trace(
+							CHROMECAST_API_MARKER,
+							"{} InputHandler: Received message with binary payload ({} bytes)",
+							remoteName,
+							((ImmutableBinaryCastMessage) message).getPayload() == null ?
+								"unknown number of" :
+								((ImmutableBinaryCastMessage) message).getPayload().size()
+						);
+						EXECUTOR.execute(new BinaryMessageHandler((ImmutableBinaryCastMessage) message));
 					} else {
 						LOGGER.warn(
 							CHROMECAST_API_MARKER,
@@ -1811,26 +1795,12 @@ public class Channel implements Closeable {
 					LOGGER.error(CHROMECAST_API_MARKER, "{} InputHandler exception, terminating handler: ", remoteName, e.getMessage());
 					if (message != null && LOGGER.isDebugEnabled(CHROMECAST_API_MARKER)) {
 						StringBuilder sb = new StringBuilder();
-						if (message.hasNamespace()) {
-							sb.append("namespace: ").append(message.getNamespace());
-						}
-						if (message.hasProtocolVersion() && message.getProtocolVersion() != null) {
-							if (sb.length() > 0) {
-								sb.append(", ");
-							}
-							sb.append("protocol version: ").append(message.getProtocolVersion().getNumber());
-						}
-						if (message.hasPayloadUtf8()) {
-							if (sb.length() > 0) {
-								sb.append(", ");
-							}
-							sb.append("string payload: ").append(message.getPayloadUtf8());
-						}
-						if (message.hasPayloadBinary()) {
-							if (sb.length() > 0) {
-								sb.append(", ");
-							}
-							sb.append("binary payload: ").append(message.getPayloadBinary());
+						sb.append("namespace: ").append(message.getNamespace());
+						sb.append(", protocol version: ").append(message.getProtocolVersion().getNumber());
+						if (message instanceof ImmutableStringCastMessage) {
+							sb.append(", string payload: ").append(((ImmutableStringCastMessage)message).getPayload());
+						} else {
+							sb.append(", binary payload: ").append(((ImmutableBinaryCastMessage) message).getPayload());
 						}
 						LOGGER.debug(CHROMECAST_API_MARKER, "Triggering (potentially partial) message: {}", sb.toString());
 					}
@@ -1865,12 +1835,12 @@ public class Channel implements Closeable {
 	protected class StringMessageHandler implements Runnable {
 
 		@Nonnull
-		protected final CastMessage message;
+		protected final ImmutableStringCastMessage message;
 
 		@Nonnull
 		protected final String jsonMessage;
 
-		public StringMessageHandler(@Nonnull CastMessage message, @Nonnull String jsonMessage) {
+		public StringMessageHandler(@Nonnull ImmutableStringCastMessage message, @Nonnull String jsonMessage) {
 			requireNotNull(message, "message");
 			requireNotBlank(jsonMessage, "jsonMessage");
 			this.message = message;
@@ -1900,7 +1870,7 @@ public class Channel implements Closeable {
 					if (!listeners.isEmpty()) {
 						listeners.fire(new DefaultCastEvent<>(
 							CastEventType.CUSTOM_MESSAGE,
-							new CustomMessageEvent(message.getNamespace(), message.getPayloadUtf8())
+							new CustomMessageEvent(message.getNamespace(), message.getPayload())
 						));
 					}
 				} else if ("CLOSE".equals(responseType)) {
@@ -1995,9 +1965,9 @@ public class Channel implements Closeable {
 
 	protected class BinaryMessageHandler implements Runnable {
 
-		protected final CastMessage message;
+		protected final ImmutableBinaryCastMessage message;
 
-		public BinaryMessageHandler(@Nonnull CastMessage message) {
+		public BinaryMessageHandler(@Nonnull ImmutableBinaryCastMessage message) {
 			requireNotNull(message, "message");
 			this.message = message;
 		}
@@ -2007,7 +1977,7 @@ public class Channel implements Closeable {
 			if (!listeners.isEmpty()) {
 				listeners.fire(new DefaultCastEvent<>(CastEventType.CUSTOM_MESSAGE, new CustomMessageEvent(
 					message.getNamespace(),
-					message.getPayloadBinary()
+					message.getPayload()
 				)));
 			}
 		}
