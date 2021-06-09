@@ -30,6 +30,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 
 /**
@@ -653,22 +655,55 @@ public class Metadata {
 		 * Generic template suitable for most media types. Used by
 		 * {@code GenericMediaMetadata}.
 		 */
-		GENERIC,
+		GENERIC(0),
 
 		/** A full length movie. Used by {@code MovieMediaMetadata}. */
-		MOVIE,
+		MOVIE(1),
 
 		/** An episode of a TV series. Used by {@code TvShowMediaMetadata}. */
-		TV_SHOW,
+		TV_SHOW(2),
 
 		/** A music track. Used by {@code MusicTrackMediaMetadata}. */
-		MUSIC_TRACK,
+		MUSIC_TRACK(3),
 
 		/** A photo. Used by {@code PhotoMediaMetadata}. */
-		PHOTO,
+		PHOTO(4),
 
 		/** An audiobook chapter. Used by {@code AudiobookChapterMediaMetadata}. */
-		AUDIOBOOK_CHAPTER
+		AUDIOBOOK_CHAPTER(5);
+
+		private int code;
+
+		private MetadataType(int code) {
+			this.code = code;
+		}
+
+		/**
+		 * @return The numerical code representing this {@link MetadataType}.
+		 */
+		@JsonValue
+		public int getCode() {
+			return code;
+		}
+
+		/**
+		 * Returns the {@link MetadataType} that corresponds to the specified
+		 * integer value, or {@code null} if nothing corresponds.
+		 *
+		 * @param code the integer value whose corresponding
+		 *            {@link MetadataType} to find.
+		 * @return The {@link MetadataType} or {@code null}.
+		 */
+		@Nullable
+		@JsonCreator
+		public static MetadataType typeOf(int code) {
+			for (MetadataType type : values()) {
+				if (type.code == code) {
+					return type;
+				}
+			}
+			return null;
+		}
 	}
 
 	/**
