@@ -17,6 +17,7 @@ package org.digitalmediaserver.chromecast.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -93,7 +94,8 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 		@JsonIgnore
 		@Override
 		public CastEventType getEventType() {
-			return CastEventType.PING;
+			// Should never be an event
+			return null;
 		}
 
 		@Override
@@ -123,7 +125,8 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 		@JsonIgnore
 		@Override
 		public CastEventType getEventType() {
-			return CastEventType.PONG;
+			// Should never be an event
+			return null;
 		}
 
 		@Override
@@ -311,6 +314,8 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 	@Immutable
 	public static class LaunchErrorResponse extends StandardResponse {
 
+		@JsonProperty
+		@JsonInclude(JsonInclude.Include.NON_NULL)
 		private final String reason;
 
 		public LaunchErrorResponse(@JsonProperty("requestId") long requestId, @JsonProperty("reason") String reason) {
@@ -346,6 +351,7 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 	@Immutable
 	public static class ReceiverStatusResponse extends StandardResponse {
 
+		@JsonProperty
 		private final ReceiverStatus status;
 
 		public ReceiverStatusResponse(@JsonProperty("requestId") long requestId, @JsonProperty("status") ReceiverStatus status) {
@@ -382,6 +388,7 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 	@JsonDeserialize(using = MediaStatusResponseDeserializer.class)
 	public static class MediaStatusResponse extends StandardResponse {
 
+		@JsonProperty
 		private final List<MediaStatus> statuses;
 
 		public MediaStatusResponse(
@@ -427,6 +434,7 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 	public static class AppAvailabilityResponse extends StandardResponse {
 
 		@Nonnull
+		@JsonProperty
 		private final Map<String, String> availability;
 
 		public AppAvailabilityResponse(
@@ -471,6 +479,7 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 	@Immutable
 	public static class MultizoneStatusResponse extends StandardResponse {
 
+		@JsonProperty
 		private final MultizoneStatus status;
 
 		public MultizoneStatusResponse(
@@ -509,6 +518,7 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 	@Immutable
 	public static class DeviceAddedResponse extends StandardResponse {
 
+		@JsonProperty
 		private final Device device;
 
 		public DeviceAddedResponse(@JsonProperty("requestId") long requestId, @JsonProperty("device") Device device) {
@@ -544,6 +554,7 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 	@Immutable
 	public static class DeviceUpdatedResponse extends StandardResponse {
 
+		@JsonProperty
 		private final Device device;
 
 		public DeviceUpdatedResponse(@JsonProperty("requestId") long requestId, @JsonProperty("device") Device device) {
@@ -579,6 +590,7 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 	@Immutable
 	public static class DeviceRemovedResponse extends StandardResponse {
 
+		@JsonProperty
 		private final String deviceId;
 
 		public DeviceRemovedResponse(

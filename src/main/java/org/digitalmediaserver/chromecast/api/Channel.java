@@ -1909,7 +1909,7 @@ public class Channel implements Closeable {
 								// Didn't match any "known" session, pass it on to listeners
 								if (!listeners.isEmpty()) { //TODO: (Nad) Must include sourceId/destionationId to have any value..
 									listeners.fire(new DefaultCastEvent<>(
-										CastEventType.CLOSE,
+										CastEventType.CLOSE, //TODO: (Nad) Only use of this eventtype
 										jsonMapper.treeToValue(parsedMessage, StandardResponse.class)
 									));
 								}
@@ -1928,7 +1928,7 @@ public class Channel implements Closeable {
 						response = null;
 					}
 
-					if (response instanceof StandardResponse) {
+					if (response instanceof StandardResponse && response.getEventType() != null) {
 //						LOGGER.error(CHROMECAST_API_MARKER, "Received unhandled standard response of type {}: {}", response.getClass().getSimpleName(), response); //TODO: (Nad) Log anything? Maybe in "CastEvent"?
 						ReceiverStatus receiverStatus;
 						if (

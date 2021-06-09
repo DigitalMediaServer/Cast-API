@@ -32,6 +32,7 @@ import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.ThreadSafe;
 import org.digitalmediaserver.chromecast.api.StandardResponse.AppAvailabilityResponse;
+import org.digitalmediaserver.chromecast.api.StandardResponse.CloseResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.DeviceAddedResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.DeviceRemovedResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.DeviceUpdatedResponse;
@@ -39,8 +40,6 @@ import org.digitalmediaserver.chromecast.api.StandardResponse.ErrorResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.LaunchErrorResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MediaStatusResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MultizoneStatusResponse;
-import org.digitalmediaserver.chromecast.api.StandardResponse.PingResponse;
-import org.digitalmediaserver.chromecast.api.StandardResponse.PongResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.ReceiverStatusResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -53,7 +52,7 @@ import com.fasterxml.jackson.databind.JsonNode;
  * @author Nadahar
  */
 @Immutable
-public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
+public interface CastEvent<T> {
 
 	/**
 	 * @return The {@link CastEventType} of this event.
@@ -435,40 +434,77 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 	public enum CastEventType {
 
 		/**
+		 * Event is fired when an unclaimed {@link AppAvailabilityResponse} is
+		 * received, which shouldn't normally happen
+		 */
 		APPLICATION_AVAILABILITY(AppAvailabilityResponse.class),
 
-		/** Special event usually received when session is stopped */
-		CLOSE(null),
+		/**
+		 * Event is fired when an unclaimed {@link CloseResponse} is received,
+		 * which shouldn't normally happen
+		 */
+		CLOSE(null), //TODO: (Nad) A special data type carrying source and destination might be needed.
 
-		/** Data type will be {@link Boolean} */
+		/**
+		 * Event is fired when the connection state with the cast device changes
+		 */
 		CONNECTED(Boolean.class),
 
-		/** Data type will be {@link CustomMessageEvent} */
+		/** Event is fired when an unclaimed custom message is received */
 		CUSTOM_MESSAGE(CustomMessageEvent.class), //TODO: (Nad) Decide on name
 
+		/**
+		 * Event is fired when an unclaimed {@link DeviceAddedResponse} is
+		 * received
+		 */
 		DEVICE_ADDED(DeviceAddedResponse.class),
 
+		/**
+		 * Event is fired when an unclaimed {@link DeviceRemovedResponse} is
+		 * received
+		 */
 		DEVICE_REMOVED(DeviceRemovedResponse.class),
 
+		/**
+		 * Event is fired when an unclaimed {@link DeviceUpdatedResponse} is
+		 * received
+		 */
 		DEVICE_UPDATED(DeviceUpdatedResponse.class),
 
+		/**
+		 * Event is fired when an unclaimed {@link ErrorResponse} is received,
+		 * which shouldn't normally happen
+		 */
 		ERROR_RESPONSE(ErrorResponse.class),
 
+		/**
+		 * Event is fired when an unclaimed {@link LaunchErrorResponse} is
+		 * received, which shouldn't normally happen
+		 */
 		LAUNCH_ERROR(LaunchErrorResponse.class),
 
-		/** Data type will be {@link MediaStatus} */
+		/**
+		 * Event is fired when an unclaimed {@link MediaStatusResponse} is
+		 * received
+		 */
 		MEDIA_STATUS(MediaStatusResponse.class),
 
+		/**
+		 * Event is fired when an unclaimed {@link MultizoneStatusResponse} is
+		 * received
+		 */
 		MULTIZONE_STATUS(MultizoneStatusResponse.class),
 
-		PING(PingResponse.class), //TODO: (Nad) Are they all in use?
-
-		PONG(PongResponse.class),
-
-		/** Data type will be {@link ReceiverStatus} */
+		/**
+		 * Event is fired when an unclaimed {@link ReceiverStatusResponse} is
+		 * received
+		 */
 		RECEIVER_STATUS(ReceiverStatusResponse.class),
 
-		/** Data type will be {@link JsonNode} */
+		/**
+		 * Event is fired when a response that can't be deserialized is
+		 * received, the data will be {@link JsonNode}
+		 */
 		UNKNOWN(JsonNode.class);
 
 		@Nullable
