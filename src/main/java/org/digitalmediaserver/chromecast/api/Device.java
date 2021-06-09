@@ -29,6 +29,14 @@ public class Device {
 	private final String deviceId;
 	private final Volume volume;
 
+	/**
+	 * Creates a new instance using the specified parameters.
+	 *
+	 * @param name the device name.
+	 * @param capabilities the encoded device capabilities.
+	 * @param deviceId the device ID.
+	 * @param volume the {@link Volume} instance.
+	 */
 	public Device(
 		@JsonProperty("name") String name,
 		@JsonProperty("capabilities") int capabilities,
@@ -41,18 +49,32 @@ public class Device {
 		this.volume = volume;
 	}
 
+	/**
+	 * @return The name of the device.
+	 */
 	public String getName() {
 		return name;
 	}
 
+	/**
+	 * @return The (encoded) device capabilities. Use
+	 *         {@link CastDeviceCapability#getCastDeviceCapabilities(int)} to
+	 *         decode.
+	 */
 	public int getCapabilities() {
 		return capabilities;
 	}
 
+	/**
+	 * @return The device ID.
+	 */
 	public String getDeviceId() {
 		return deviceId;
 	}
 
+	/**
+	 * @return The {@link Volume} instance.
+	 */
 	public Volume getVolume() {
 		return volume;
 	}

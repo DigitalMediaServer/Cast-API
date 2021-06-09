@@ -143,7 +143,7 @@ public class ChannelTest {
 		assertTrue(media.getCustomData().isEmpty());
 		assertEquals(null, media.getDuration());
 		assertNotNull(media.getMetadata());
-		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertNull(media.getMetadataType());
 		assertNull(media.getStreamType());
 		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
@@ -184,7 +184,7 @@ public class ChannelTest {
 		assertTrue(media.getCustomData().isEmpty());
 		assertEquals(389.355102, media.getDuration().doubleValue(), 0.0);
 		assertTrue(media.getMetadata().isEmpty());
-		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertNull(media.getMetadataType());
 		assertEquals(StreamType.BUFFERED, media.getStreamType());
 		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
@@ -195,7 +195,7 @@ public class ChannelTest {
 		assertTrue(media.getCustomData().isEmpty());
 		assertEquals(389.355102, media.getDuration().doubleValue(), 0.0);
 		assertTrue(media.getMetadata().isEmpty());
-		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertNull(media.getMetadataType());
 		assertEquals(StreamType.BUFFERED, media.getStreamType());
 		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
@@ -284,7 +284,7 @@ public class ChannelTest {
 		assertEquals("http://example.none", images.get(1).getUrl());
 		assertEquals(640, images.get(1).getWidth().intValue());
 		assertEquals(480, images.get(1).getHeight().intValue());
-		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertNull(media.getMetadataType());
 		assertEquals(StreamType.BUFFERED, media.getStreamType());
 		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
@@ -444,7 +444,7 @@ public class ChannelTest {
 		assertEquals("http://lh3.googleusercontent.com/UirYk5XiPVHW2HHRtoVlvHF10_Of8VtYU9DL18qwFsFodXd3hXo60yX1BfV5up5ClCKhgZvLPUY", images.get(0).getUrl());
 		assertNull(images.get(0).getHeight());
 		assertNull(images.get(0).getWidth());
-		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertNull(media.getMetadataType());
 		assertEquals(StreamType.BUFFERED, media.getStreamType());
 		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
@@ -485,7 +485,7 @@ public class ChannelTest {
 		assertTrue(media.getCustomData().isEmpty());
 		assertNull(media.getDuration());
 		assertTrue(media.getMetadata().isEmpty());
-		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertNull(media.getMetadataType());
 		assertEquals(StreamType.BUFFERED, media.getStreamType());
 		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
@@ -526,7 +526,7 @@ public class ChannelTest {
 		assertTrue(media.getCustomData().isEmpty());
 		assertNull(media.getDuration());
 		assertTrue(media.getMetadata().isEmpty());
-		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertNull(media.getMetadataType());
 		assertEquals(StreamType.BUFFERED, media.getStreamType());
 		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
@@ -560,7 +560,7 @@ public class ChannelTest {
 		assertTrue(media.getCustomData().isEmpty());
 		assertEquals(596.474195, media.getDuration().doubleValue(), 0.0);
 		assertTrue(media.getMetadata().isEmpty());
-		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertNull(media.getMetadataType());
 		assertNull(media.getStreamType());
 		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
@@ -618,7 +618,7 @@ public class ChannelTest {
 		assertTrue(media.getCustomData().isEmpty());
 		assertEquals(null, media.getDuration());
 		assertNotNull(media.getMetadata());
-		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertNull(media.getMetadataType());
 		assertNull(media.getStreamType());
 		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());

@@ -503,16 +503,17 @@ public class Media {
 	}
 
 	/**
-	 * @return The type defined by the key {@link #METADATA_TYPE}.
+	 * @return The {@link MetadataType} defined by the key
+	 *         {@link #METADATA_TYPE} or {@code null}.
 	 */
+	@Nullable
 	@JsonIgnore
 	public MetadataType getMetadataType() {
-		if (!metadata.containsKey(Metadata.METADATA_TYPE)) {
-			return MetadataType.GENERIC;
+		Object object = metadata.get(Metadata.METADATA_TYPE);
+		if (object instanceof Integer) {
+			return MetadataType.typeOf(((Integer) object).intValue());
 		}
-
-		Integer ordinal = (Integer) metadata.get(Metadata.METADATA_TYPE);
-		return ordinal < MetadataType.values().length ? MetadataType.values()[ordinal] : MetadataType.GENERIC; //TODO: (Nad) Look into this (ordinal)
+		return null;
 	}
 
 	@Override

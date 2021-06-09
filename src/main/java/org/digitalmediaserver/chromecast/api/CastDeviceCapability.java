@@ -20,14 +20,32 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 
 
-//TODO: (Nad) JavaDocs
+/**
+ * This represents the (fundamental) capabilities of a cast device.
+ *
+ * @author Nadahar
+ */
 public enum CastDeviceCapability {
+
+	/** The cast device has no known capabilities */
 	NONE(0),
+
+	/** The cast device can play video media */
 	VIDEO_OUT(1 << 0),
+
+	/** The cast device can provide video media */
 	VIDEO_IN(1 << 1),
+
+	/** The cast device can play audio media */
 	AUDIO_OUT(1 << 2),
+
+	/** The cast device can provide audio media */
 	AUDIO_IN(1 << 3),
+
+	/** The cast device supports or is in (?) development mode */
 	DEV_MODE(1 << 4),
+
+	/** The cast device supports multizone groups */
 	MULTIZONE_GROUP(1 << 5);
 
 	private final int mask;

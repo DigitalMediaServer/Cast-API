@@ -85,7 +85,7 @@ public class MediaStatusTest {
 		), mediaStatus.getItems());
 
 		assertEquals(media, mediaStatus.getMedia());
-		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertNull(media.getMetadataType());
 		assertEquals(1, mediaStatus.getMediaSessionId());
 		assertEquals(1, mediaStatus.getPlaybackRate(), 0f);
 		assertEquals(PlayerState.BUFFERING, mediaStatus.getPlayerState());
@@ -137,7 +137,7 @@ public class MediaStatusTest {
 
 		final MediaStatus mediaStatus = response.getStatuses().get(0);
 		Media media = mediaStatus.getMedia();
-		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertNull(media.getMetadataType());
 	}
 
 	@Test
@@ -147,7 +147,7 @@ public class MediaStatusTest {
 
 		final MediaStatus mediaStatus = response.getStatuses().get(0);
 		Media media = mediaStatus.getMedia();
-		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertNull(media.getMetadataType());
 	}
 
 	@Test
