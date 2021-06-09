@@ -22,18 +22,16 @@ import java.util.EnumSet;
 import java.util.EventListener;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executor;
-import java.util.concurrent.RejectedExecutionException;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.ThreadSafe;
 import org.digitalmediaserver.chromecast.api.StandardResponse.AppAvailabilityResponse;
-import org.digitalmediaserver.chromecast.api.StandardResponse.CloseResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.DeviceAddedResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.DeviceRemovedResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.DeviceUpdatedResponse;
@@ -44,39 +42,67 @@ import org.digitalmediaserver.chromecast.api.StandardResponse.MultizoneStatusRes
 import org.digitalmediaserver.chromecast.api.StandardResponse.PingResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.PongResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.ReceiverStatusResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 
 
-//TODO: (Nad) JavaDocs
 /**
- * This interface describes  events.
+ * This interface describes cast device related events.
  *
  * @param <T> the type data in the event.
  *
  * @author Nadahar
  */
+@Immutable
 public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 
+	/**
+	 * @return The {@link CastEventType} of this event.
+	 */
 	@Nonnull
 	CastEventType getEventType();
 
+	/**
+	 * @return The event data, if any.
+	 */
 	@Nullable
 	T getData();
 
+	/**
+	 * Tries to cast the event data to the specified type and return it.
+	 *
+	 * @param <U> the event data type.
+	 * @param cls the {@link Class} of the event data type.
+	 * @return The event data cast to the specified type or {@code null}.
+	 */
 	@Nullable
 	<U> U getData(Class<U> cls);
 
+	/**
+	 * The default {@link CastEvent} implementation.
+	 *
+	 * @param <T> the type data in the event.
+	 *
+	 * @author Nadahar
+	 */
 	@Immutable
 	public static class DefaultCastEvent<T> implements CastEvent<T> {
 
+		/** The {@link CastEventType} */
 		@Nonnull
 		protected final CastEventType eventType;
 
+		/** The event data */
 		@Nullable
 		protected final T data;
 
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param eventType the {@link CastEventType}.
+		 * @param data the event data or {@code null}.
+		 * @throws IllegalArgumentException If {@code eventType} is
+		 *             {@code null}.
+		 */
 		public DefaultCastEvent(@Nonnull CastEventType eventType, @Nullable T data) {
 			requireNotNull(eventType, "eventType");
 			this.eventType = eventType;
@@ -121,9 +147,6 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 	/**
 	 * An {@link EventListener} that listens for {@link CastEvent}s.
 	 *
-	 * @param <E> the {@link CastEvent} type.
-	 * @param <T> the type of the event data object.
-	 *
 	 * @author Nadahar
 	 */
 	public interface CastEventListener extends EventListener {
@@ -136,14 +159,31 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 		void onEvent(@Nonnull CastEvent<?> event);
 	}
 
+	/**
+	 * A thread-safe {@link List} of {@link CastEventListener}s.
+	 *
+	 * @author Nadahar
+	 */
 	@ThreadSafe
 	public interface CastEventListenerList {
 
+		/**
+		 * Registers the specified {@link CastEventListener} to this
+		 * {@link CastEventListenerList} for the specified
+		 * {@link CastEventType}s.
+		 *
+		 * @param listener the listener to register.
+		 * @param eventTypes the event type(s) to listen to.
+		 * @return {@code true} if a change was made to the listener list,
+		 *         {@code false} if this registration deadn't lead to any
+		 *         change.
+		 */
 		boolean add(@Nullable CastEventListener listener, CastEventType... eventTypes);
 
 		/**
-		 * Adds the specified {@link CastEventListener}s to this
-		 * {@link CastEventListenerList}.
+		 * Registers the specified {@link CastEventListener}s to this
+		 * {@link CastEventListenerList} for the specified
+		 * {@link CastEventType}s.
 		 *
 		 * @param collection the {@link Collection} of
 		 *            {@link CastEventListener}s.
@@ -153,34 +193,99 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 		 */
 		int addAll(@Nullable Collection<CastEventListener> collection, CastEventType... eventTypes);
 
+		/**
+		 * Unregisters the specified {@link CastEventListener} from this
+		 * {@link CastEventListenerList}.
+		 *
+		 * @param listener the {@link CastEventListener} to unregister.
+		 * @return {@code true} if a change was made to the listener list,
+		 *         {@code false} if this registration deadn't lead to any
+		 *         change.
+		 */
 		boolean remove(@Nullable CastEventListener listener);
 
+		/**
+		 * Unregisters the specified {@link CastEventListener}s from this
+		 * {@link CastEventListenerList}.
+		 *
+		 * @param collection the {@link Collection} of
+		 *            {@link CastEventListener}s.
+		 * @return {@code true} if a change was made to the listener list,
+		 *         {@code false} if this registration deadn't lead to any
+		 *         change.
+		 */
 		boolean removeAll(@Nullable Collection<CastEventListener> collection);
 
+		/**
+		 * Checks if the specified {@link CastEventListener} is already
+		 * registered with this {@link CastEventListenerList}.
+		 *
+		 * @param listener the {@link CastEventListener} to check.
+		 * @return {@code true} if the specified {@link CastEventListener} is
+		 *         registered, {@code false} otherwise.
+		 */
 		boolean contains(@Nullable CastEventListener listener);
 
+		/**
+		 * Unregisters all {@link CastEventListener}s from this
+		 * {@link CastEventListenerList}.
+		 */
 		void clear();
 
+		/**
+		 * @return {@code true} if this {@link CastEventListenerList} has no
+		 *         registered {@link CastEventListener}s, {@code false}
+		 *         otherwise.
+		 */
 		boolean isEmpty();
+
+		/**
+		 * @return The number of registered {@link CastEventListener}s.
+		 */
 		int size();
 
-		//Doc: Unmodifiable snapshot
+		/**
+		 * @return An unmodifiable snapshot {@link Iterable} captured at the
+		 *         time this method is called.
+		 */
 		Iterable<CastEventListener> listeners();
 
-		//Doc: Unmodifiable snapshot
+		/**
+		 * @return An unmodifiable snapshot {@link Iterator} captured at the
+		 *         time this method is called.
+		 */
 		Iterator<CastEventListener> iterator();
 
+		/**
+		 * Fires the specified event on all the registered
+		 * {@link CastEventListener}s.
+		 *
+		 * @param event the {@link CastEvent} to fire.
+		 */
 		void fire(@Nullable CastEvent<?> event);
 	}
 
+	/**
+	 * A simple (as in not threaded) {@link CastEventListenerList} implementaion
+	 * that invokes {@link CastEventListener}s from the thread that calls
+	 * {@link #fire(CastEvent)}.
+	 *
+	 * @author Nadahar
+	 */
 	@ThreadSafe
 	public static class SimpleCastEventListenerList implements CastEventListenerList {
 
+		/** The {@link List} containing the listeners */
 		protected final CopyOnWriteArrayList<CastEventListener> listeners = new CopyOnWriteArrayList<>();
 
+		/** The lock object for the filters */
 		@Nonnull
 		protected final Object filtersLock = new Object();
 
+		/**
+		 * The filters that keep track of what {@link CastEventType}s to send to
+		 * which {@link CastEventListener}s
+		 */
 		@Nonnull
 		@GuardedBy("filtersLock")
 		protected final Map<CastEventListener, Set<CastEventType>> filters = new HashMap<>();
@@ -284,8 +389,7 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 			// Using Iterable instead of List avoids an extra arraycopy
 			return new Iterable<CastEventListener>() {
 				@Override
-				public Iterator<CastEventListener> iterator()
-				{
+				public Iterator<CastEventListener> iterator() {
 					return listeners.iterator();
 				}
 			};
@@ -323,54 +427,18 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 		}
 	}
 
-	@ThreadSafe
-	public static class ThreadedCastEventListenerList extends SimpleCastEventListenerList { //TODO: (Nad) Remove if not used..
-
-		private static final Logger LOGGER = LoggerFactory.getLogger(ThreadedCastEventListenerList.class);
-
-		@Nonnull
-		protected final Executor notifier;
-
-		public ThreadedCastEventListenerList(@Nonnull Executor notifier) {
-			requireNotNull(notifier, "notifier");
-			this.notifier = notifier;
-		}
-
-		@Nonnull
-		public Executor getExecutor() {
-			return notifier;
-		}
-
-		@Override
-		public void fire(@Nullable final CastEvent<?> event) { //TODO: (Nad) Fix, include filters if keep
-			if (event == null) {
-				return;
-			}
-
-			final Iterator<CastEventListener> iterator = listeners.iterator();
-			try {
-				notifier.execute(new Runnable() {
-
-					@Override
-					public void run() {
-						while (iterator.hasNext()) {
-							iterator.next().onEvent(event);
-						}
-					}
-				});
-			} catch (RejectedExecutionException e) {
-				LOGGER.warn("Unable to notify listeners of event: " + e.getMessage());
-				LOGGER.trace("", e);
-			}
-		}
-	}
-
+	/**
+	 * All the {@link CastEvent} types.
+	 *
+	 * @author Nadahar
+	 */
 	public enum CastEventType {
 
+		/**
 		APPLICATION_AVAILABILITY(AppAvailabilityResponse.class),
 
 		/** Special event usually received when session is stopped */
-		CLOSE(CloseResponse.class), //TODO: (Nad) Figure out, shouldn't have a payload at all..?
+		CLOSE(null),
 
 		/** Data type will be {@link Boolean} */
 		CONNECTED(Boolean.class),
@@ -393,7 +461,7 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 
 		MULTIZONE_STATUS(MultizoneStatusResponse.class),
 
-		PING(PingResponse.class),
+		PING(PingResponse.class), //TODO: (Nad) Are they all in use?
 
 		PONG(PongResponse.class),
 
@@ -403,12 +471,17 @@ public interface CastEvent<T> { //TODO: (Nad) Name + Rewrite JavaDocs++
 		/** Data type will be {@link JsonNode} */
 		UNKNOWN(JsonNode.class);
 
+		@Nullable
 		private final Class<?> dataClass;
 
-		CastEventType(Class<?> dataClass) {
+		private CastEventType(Class<?> dataClass) {
 			this.dataClass = dataClass;
 		}
 
+		/**
+		 * @return The data {@link Class} for this {@link CastEventType}.
+		 */
+		@Nullable
 		public Class<?> getDataClass() {
 			return dataClass;
 		}
