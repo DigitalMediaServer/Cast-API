@@ -125,6 +125,31 @@ public class QueueItem {
 	 * @param autoplay the autoplay parameter, which if is not specified or is
 	 *            {@code true}, the media player will begin playing the element
 	 *            in the queue when the item becomes the currentItem.
+	 * @param media the {@link Media} instance of the playlist element.
+	 * @param preloadTime the preload time in seconds.
+	 * @param startTime the number of seconds since beginning of the content. If
+	 *            the content is live content, and {@code startTime} is not
+	 *            specified, the stream will start at the live position.
+	 */
+	public QueueItem(
+		@Nullable List<Integer> activeTrackIds,
+		@Nullable Boolean autoplay,
+		@Nullable Media media,
+		@Nullable Double preloadTime,
+		@Nullable Double startTime
+	) {
+		this(activeTrackIds, autoplay, null, null, media, null, preloadTime, startTime);
+	}
+
+	/**
+	 * Creates a new instance using the specified parameters.
+	 *
+	 * @param activeTrackIds the {@link List} of {@link Track} {@code trackIds}
+	 *            that are active. If the list is not provided, the default
+	 *            tracks will be active.
+	 * @param autoplay the autoplay parameter, which if is not specified or is
+	 *            {@code true}, the media player will begin playing the element
+	 *            in the queue when the item becomes the currentItem.
 	 * @param customData the extra queue item information.
 	 * @param itemId the item ID, which is a unique identifier of the item in
 	 *            the queue. The attribute is optional because for LOAD or
@@ -138,15 +163,15 @@ public class QueueItem {
 	 *            the content is live content, and {@code startTime} is not
 	 *            specified, the stream will start at the live position.
 	 */
-	public QueueItem( //TODO: (Nad) Simplified overloaded constructor?
-		@JsonProperty("activeTrackIds") List<Integer> activeTrackIds,
-		@JsonProperty("autoplay") Boolean autoplay,
-		@JsonProperty("customData") Map<String, Object> customData,
-		@JsonProperty("itemId") Integer itemId,
-		@JsonProperty("media") Media media,
-		@JsonProperty("orderId") Integer orderId,
-		@JsonProperty("preloadTime") Double preloadTime,
-		@JsonProperty("startTime") Double startTime
+	public QueueItem(
+		@JsonProperty("activeTrackIds") @Nullable List<Integer> activeTrackIds,
+		@JsonProperty("autoplay") @Nullable Boolean autoplay,
+		@JsonProperty("customData") @Nullable Map<String, Object> customData,
+		@JsonProperty("itemId") @Nullable Integer itemId,
+		@JsonProperty("media") @Nullable Media media,
+		@JsonProperty("orderId") @Nullable Integer orderId,
+		@JsonProperty("preloadTime") @Nullable Double preloadTime,
+		@JsonProperty("startTime") @Nullable Double startTime
 	) {
 		if (activeTrackIds == null || activeTrackIds.isEmpty()) {
 			this.activeTrackIds = Collections.emptyList();

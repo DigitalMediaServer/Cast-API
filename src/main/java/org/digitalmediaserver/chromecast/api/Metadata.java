@@ -56,8 +56,15 @@ public class Metadata {
 	/** The key used for metadata images */
 	public static final String IMAGES = "images";
 
+	/**
+	 * Utility method to extract {@link Image}s from metadata stored as a
+	 * {@link Map}.
+	 *
+	 * @param metadata the metadata to extract from.
+	 * @return The resulting {@link List} of {@link Image}s.
+	 */
 	@Nonnull
-	public static List<Image> extractImages(@Nullable Map<String, Object> metadata) { //TODO: (Nad) JavaDocs + move
+	public static List<Image> extractImages(@Nullable Map<String, Object> metadata) {
 		List<Image> result = new ArrayList<>();
 		if (metadata == null || metadata.isEmpty()) {
 			return result;
@@ -100,6 +107,15 @@ public class Metadata {
 		return result;
 	}
 
+	/**
+	 * Utility method to "set" (insert or replace) the {@link Image}s of
+	 * metadata stored as a {@link Map}.
+	 *
+	 * @param metadata to metadata to alter.
+	 * @param images the {@link Image}(s) to set.
+	 * @return {@code true} if the metadata was altered, {@code false} if it
+	 *         wasn't.
+	 */
 	public static boolean setImages(@Nullable Map<String, Object> metadata, Image... images) {
 		if (metadata == null) {
 			return false;
@@ -110,6 +126,15 @@ public class Metadata {
 		return setImages(metadata, Arrays.asList(images));
 	}
 
+	/**
+	 * Utility method to "set" (insert or replace) the {@link Image}s of
+	 * metadata stored as a {@link Map}.
+	 *
+	 * @param metadata to metadata to alter.
+	 * @param images the {@link Collection} of {@link Image}s to set.
+	 * @return {@code true} if the metadata was altered, {@code false} if it
+	 *         wasn't.
+	 */
 	public static boolean setImages(@Nullable Map<String, Object> metadata, @Nullable Collection<Image> images) {
 		if (metadata == null) { //TODO: (Nad) Make test..
 			return false;
@@ -142,6 +167,11 @@ public class Metadata {
 		return true;
 	}
 
+	/**
+	 * The standard metadata keys defined for "Generic" media.
+	 *
+	 * @author Nadahar
+	 */
 	public static class Generic {
 
 		/**
@@ -211,6 +241,11 @@ public class Metadata {
 		}
 	}
 
+	/**
+	 * The standard metadata keys defined for "Movie" media.
+	 *
+	 * @author Nadahar
+	 */
 	public static class Movie {
 
 		/**
@@ -280,6 +315,11 @@ public class Metadata {
 		}
 	}
 
+	/**
+	 * The standard metadata keys defined for "TV show" media.
+	 *
+	 * @author Nadahar
+	 */
 	public static class TvShow {
 
 		/**
@@ -366,6 +406,11 @@ public class Metadata {
 		}
 	}
 
+	/**
+	 * The standard metadata keys defined for "Music track" media.
+	 *
+	 * @author Nadahar
+	 */
 	public static class MusicTrack {
 
 		/**
@@ -463,6 +508,11 @@ public class Metadata {
 		}
 	}
 
+	/**
+	 * The standard metadata keys defined for "Photo" media.
+	 *
+	 * @author Nadahar
+	 */
 	public static class Photo {
 
 		/**
@@ -564,6 +614,11 @@ public class Metadata {
 		}
 	}
 
+	/**
+	 * The standard metadata keys defined for "Audiobook chapter" media.
+	 *
+	 * @author Nadahar
+	 */
 	public static class AudiobookChapter {
 
 		/**
