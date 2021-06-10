@@ -15,158 +15,281 @@
  */
 package org.digitalmediaserver.cast;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.concurrent.GuardedBy;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
+import javax.jmdns.ServiceInfo;
 import javax.jmdns.ServiceListener;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
+
 
 /**
- * Utility class that discovers cast devices and holds references to all
- * of them.
+ * A class that can be used to keep discover cast devices and create
+ * corresponding {@link CastDevice}s while notifying registered listeners of
+ * discovered or disappearing devices.
+ * <p>
+ * After creating a {@link CastDeviceMonitor}, it must be started using
+ * {@link #startDiscovery(InetAddress, String)}.
  */
 public final class CastDeviceMonitor {
 
-	private static final CastDeviceMonitor INSTANCE = new CastDeviceMonitor();
-	private final MyServiceListener listener = new MyServiceListener();
+	/** The {@link ServiceListener} that listens to mDNS changes */
+	@Nonnull
+	protected final MulticastDNSServiceListener listener = new MulticastDNSServiceListener();
 
-	private JmDNS mDNS;
+	/** The synchronization object */
+	@Nonnull
+	protected final Object lock = new Object();
 
-	private final List<DeviceDiscoveryListener> listeners = new ArrayList<>();
-	private final List<CastDevice> chromeCasts = Collections.synchronizedList(new ArrayList<CastDevice>());
+	/** The mDNS instance */
+	@Nullable
+	@GuardedBy("lock")
+	protected JmDNS mDNS;
 
-	private CastDeviceMonitor() {
+	/** The {@link Set} of {@link DeviceDiscoveryListener} to notify of changes */
+	@Nonnull
+	@GuardedBy("lock")
+	protected final Set<DeviceDiscoveryListener> listeners = new LinkedHashSet<>();
+
+	/** The currently "registered" cast devices */
+	@Nonnull
+	@GuardedBy("lock")
+	protected final Set<CastDevice> castDevices = new LinkedHashSet<>();
+
+	/**
+	 * Creates a new instance. Use {@link #startDiscovery()} to start
+	 * monitoring.
+	 */
+	public CastDeviceMonitor() {
 	}
 
 	/**
-	 * Returns a copy of the currently seen chrome casts.
-	 *
-	 * @return a copy of the currently seen chromecast devices.
+	 * @return A {@link Set} with a snapshot of the currently known cast
+	 *         devices.
 	 */
-	public static List<CastDevice> get() {
-		return new ArrayList<>(INSTANCE.chromeCasts);
+	public Set<CastDevice> getCastDevices() {
+		synchronized (lock) {
+			return new LinkedHashSet<>(castDevices);
+		}
+	}
+
+	/**
+	 * Starts discovery of cast devices.
+	 * <p>
+	 * <b>Note:</b> This is a convenience method. The preferred constructor is
+	 * {@link #startDiscovery(InetAddress, String)}. Check that your platform
+	 * correctly handles the default localhost IP address and the local
+	 * hostname. If in doubt, use the explicit constructor.
+	 * <p>
+	 * This method is equivalent to {@code startDiscovery(null, null)}.
+	 *
+	 * @throws IOException If an error occurs during the operation.
+	 */
+	public void startDiscovery() throws IOException {
+		startDiscovery(null, null);
+	}
+
+	/**
+	 * Starts discovery of cast devices.
+	 *
+	 * @param addr the IP address to bind to.
+	 * @param name the name of the multicast DNS "device" that will be created
+	 *            to participate in the "multicast DNS network".
+	 * @throws IOException If an error occurs during the operation.
+	 */
+	public void startDiscovery(@Nullable InetAddress addr, @Nullable String name) throws IOException {
+		synchronized (lock) {
+			if (mDNS == null) {
+				mDNS = JmDNS.create(addr, name);
+				mDNS.addServiceListener(CastDevice.SERVICE_TYPE, listener);
+			}
+		}
+	}
+
+	/**
+	 * Stops discovery of cast devices and removes all discovered devices.
+	 *
+	 * @throws IOException If an error occurs during the operation.
+	 */
+	public void stopDiscovery() throws IOException {
+		stopDiscovery(false);
+	}
+
+	/**
+	 * Stops discovery of cast devices and removes all discovered devices.
+	 *
+	 * @param notifyListeners if {@code true}, also notifies listeners that the
+	 *            devices are removed, to trigger potential cleanup.
+	 * @throws IOException If an error occurs during the operation.
+	 */
+	public void stopDiscovery(boolean notifyListeners) throws IOException {
+		Set<CastDevice> tmpDevices = null;
+		Set<DeviceDiscoveryListener> tmpListeners = null;
+		synchronized (lock) {
+			if (mDNS != null) {
+				mDNS.close();
+				mDNS = null;
+			}
+			if (notifyListeners) {
+				tmpDevices = new LinkedHashSet<>(castDevices);
+				tmpListeners = new LinkedHashSet<>(listeners);
+			}
+			castDevices.clear();
+		}
+
+		if (tmpDevices != null && !tmpDevices.isEmpty() && tmpListeners != null && !tmpListeners.isEmpty()) {
+			for (CastDevice device : tmpDevices) {
+				for (DeviceDiscoveryListener discoveryListener : tmpListeners) {
+					discoveryListener.deviceRemoved(device);
+				}
+			}
+		}
+	}
+
+	@Override
+	protected void finalize() throws Throwable {
+		stopDiscovery(true);
+		super.finalize();
+	}
+
+	/**
+	 * Register a new {@link DeviceDiscoveryListener} that will be notified when
+	 * cast devices are found or disappears. It will also be notified of any
+	 * already known cast devices at the time of registration before returning.
+	 *
+	 * @param listener the {@link DeviceDiscoveryListener} to add.
+	 * @return {@code true} if the new listener was registered, {@code false} if
+	 *         it was registered already.
+	 */
+	public boolean registerListener(@Nullable DeviceDiscoveryListener listener) {
+		if (listener == null) {
+			return false;
+		}
+		Set<CastDevice> tmpDevices = null;
+		boolean result;
+		synchronized (lock) {
+			result = listeners.add(listener);
+			if (result) {
+				tmpDevices = new LinkedHashSet<>(castDevices);
+			}
+		}
+		if (tmpDevices != null && !tmpDevices.isEmpty()) {
+			for (CastDevice tmpDevice : tmpDevices) {
+				listener.deviceDiscovered(tmpDevice);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Unregister a {@link DeviceDiscoveryListener} so that it will no longer be
+	 * notified when cast devices are found or disappears.
+	 *
+	 * @param listener the {@link DeviceDiscoveryListener} to remove.
+	 * @return {@code true} if the listener was unregistered, {@code false} if
+	 *         it wasn't registered before the call.
+	 */
+	public boolean unregisterListener(@Nullable DeviceDiscoveryListener listener) {
+		if (listener == null) {
+			return false;
+		}
+		synchronized (lock) {
+			return listeners.remove(listener);
+		}
 	}
 
 	/**
 	 * Service listener to receive mDNS service updates.
 	 */
-	public class MyServiceListener implements ServiceListener {
+	public class MulticastDNSServiceListener implements ServiceListener {
 
 		@Override
 		public void serviceAdded(ServiceEvent se) {
-			if (se.getInfo() != null) {
-				CastDevice device = new CastDevice(mDNS, se.getInfo().getName(), true);
-				chromeCasts.add(device);
-				for (DeviceDiscoveryListener nextListener : listeners) {
-					nextListener.deviceDiscovered(device);
+			if (se.getDNS() != null && se.getInfo() != null) {
+				ServiceInfo info = se.getDNS().getServiceInfo(CastDevice.SERVICE_TYPE, se.getInfo().getName());
+				String id;
+				if (info == null || Util.isBlank(id = info.getPropertyString("id"))) {
+					return;
+				}
+				InetAddress address;
+				if (info.getInet4Addresses().length > 0) {
+					address = info.getInet4Addresses()[0];
+				} else if (info.getInet6Addresses().length > 0) {
+					address = info.getInet6Addresses()[0];
+				} else {
+					return;
+				}
+				CastDevice newDevice = null;
+				Set<DeviceDiscoveryListener> tmpListeners = null;
+				synchronized (lock) {
+					boolean found = false;
+					for (CastDevice device : castDevices) {
+						if (
+							id.equals(device.getUniqueId()) &&
+							Objects.equals(address, device.getAddress()) &&
+							info.getPort() == device.getPort()
+						) {
+							found = true;
+							break;
+						}
+					}
+					if (!found) {
+						newDevice = new CastDevice(info, true);
+						castDevices.add(newDevice);
+						if (!listeners.isEmpty()) {
+							tmpListeners = new LinkedHashSet<>(listeners);
+						}
+					}
+				}
+				if (newDevice != null && tmpListeners != null) {
+					for (DeviceDiscoveryListener discoveryListener : tmpListeners) {
+						discoveryListener.deviceDiscovered(newDevice);
+					}
 				}
 			}
 		}
 
 		@Override
 		public void serviceRemoved(ServiceEvent se) {
-			if (CastDevice.SERVICE_TYPE.equals(se.getType())) {
-				// We have a ChromeCast device unregistering
-				List<CastDevice> copy = get();
-				CastDevice deviceRemoved = null;
-				// Probably better keep a map to better lookup devices
-				for (CastDevice device : copy) {
-					if (device.getDNSName().equals(se.getInfo().getName())) {
-						deviceRemoved = device;
-						chromeCasts.remove(device);
+			ServiceInfo info = se.getInfo();
+			String id, name;
+			if (info == null || Util.isBlank(id = info.getPropertyString("id")) || Util.isBlank(name = info.getName())) {
+				return;
+			}
+
+			CastDevice removed = null;
+			Set<DeviceDiscoveryListener> tmpListeners = null;
+			synchronized (lock) {
+				for (CastDevice device : castDevices) {
+					if (id.equals(device.getUniqueId()) && name.equals(device.getDNSName())) {
+						removed = device;
 						break;
 					}
 				}
-				if (deviceRemoved != null) {
-					for (DeviceDiscoveryListener nextListener : listeners) {
-						nextListener.deviceRemoved(deviceRemoved);
+				if (removed != null) {
+					castDevices.remove(removed);
+					if (!listeners.isEmpty()) {
+						tmpListeners = new LinkedHashSet<>(listeners);
 					}
+				}
+			}
+			if (removed != null && tmpListeners != null) {
+				for (DeviceDiscoveryListener discoveryListener : tmpListeners) {
+					discoveryListener.deviceRemoved(removed);
 				}
 			}
 		}
 
 		@Override
 		public void serviceResolved(ServiceEvent se) {
-			// intentionally blank
-		}
-	}
-
-	private void doStartDiscovery(InetAddress addr) throws IOException {
-		if (mDNS == null) {
-			chromeCasts.clear();
-
-			if (addr != null) {
-				mDNS = JmDNS.create(addr);
-			} else {
-				mDNS = JmDNS.create();
-			}
-			mDNS.addServiceListener(CastDevice.SERVICE_TYPE, listener);
-		}
-	}
-
-	private void doStopDiscovery() throws IOException {
-		if (mDNS != null) {
-			mDNS.close();
-			mDNS = null;
-		}
-	}
-
-	/**
-	 * Starts ChromeCast device discovery.
-	 */
-	public static void startDiscovery() throws IOException {
-		INSTANCE.doStartDiscovery(null);
-	}
-
-	/**
-	 * Starts ChromeCast device discovery.
-	 *
-	 * @param addr the address of the interface that should be used for
-	 *            discovery
-	 */
-	public static void startDiscovery(InetAddress addr) throws IOException {
-		INSTANCE.doStartDiscovery(addr);
-	}
-
-	/**
-	 * Stops ChromeCast device discovery.
-	 */
-	public static void stopDiscovery() throws IOException {
-		INSTANCE.doStopDiscovery();
-	}
-
-	/**
-	 * Restarts discovery by sequentially calling 'stop' and 'start' methods.
-	 */
-	public static void restartDiscovery() throws IOException {
-		stopDiscovery();
-		startDiscovery();
-	}
-
-	/**
-	 * Restarts discovery by sequentially calling 'stop' and 'start' methods.
-	 *
-	 * @param addr the address of the interface that should be used for
-	 *            discovery
-	 */
-	public static void restartDiscovery(InetAddress addr) throws IOException {
-		stopDiscovery();
-		startDiscovery(addr);
-	}
-
-	public static void registerListener(DeviceDiscoveryListener listener) {
-		if (listener != null) {
-			INSTANCE.listeners.add(listener);
-		}
-	}
-
-	public static void unregisterListener(DeviceDiscoveryListener listener) {
-		if (listener != null) {
-			INSTANCE.listeners.remove(listener);
+			// Already handled under "added"
 		}
 	}
 }
