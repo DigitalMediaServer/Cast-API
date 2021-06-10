@@ -22,6 +22,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,6 +41,7 @@ import org.digitalmediaserver.chromecast.api.Volume.VolumeBuilder;
  */
 public class CastDevice {
 
+	/** The DNS-SD service type for cast devices */
 	public static final String SERVICE_TYPE = "_googlecast._tcp.local.";
 
 	@Nonnull
@@ -53,7 +55,7 @@ public class CastDevice {
 	protected final int port;
 
 	@Nullable
-	protected final String applicationsURL;
+	protected final String deviceURL;
 
 	@Nullable
 	protected final String serviceName;
@@ -66,9 +68,6 @@ public class CastDevice {
 
 	@Nullable
 	protected final String friendlyName;
-
-	@Nullable
-	protected final String applicationTitle;
 
 	@Nullable
 	protected final String modelName;
@@ -100,7 +99,7 @@ public class CastDevice {
 		}
 		this.autoReconnect = autoReconnect;
 		this.port = serviceInfo.getPort();
-		this.applicationsURL = serviceInfo.getURLs().length == 0 ? null : serviceInfo.getURLs()[0];
+		this.deviceURL = serviceInfo.getURLs().length == 0 ? null : serviceInfo.getURLs()[0];
 		this.serviceName = serviceInfo.getApplication();
 		this.uniqueId = serviceInfo.getPropertyString("id");
 		String s = serviceInfo.getPropertyString("ca");
@@ -116,7 +115,6 @@ public class CastDevice {
 			this.capabilities = Collections.unmodifiableSet(CastDeviceCapability.getCastDeviceCapabilities(value));
 		}
 		this.friendlyName = serviceInfo.getPropertyString("fn");
-		this.applicationTitle = serviceInfo.getPropertyString("rs");
 		this.modelName = serviceInfo.getPropertyString("md");
 		s = serviceInfo.getPropertyString("ve");
 		if (Util.isBlank(s)) {
@@ -143,7 +141,6 @@ public class CastDevice {
 		@Nullable String uniqueId,
 		@Nullable Set<CastDeviceCapability> capabilities,
 		@Nullable String friendlyName,
-		@Nullable String applicationTitle,
 		@Nullable String modelName,
 		int protocolVersion,
 		@Nullable String iconPath,
@@ -158,7 +155,6 @@ public class CastDevice {
 			uniqueId,
 			capabilities,
 			friendlyName,
-			applicationTitle,
 			modelName,
 			protocolVersion,
 			iconPath,
@@ -175,7 +171,6 @@ public class CastDevice {
 		@Nullable String uniqueId,
 		@Nullable Set<CastDeviceCapability> capabilities,
 		@Nullable String friendlyName,
-		@Nullable String applicationTitle,
 		@Nullable String modelName,
 		int protocolVersion,
 		@Nullable String iconPath,
@@ -191,14 +186,13 @@ public class CastDevice {
 		this.dnsName = dnsName;
 		this.address = address;
 		this.port = port;
-		this.applicationsURL = applicationsURL;
+		this.deviceURL = applicationsURL;
 		this.serviceName = serviceName;
 		this.uniqueId = uniqueId;
 		this.capabilities = capabilities == null || capabilities.isEmpty() ?
 			Collections.singleton(CastDeviceCapability.NONE) :
 			Collections.unmodifiableSet(EnumSet.copyOf(capabilities));
 		this.friendlyName = friendlyName;
-		this.applicationTitle = applicationTitle;
 		this.modelName = modelName;
 		this.protocolVersion = protocolVersion;
 		this.iconPath = iconPath;
@@ -230,9 +224,12 @@ public class CastDevice {
 		return port;
 	}
 
+	/**
+	 * @return The device URL.
+	 */
 	@Nullable
-	public String getApplicationsURL() {
-		return applicationsURL;
+	public String getDeviceURL() {
+		return deviceURL;
 	}
 
 	/**
@@ -250,17 +247,6 @@ public class CastDevice {
 	@Nullable
 	public String getFriendlyName() {
 		return friendlyName;
-	}
-
-	/**
-	 * @return The title of the app that is currently running, or empty string
-	 *         in case of the backdrop. Usually something like "YouTube" or
-	 *         "Spotify", but could also be, say, the URL of a web page being
-	 *         mirrored. //TODO: (Nad) Fix JavaDoc
-	 */
-	@Nullable
-	public String getApplicationTitle() {
-		return applicationTitle;
 	}
 
 	/**
@@ -541,240 +527,6 @@ public class CastDevice {
 //		), synchronous);
 //	}
 
-	/**
-	 * <p>
-	 * If no application is running at the moment then exception is thrown.
-	 * </p>
-	 *
-	 * @return current media status, state, time, playback rate, etc.
-	 * @throws IOException
-	 */
-//	public MediaStatus getMediaStatus() throws IOException {
-//		Application runningApp = getRunningApplication();
-//		if (runningApp == null) {
-//			throw new ChromeCastException("No application is running in ChromeCast");
-//		}
-//		return channel().getMediaStatus(getTransportId(runningApp));
-//	}
-
-	/**
-	 * <p>
-	 * Resume paused media playback
-	 * </p>
-	 *
-	 * <p>
-	 * If no application is running at the moment then exception is thrown.
-	 * </p>
-	 *
-	 * @throws IOException
-	 */
-//	public void play() throws IOException {
-//		ReceiverStatus status = getReceiverStatus();
-//		Application runningApp = status.getRunningApp();
-//		if (runningApp == null) {
-//			throw new ChromeCastException("No application is running in ChromeCast");
-//		}
-//		MediaStatus mediaStatus = channel().getMediaStatus(getTransportId(runningApp));
-//		if (mediaStatus == null) {
-//			throw new ChromeCastException("ChromeCast has invalid state to resume media playback");
-//		}
-//		channel().play(getTransportId(runningApp), runningApp.getSessionId(), mediaStatus.getMediaSessionId());
-//	}
-
-	/**
-	 * <p>
-	 * Pause current playback
-	 * </p>
-	 *
-	 * <p>
-	 * If no application is running at the moment then exception is thrown.
-	 * </p>
-	 *
-	 * @throws IOException
-	 */
-//	public void pause() throws IOException {
-//		ReceiverStatus status = getReceiverStatus();
-//		Application runningApp = status.getRunningApp();
-//		if (runningApp == null) {
-//			throw new ChromeCastException("No application is running in ChromeCast");
-//		}
-//		MediaStatus mediaStatus = channel().getMediaStatus(getTransportId(runningApp));
-//		if (mediaStatus == null) {
-//			throw new ChromeCastException("ChromeCast has invalid state to pause media playback");
-//		}
-//		channel().pause(getTransportId(runningApp), runningApp.getSessionId(), mediaStatus.getMediaSessionId());
-//	}
-
-	/**
-	 * <p>
-	 * Moves current playback time point to specified value
-	 * </p>
-	 *
-	 * <p>
-	 * If no application is running at the moment then exception is thrown.
-	 * </p>
-	 *
-	 * @param time time point between zero and media duration
-	 * @throws IOException
-	 */
-//	public void seek(double time) throws IOException {
-//		ReceiverStatus status = getReceiverStatus();
-//		Application runningApp = status.getRunningApp();
-//		if (runningApp == null) {
-//			throw new ChromeCastException("No application is running in ChromeCast");
-//		}
-//		MediaStatus mediaStatus = channel().getMediaStatus(getTransportId(runningApp));
-//		if (mediaStatus == null) {
-//			throw new ChromeCastException("ChromeCast has invalid state to seek media playback");
-//		}
-//		channel().seek(getTransportId(runningApp), runningApp.getSessionId(), mediaStatus.getMediaSessionId(), time);
-//	}
-
-	/**
-	 * <p>
-	 * Loads and starts playing media in specified URL
-	 * </p>
-	 *
-	 * <p>
-	 * If no application is running at the moment then exception is thrown.
-	 * </p>
-	 *
-	 * @param url media url
-	 * @return The new media status that resulted from loading the media.
-	 * @throws IOException
-	 */
-//	public MediaStatus load(String url) throws IOException {
-//		return load(getMediaTitle(url), null, url, getContentType(url));
-//	}
-
-	/**
-	 * <p>
-	 * Loads and starts playing specified media
-	 * </p>
-	 *
-	 * <p>
-	 * If no application is running at the moment then exception is thrown.
-	 * </p>
-	 *
-	 * @param mediaTitle name to be displayed
-	 * @param thumb url of video thumbnail to be displayed, relative to media
-	 *            url
-	 * @param url media url
-	 * @param contentType MIME content type
-	 * @return The new media status that resulted from loading the media.
-	 * @throws IOException
-	 */
-//	public MediaStatus load(String mediaTitle, String thumb, String url, String contentType) throws IOException {
-//		ReceiverStatus status = getReceiverStatus();
-//		Application runningApp = status.getRunningApp();
-//		if (runningApp == null) {
-//			throw new ChromeCastException("No application is running in ChromeCast");
-//		}
-//		Map<String, Object> metadata = new HashMap<>(2); //TODO: (Nad) This
-//		metadata.put("title", mediaTitle);
-//		metadata.put("thumb", thumb);
-//		return channel().load(
-//			getTransportId(runningApp),
-//			runningApp.getSessionId(),
-//			new Media(
-//				url,
-//				contentType == null ? getContentType(url) : contentType,
-//				null,
-//				null,
-//				null,
-//				metadata,
-//				null,
-//				null
-//			),
-//			true,
-//			0d,
-//			null
-//		);
-//	}
-
-	/**
-	 * <p>
-	 * Loads and starts playing specified media
-	 * </p>
-	 *
-	 * <p>
-	 * If no application is running at the moment then exception is thrown.
-	 * </p>
-	 *
-	 * @param media The media to load and play. See <a href=
-	 *            "https://developers.google.com/cast/docs/reference/messages#Load">
-	 *            https://developers.google.com/cast/docs/reference/messages#Load</a>
-	 *            for more details.
-	 * @return The new media status that resulted from loading the media.
-	 * @throws IOException
-	 */
-//	public MediaStatus load(final Media media) throws IOException {
-//		ReceiverStatus status = getReceiverStatus();
-//		Application runningApp = status.getRunningApp();
-//		if (runningApp == null) {
-//			throw new ChromeCastException("No application is running in ChromeCast");
-//		}
-//		Media mediaToPlay;
-//		if (media.getContentType() == null) {
-//			mediaToPlay = new Media(
-//				media.getUrl(),
-//				getContentType(media.getUrl()),
-//				media.getDuration(),
-//				media.getStreamType(),
-//				media.getCustomData(),
-//				media.getMetadata(),
-//				media.getTextTrackStyle(),
-//				media.getTracks()
-//			);
-//		} else {
-//			mediaToPlay = media;
-//		}
-//		return channel().load(getTransportId(runningApp), runningApp.getSessionId(), mediaToPlay, true, 0d, null);
-//	}
-
-	/**
-	 * <p>
-	 * Sends some generic request to the currently running application.
-	 * </p>
-	 *
-	 * <p>
-	 * If no application is running at the moment then exception is thrown.
-	 * </p>
-	 *
-	 * @param namespace request namespace
-	 * @param request request object
-	 * @param responseClass class of the response for proper deserialization
-	 * @param <T> type of response
-	 * @return deserialized response
-	 * @throws IOException
-	 */
-//	public <T extends Response> T send(String namespace, Request request, Class<T> responseClass) throws IOException {
-//		ReceiverStatus status = getReceiverStatus();
-//		Application runningApp = status.getRunningApp();
-//		if (runningApp == null) {
-//			throw new ChromeCastException("No application is running in ChromeCast");
-//		}
-//		return channel().sendGenericRequest(getTransportId(runningApp), namespace, request, responseClass);
-//	}
-
-	/**
-	 * <p>
-	 * Sends some generic request to the currently running application. No
-	 * response is expected as a result of this call.
-	 * </p>
-	 *
-	 * <p>
-	 * If no application is running at the moment then exception is thrown.
-	 * </p>
-	 *
-	 * @param namespace request namespace
-	 * @param request request object
-	 * @throws IOException
-	 */
-//	public void send(String namespace, Request request) throws IOException {
-//		send(namespace, request, null);
-//	}
-
 	public boolean addEventListener(@Nullable CastEventListener listener, CastEventType... eventTypes) {
 		return listeners.add(listener, eventTypes);
 	}
@@ -784,7 +536,32 @@ public class CastDevice {
 	}
 
 	@Override
-	public String toString() {
+	public int hashCode() {
+		return Objects.hash(
+			address, capabilities, deviceURL, displayName, dnsName, friendlyName,
+			modelName, port, protocolVersion, serviceName, uniqueId
+		);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof CastDevice)) {
+			return false;
+		}
+		CastDevice other = (CastDevice) obj;
+		return
+			Objects.equals(address, other.address) && Objects.equals(capabilities, other.capabilities) &&
+			Objects.equals(deviceURL, other.deviceURL) && Objects.equals(displayName, other.displayName) &&
+			Objects.equals(dnsName, other.dnsName) && Objects.equals(friendlyName, other.friendlyName) &&
+			Objects.equals(modelName, other.modelName) && port == other.port && protocolVersion == other.protocolVersion &&
+			Objects.equals(serviceName, other.serviceName) && Objects.equals(uniqueId, other.uniqueId);
+	}
+
+	@Override
+	public String toString() { //TODO: (Nad) Look at
 		return String.format(
 			"ChromeCast{name: %s, title: %s, model: %s, address: %s, port: %d}",
 			this.dnsName,
