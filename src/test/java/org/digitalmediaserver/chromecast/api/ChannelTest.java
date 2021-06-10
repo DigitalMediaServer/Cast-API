@@ -715,7 +715,7 @@ public class ChannelTest {
 	@Test
 	public void liveTest() throws Exception { //TODO: (Nad) More..
 		MockedChromeCast mock = new MockedChromeCast();
-		ChromeCast cc = new ChromeCast(
+		CastDevice cc = new CastDevice(
 			"Mock",
 			"localhost",
 			null,

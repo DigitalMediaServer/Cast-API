@@ -30,7 +30,7 @@ import static org.junit.Assert.assertNotNull;
 public class CustomRequestTest {
 
 	MockedChromeCast chromeCastStub;
-	ChromeCast cast = new ChromeCast(
+	CastDevice cast = new CastDevice(
 		"Mock",
 		"localhost",
 		null,

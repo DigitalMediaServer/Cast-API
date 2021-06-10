@@ -83,7 +83,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Internal class for low-level communication with ChromeCast device. It's
- * normally desirable to use {@link ChromeCast} or {@link Session} methods
+ * normally desirable to use {@link CastDevice} or {@link Session} methods
  * instead of calling this class directly.
  */
 public class Channel implements Closeable {

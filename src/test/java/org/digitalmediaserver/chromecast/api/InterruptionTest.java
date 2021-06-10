@@ -41,7 +41,7 @@ public class InterruptionTest {
 	public ExpectedException thrown = ExpectedException.none();
 
 	MockedChromeCast chromeCastStub;
-	ChromeCast cast = new ChromeCast(
+	CastDevice cast = new CastDevice(
 		"Mock",
 		"localhost",
 		null,
