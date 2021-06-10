@@ -38,7 +38,7 @@ import org.digitalmediaserver.chromecast.api.Volume.VolumeBuilder;
 /**
  * ChromeCast device - main object used for interaction with ChromeCast dongle.
  */
-public class ChromeCast {
+public class CastDevice {
 
 	public static final String SERVICE_TYPE = "_googlecast._tcp.local.";
 
@@ -85,11 +85,11 @@ public class ChromeCast {
 	protected final Channel channel;
 	protected final boolean autoReconnect;
 
-	public ChromeCast(@Nonnull JmDNS mDNS, @Nonnull String dnsName, boolean autoReconnect) {
+	public CastDevice(@Nonnull JmDNS mDNS, @Nonnull String dnsName, boolean autoReconnect) {
 		this(mDNS.getServiceInfo(SERVICE_TYPE, dnsName), autoReconnect);
 	}
 
-	public ChromeCast(@Nonnull ServiceInfo serviceInfo, boolean autoReconnect) {
+	public CastDevice(@Nonnull ServiceInfo serviceInfo, boolean autoReconnect) {
 		this.dnsName = serviceInfo.getName();
 		if (serviceInfo.getInet4Addresses().length > 0) {
 			this.address = serviceInfo.getInet4Addresses()[0].getHostAddress();
@@ -135,7 +135,7 @@ public class ChromeCast {
 		this.channel = new Channel(address, port, displayName, listeners);
 	}
 
-	public ChromeCast(
+	public CastDevice(
 		@Nonnull String dnsName,
 		@Nonnull String address,
 		@Nullable String applicationsURL,
@@ -166,7 +166,7 @@ public class ChromeCast {
 		);
 	}
 
-	public ChromeCast(
+	public CastDevice(
 		@Nonnull String dnsName,
 		@Nonnull String address,
 		int port,
