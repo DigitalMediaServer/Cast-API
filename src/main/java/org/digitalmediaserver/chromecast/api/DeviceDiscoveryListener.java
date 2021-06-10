@@ -25,12 +25,12 @@ public interface DeviceDiscoveryListener {
 	 *
 	 * @param castDevice the new cast device.
 	 */
-	void castDeviceDiscovered(CastDevice castDevice);
+	void deviceDiscovered(CastDevice castDevice);
 
 	/**
 	 * Invoked when a cast device disappears.
 	 *
 	 * @param castDevice the disappeared cast device.
 	 */
-	void castDeviceRemoved(CastDevice castDevice);
+	void deviceRemoved(CastDevice castDevice);
 }

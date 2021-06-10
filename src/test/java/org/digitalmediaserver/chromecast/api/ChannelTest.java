@@ -723,7 +723,6 @@ public class ChannelTest {
 			"unique",
 			EnumSet.of(CastDeviceCapability.AUDIO_OUT, CastDeviceCapability.VIDEO_OUT),
 			"Mocked ChromeCast",
-			null,
 			"Mock",
 			1,
 			null,

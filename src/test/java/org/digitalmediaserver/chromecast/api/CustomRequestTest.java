@@ -39,7 +39,6 @@ public class CustomRequestTest {
 		null,
 		"Mocked ChromeCast",
 		null,
-		null,
 		1,
 		null,
 		true

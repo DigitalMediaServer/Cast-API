@@ -50,7 +50,6 @@ public class InterruptionTest {
 		null,
 		"Mocked ChromeCast",
 		null,
-		null,
 		1,
 		null,
 		true
