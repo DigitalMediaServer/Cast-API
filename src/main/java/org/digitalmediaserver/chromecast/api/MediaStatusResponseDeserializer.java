@@ -26,20 +26,48 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
 
+/**
+ * A custom deserializer for {@link MediaStatusResponse} messages to handle the
+ * fact that the "{@code status}" field can either contain a single
+ * {@link MediaStatus} instance <i>or</i> and array of {@link MediaStatus}
+ * instances.
+ *
+ * @author Nadahar
+ */
 public class MediaStatusResponseDeserializer extends StdDeserializer<MediaStatusResponse> {
 
 	private static final long serialVersionUID = 1L;
+
+	/**
+	 * Creates a new instance.
+	 */
 	public MediaStatusResponseDeserializer() {
 		super((Class<?>) null);
 	}
+
+	/**
+	 * Creates a new instance using the specified parameter.
+	 *
+	 * @param vc the {@link Class} to use.
+	 */
 	public MediaStatusResponseDeserializer(Class<?> vc) {
 		super(vc);
 	}
 
+	/**
+	 * Creates a new instance using the specified parameter.
+	 *
+	 * @param valueType the {@link JavaType} to use.
+	 */
 	public MediaStatusResponseDeserializer(JavaType valueType) {
 		super(valueType);
 	}
 
+	/**
+	 * Creates a new instance using the specified parameter.
+	 *
+	 * @param src the {@link StdDeserializer} to use.
+	 */
 	public MediaStatusResponseDeserializer(StdDeserializer<?> src) {
 		super(src);
 	}

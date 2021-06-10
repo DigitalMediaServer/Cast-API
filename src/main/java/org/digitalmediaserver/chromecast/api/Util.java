@@ -18,17 +18,18 @@ package org.digitalmediaserver.chromecast.api;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+
 /**
- * Contains utility methods.
+ * A utility class with utility methods.
  */
 final class Util {
 
+	/**
+	 * Not to be instantiated.
+	 */
 	private Util() {
 	}
 
@@ -82,27 +83,6 @@ final class Util {
 			result |= (read & 0xff) << i;
 		}
 		return result;
-	}
-
-	public static String getMediaTitle(String url) { //TODO: (Nad) Look into
-		try {
-			URL urlObj = new URL(url);
-			String mediaTitle;
-			String path = urlObj.getPath();
-			int lastIndexOfSlash = path.lastIndexOf('/');
-			if (lastIndexOfSlash >= 0 && lastIndexOfSlash + 1 < url.length()) {
-				mediaTitle = path.substring(lastIndexOfSlash + 1);
-				int lastIndexOfDot = mediaTitle.lastIndexOf('.');
-				if (lastIndexOfDot > 0) {
-					mediaTitle = mediaTitle.substring(0, lastIndexOfDot);
-				}
-			} else {
-				mediaTitle = path;
-			}
-			return mediaTitle.isEmpty() ? url : mediaTitle;
-		} catch (MalformedURLException mfu) {
-			return url;
-		}
 	}
 
 	/**

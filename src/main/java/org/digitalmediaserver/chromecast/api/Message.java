@@ -16,7 +16,7 @@
 package org.digitalmediaserver.chromecast.api;
 
 /**
- * Generic message used in exchange with the ChromeCast device.
+ * Generic message used in exchange with cast devices.
  */
 public interface Message {
 }
