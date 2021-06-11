@@ -176,7 +176,7 @@ public class Session {
 	 *            return immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -222,7 +222,7 @@ public class Session {
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -267,7 +267,7 @@ public class Session {
 	 *            return immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -303,7 +303,7 @@ public class Session {
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -350,7 +350,7 @@ public class Session {
 	 *            application with the load command.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -389,7 +389,7 @@ public class Session {
 	 *            application with the load command.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -430,7 +430,7 @@ public class Session {
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -456,7 +456,7 @@ public class Session {
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -480,7 +480,7 @@ public class Session {
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -506,7 +506,7 @@ public class Session {
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -534,7 +534,7 @@ public class Session {
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -569,7 +569,7 @@ public class Session {
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -608,7 +608,7 @@ public class Session {
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -634,7 +634,7 @@ public class Session {
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -660,7 +660,7 @@ public class Session {
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code volume} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.

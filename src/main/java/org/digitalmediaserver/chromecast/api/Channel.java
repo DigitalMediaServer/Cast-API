@@ -483,8 +483,9 @@ public class Channel implements Closeable {
 	 * @return The {@link Response} object of the specified type if
 	 *         {@code responseClass} is non-{@code null}, {@code null} if
 	 *         {@code responseClass} is {@code null}.
-	 * @throws IllegalArgumentException If {@code namespace} is invalid (see
-	 *             {@link #validateNamespace(String)} for constraints).
+	 * @throws IllegalArgumentException If {@code namespace} is {@code null} or
+	 *             invalid (see {@link #validateNamespace(String)} for
+	 *             constraints).
 	 * @throws IOException If {@code responseClass} is non-{@code null} and the
 	 *             response from the cast device a different type than what was
 	 *             expected, or if an error occurs during the operation.
@@ -901,7 +902,7 @@ public class Channel implements Closeable {
 	 *            application with the load command.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -956,7 +957,7 @@ public class Channel implements Closeable {
 	 *            application with the load command.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -1001,7 +1002,7 @@ public class Channel implements Closeable {
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -1036,7 +1037,7 @@ public class Channel implements Closeable {
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -1078,7 +1079,7 @@ public class Channel implements Closeable {
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -1113,7 +1114,7 @@ public class Channel implements Closeable {
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -1159,7 +1160,7 @@ public class Channel implements Closeable {
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -1209,7 +1210,7 @@ public class Channel implements Closeable {
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -1252,7 +1253,7 @@ public class Channel implements Closeable {
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code senderId} or
 	 *             {@code destinationId} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
@@ -1287,7 +1288,7 @@ public class Channel implements Closeable {
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code senderId} or
 	 *             {@code destinationId} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
@@ -1333,7 +1334,7 @@ public class Channel implements Closeable {
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code senderId},
 	 *             {@code destinationId}, {@code sessionId} or {@code volume} is
 	 *             {@code null}.
@@ -1383,7 +1384,7 @@ public class Channel implements Closeable {
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false} or a timeout occurs.
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code senderId},
 	 *             {@code destinationId}, {@code sessionId} or {@code volume} is
 	 *             {@code null}.
@@ -1467,6 +1468,22 @@ public class Channel implements Closeable {
 		doSetVolume(volume, false, DEFAULT_RESPONSE_TIMEOUT);
 	}
 
+	/**
+	 * Sets the device volume level using the specified parameters, without any checks or evaluations.
+	 *
+	 * @param volume the {@link Volume} instance to send to the cast device.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link ReceiverStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
 	@Nullable
 	protected ReceiverStatus doSetVolume(Volume volume, boolean synchronous, long responseTimeout) throws IOException {
 		ReceiverStatusResponse status = send(
@@ -1556,10 +1573,30 @@ public class Channel implements Closeable {
 		}
 	}
 
+	/**
+	 * Writes the specified {@link Message} to the socket using the specified
+	 * parameters.
+	 *
+	 * @param namespace the namespace to use.
+	 * @param message the {@link Message} to write.
+	 * @param senderId the sender ID to use.
+	 * @param destinationId the destination ID to use.
+	 * @throws IOException If an error occurs during the operation.
+	 */
 	protected void write(String namespace, Message message, String senderId, String destinationId) throws IOException {
 		write(namespace, jsonMapper.writeValueAsString(message), senderId, destinationId);
 	}
 
+	/**
+	 * Writes the specified ({@code JSON} formatted) {@link String} to the
+	 * socket using the specified parameters.
+	 *
+	 * @param namespace the namespace to use.
+	 * @param message the message content to write.
+	 * @param senderId the sender ID to use.
+	 * @param destinationId the destination ID to use.
+	 * @throws IOException If an error occurs during the operation.
+	 */
 	protected void write(String namespace, String message, String senderId, String destinationId) throws IOException {
 		LOGGER.trace(CHROMECAST_API_MARKER, "Sending message to {}; \"{}\"", remoteName, message);
 		CastMessage msg = CastMessage.newBuilder()
@@ -1573,6 +1610,12 @@ public class Channel implements Closeable {
 		write(msg);
 	}
 
+	/**
+	 * Writes the specified {@link CastMessage} to the socket.
+	 *
+	 * @param message the {@link CastMessage} to write.
+	 * @throws IOException If an error occurs during the operation.
+	 */
 	protected void write(CastMessage message) throws IOException {
 		OutputStream os;
 		synchronized (socketLock) {
@@ -1611,6 +1654,16 @@ public class Channel implements Closeable {
 		return ImmutableCastMessage.create(CastMessage.parseFrom(buf));
 	}
 
+	/**
+	 * Determines if the message referenced by the specified {@link JsonNode} is
+	 * among the "standard responses" by looking at the {@code type} field
+	 * exclusively.
+	 *
+	 * @param parsedMessage the {@link JsonNode} referencing a parsed, received
+	 *            message.
+	 * @return {@code true} if the message is deemed not to be among the
+	 *         "standard responses", {@code false} if it is.
+	 */
 	protected static boolean isCustomMessage(@Nullable JsonNode parsedMessage) {
 		if (parsedMessage == null) {
 			return true;
@@ -1626,6 +1679,13 @@ public class Channel implements Closeable {
 		return true;
 	}
 
+	/**
+	 * Validates that the specified namespace conforms to some very basic
+	 * constraints.
+	 *
+	 * @param namespace the namespace to validate.
+	 * @throws IllegalArgumentException If the validation fails.
+	 */
 	public static void validateNamespace(@Nonnull String namespace) throws IllegalArgumentException {
 		requireNotBlank(namespace, "namespace");
 		if (namespace.length() > 128) {
@@ -1639,6 +1699,9 @@ public class Channel implements Closeable {
 		}
 	}
 
+	/**
+	 * @return The new {@link Executor}.
+	 */
 	protected static Executor createExecutor() {
 		ThreadPoolExecutor result = new ThreadPoolExecutor(
 			0,
@@ -1672,6 +1735,9 @@ public class Channel implements Closeable {
 
 		/**
 		 * Creates a new instance.
+		 *
+		 * @throws AssertionError If the {@code JSON} mapper can't serialize the
+		 *             {@code PING} message.
 		 */
 		public PingTask() {
 			try {
@@ -1786,6 +1852,12 @@ public class Channel implements Closeable {
 		}
 	}
 
+	/**
+	 * A {@link Thread} implementation tailored to process incoming messages on
+	 * the socket.
+	 *
+	 * @author Nadahar
+	 */
 	protected class InputHandler extends Thread {
 
 		private volatile boolean running;
@@ -1796,6 +1868,11 @@ public class Channel implements Closeable {
 		@Nonnull
 		private final CastMessage pongMessage;
 
+		/**
+		 * Creates a new instance bound to the specified {@link InputStream}.
+		 *
+		 * @param inputStream the {@link InputStream} to process.
+		 */
 		public InputHandler(@Nonnull InputStream inputStream) {
 			super(remoteName + " input handler");
 			requireNotNull(inputStream, "inputStream");
@@ -1841,7 +1918,7 @@ public class Channel implements Closeable {
 						}
 					}
 					if (message instanceof ImmutableStringCastMessage) {
-						jsonMessage = ((ImmutableStringCastMessage)message).getPayload();
+						jsonMessage = ((ImmutableStringCastMessage) message).getPayload();
 						if (isBlank(jsonMessage)) {
 							LOGGER.trace(
 								CHROMECAST_API_MARKER,
@@ -1881,7 +1958,7 @@ public class Channel implements Closeable {
 							remoteName,
 							jsonMessage
 						);
-						EXECUTOR.execute(new StringMessageHandler((ImmutableStringCastMessage) message, jsonMessage));
+						EXECUTOR.execute(new StringMessageHandler((ImmutableStringCastMessage) message));
 					} else if (message != null) {
 						LOGGER.trace(
 							CHROMECAST_API_MARKER,
@@ -1908,7 +1985,7 @@ public class Channel implements Closeable {
 						sb.append("namespace: ").append(message.getNamespace());
 						sb.append(", protocol version: ").append(message.getProtocolVersion().getNumber());
 						if (message instanceof ImmutableStringCastMessage) {
-							sb.append(", string payload: ").append(((ImmutableStringCastMessage)message).getPayload());
+							sb.append(", string payload: ").append(((ImmutableStringCastMessage) message).getPayload());
 						} else {
 							sb.append(", binary payload: ").append(((ImmutableBinaryCastMessage) message).getPayload());
 						}
@@ -1937,24 +2014,42 @@ public class Channel implements Closeable {
 			}
 		}
 
+		/**
+		 * Tells this {@link InputHandler} to stop processing and shut down.
+		 */
 		public void stopProcessing() {
 			running = false;
 		}
 	}
 
+	/**
+	 * A {@link Runnable} implementation for processing a single incoming
+	 * string-based message.
+	 *
+	 * @author Nadahar
+	 */
 	protected class StringMessageHandler implements Runnable {
 
+		/** The message to process */
 		@Nonnull
 		protected final ImmutableStringCastMessage message;
 
+		/** The string payload of the message */
 		@Nonnull
 		protected final String jsonMessage;
 
-		public StringMessageHandler(@Nonnull ImmutableStringCastMessage message, @Nonnull String jsonMessage) {
+		/**
+		 * Creates a new handler for a single string-based message.
+		 *
+		 * @param message the message to process.
+		 * @throws IllegalArgumentException If {@code message} is {@code null}
+		 *             or the string payload is blank.
+		 */
+		public StringMessageHandler(@Nonnull ImmutableStringCastMessage message) {
 			requireNotNull(message, "message");
-			requireNotBlank(jsonMessage, "jsonMessage");
 			this.message = message;
-			this.jsonMessage = jsonMessage;
+			this.jsonMessage = message.getPayload();
+			requireNotBlank(jsonMessage, "jsonMessage");
 		}
 
 		@Override
