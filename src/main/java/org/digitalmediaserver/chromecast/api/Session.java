@@ -691,6 +691,25 @@ public class Session {
 	}
 
 	/**
+	 * Requests an updated {@link MediaStatus} from the remote application. This
+	 * method is always blocking.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be
+	 *            used.
+	 * @return The resulting {@link MediaStatus} if a reply is received in time,
+	 *         or {@code null} if a timeout occurs.
+	 * @throws IOException If an error occurs during the operation.
+	 */
+	@Nullable
+	public MediaStatus getMediaStatus(long responseTimeout) throws IOException {
+		return channel.getMediaStatus(senderId, destinationId, responseTimeout);
+	}
+
+	/**
 	 * Sends the specified {@link Request} with the specified namespace using
 	 * this {@link Session}.
 	 *
