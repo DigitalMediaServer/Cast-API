@@ -100,7 +100,14 @@ public class InterruptionTest {
 			public void run() {
 				try {
 					barrier.await();
-					cast.channel().send("", new Custom(), "sender-0", "receiver-0", Custom.class, Channel.DEFAULT_RESPONSE_TIMEOUT);
+					cast.channel().send(
+						"urn:x-cast:test",
+						new Custom(),
+						"sender-0",
+						"receiver-0",
+						Custom.class,
+						Channel.DEFAULT_RESPONSE_TIMEOUT
+					);
 				} catch (IOException e) {
 					exception.set(e);
 				} catch (InterruptedException e) {
@@ -144,7 +151,7 @@ public class InterruptionTest {
 		thrown.expect(ChromeCastException.class);
 		thrown.expectCause(CoreMatchers.isA(TimeoutException.class));
 		thrown.expectMessage("Waiting for response timed out");
-		cast.channel().send("", new Custom(), "sender-0", "receiver-0", Custom.class, 100L);
+		cast.channel().send("urn:x-cast:test", new Custom(), "sender-0", "receiver-0", Custom.class, 100L);
 	}
 
 	@After
