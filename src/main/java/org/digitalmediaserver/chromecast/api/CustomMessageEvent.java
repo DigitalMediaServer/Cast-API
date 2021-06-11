@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 Vitaly Litvak (vitavaque@gmail.com)
+ * Copyright (C) 2021 Digital Media Server developers.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,12 @@ import com.google.protobuf.ByteString;
 public class CustomMessageEvent {
 
 	@Nullable
+	private final String sourceId;
+
+	@Nullable
+	private final String destinationId;
+
+	@Nullable
 	private final String namespace;
 
 	@Nullable
@@ -43,10 +49,19 @@ public class CustomMessageEvent {
 	/**
 	 * Creates a new {@code STRING} instance.
 	 *
-	 * @param namespace the namespace to use.
-	 * @param stringPayload the string payload to use.
+	 * @param sourceId the source ID from the message.
+	 * @param destinationId the destination ID from the message.
+	 * @param namespace the namespace from the message.
+	 * @param stringPayload the string payload from the message.
 	 */
-	public CustomMessageEvent(@Nullable String namespace, @Nullable String stringPayload) {
+	public CustomMessageEvent(
+		@Nullable String sourceId,
+		@Nullable String destinationId,
+		@Nullable String namespace,
+		@Nullable String stringPayload
+	) {
+		this.sourceId = sourceId;
+		this.destinationId = destinationId;
 		this.namespace = namespace;
 		this.stringPayload = stringPayload;
 		this.binaryPayload = null;
@@ -56,10 +71,19 @@ public class CustomMessageEvent {
 	/**
 	 * Creates a new {@code BINARY} instance.
 	 *
-	 * @param namespace the namespace to use.
-	 * @param binaryPayload the binary payload to use.
+	 * @param sourceId the source ID from the message.
+	 * @param destinationId the destination ID from the message.
+	 * @param namespace the namespace from the message.
+	 * @param binaryPayload the binary payload from the message.
 	 */
-	public CustomMessageEvent(@Nullable String namespace, @Nullable ByteString binaryPayload) {
+	public CustomMessageEvent(
+		@Nullable String sourceId,
+		@Nullable String destinationId,
+		@Nullable String namespace,
+		@Nullable ByteString binaryPayload
+	) {
+		this.sourceId = sourceId;
+		this.destinationId = destinationId;
 		this.namespace = namespace;
 		this.stringPayload = null;
 		this.binaryPayload = binaryPayload;
@@ -67,7 +91,23 @@ public class CustomMessageEvent {
 	}
 
 	/**
-	 * @return The namespace of the source message.
+	 * @return The message source ID.
+	 */
+	@Nullable
+	public String getSourceId() {
+		return sourceId;
+	}
+
+	/**
+	 * @return The message destination ID.
+	 */
+	@Nullable
+	public String getDestinationId() {
+		return destinationId;
+	}
+
+	/**
+	 * @return The message namespace.
 	 */
 	@Nullable
 	public String getNamespace() {

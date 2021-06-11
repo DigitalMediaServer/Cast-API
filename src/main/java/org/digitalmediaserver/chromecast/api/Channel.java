@@ -1598,7 +1598,7 @@ public class Channel implements Closeable {
 	 * @throws IOException If an error occurs during the operation.
 	 */
 	protected void write(String namespace, String message, String senderId, String destinationId) throws IOException {
-		LOGGER.trace(CHROMECAST_API_MARKER, "Sending message to {}; \"{}\"", remoteName, message);
+		LOGGER.debug(CHROMECAST_API_MARKER, "Sending message to {}; \"{}\"", remoteName, message);
 		CastMessage msg = CastMessage.newBuilder()
 			.setProtocolVersion(CastMessage.ProtocolVersion.CASTV2_1_0)
 			.setSourceId(senderId)
@@ -1952,7 +1952,7 @@ public class Channel implements Closeable {
 							}
 							continue;
 						}
-						LOGGER.trace(
+						LOGGER.debug(
 							CHROMECAST_API_MARKER,
 							"{} InputHandler: Received string message \"{}\"",
 							remoteName,
@@ -1960,7 +1960,7 @@ public class Channel implements Closeable {
 						);
 						EXECUTOR.execute(new StringMessageHandler((ImmutableStringCastMessage) message));
 					} else if (message != null) {
-						LOGGER.trace(
+						LOGGER.debug(
 							CHROMECAST_API_MARKER,
 							"{} InputHandler: Received message with binary payload ({} bytes)",
 							remoteName,
@@ -2048,7 +2048,7 @@ public class Channel implements Closeable {
 		public StringMessageHandler(@Nonnull ImmutableStringCastMessage message) {
 			requireNotNull(message, "message");
 			this.message = message;
-			this.jsonMessage = message.getPayload();
+			this.jsonMessage = message.getPayload().replaceFirst("\"type\"", "\"responseType\"");
 			requireNotBlank(jsonMessage, "jsonMessage");
 		}
 
@@ -2074,7 +2074,12 @@ public class Channel implements Closeable {
 					if (!listeners.isEmpty()) {
 						listeners.fire(new DefaultCastEvent<>(
 							CastEventType.CUSTOM_MESSAGE,
-							new CustomMessageEvent(message.getNamespace(), message.getPayload())
+							new CustomMessageEvent(
+								message.getSourceId(),
+								message.getDestinationId(),
+								message.getNamespace(),
+								message.getPayload()
+							)
 						));
 					}
 				} else if ("CLOSE".equals(responseType)) {
@@ -2113,10 +2118,14 @@ public class Channel implements Closeable {
 								}
 							} else {
 								// Didn't match any "known" session, pass it on to listeners
-								if (!listeners.isEmpty()) { //TODO: (Nad) Must include sourceId/destionationId to have any value..
+								if (!listeners.isEmpty()) {
 									listeners.fire(new DefaultCastEvent<>(
-										CastEventType.CLOSE, //TODO: (Nad) Only use of this eventtype
-										jsonMapper.treeToValue(parsedMessage, StandardResponse.class)
+										CastEventType.CLOSE,
+										new CloseMessageEvent(
+											message.getSourceId(),
+											message.getDestinationId(),
+											message.getNamespace()
+										)
 									));
 								}
 							}
@@ -2135,7 +2144,6 @@ public class Channel implements Closeable {
 					}
 
 					if (response instanceof StandardResponse && response.getEventType() != null) {
-//						LOGGER.error(CHROMECAST_API_MARKER, "Received unhandled standard response of type {}: {}", response.getClass().getSimpleName(), response); //TODO: (Nad) Log anything? Maybe in "CastEvent"?
 						ReceiverStatus receiverStatus;
 						if (
 							response instanceof ReceiverStatusResponse &&
@@ -2180,6 +2188,8 @@ public class Channel implements Closeable {
 		public void run() {
 			if (!listeners.isEmpty()) {
 				listeners.fire(new DefaultCastEvent<>(CastEventType.CUSTOM_MESSAGE, new CustomMessageEvent(
+					message.getSourceId(),
+					message.getDestinationId(),
 					message.getNamespace(),
 					message.getPayload()
 				)));
