@@ -52,7 +52,7 @@ public class ChannelTest {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void StringMessageHandlerTest() throws Exception {
-		CastEventListenerList listeners = new SimpleCastEventListenerList();
+		CastEventListenerList listeners = new SimpleCastEventListenerList("Mocked device");
 		final List<CastEvent<?>> events = new ArrayList<>();
 		listeners.add(new CastEventListener() {
 

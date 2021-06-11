@@ -15,6 +15,7 @@
  */
 package org.digitalmediaserver.chromecast.api;
 
+import static org.digitalmediaserver.chromecast.api.Util.requireNotBlank;
 import static org.digitalmediaserver.chromecast.api.Util.requireNotNull;
 import java.util.Arrays;
 import java.util.Collection;
@@ -41,6 +42,8 @@ import org.digitalmediaserver.chromecast.api.StandardResponse.LaunchErrorRespons
 import org.digitalmediaserver.chromecast.api.StandardResponse.MediaStatusResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.MultizoneStatusResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.ReceiverStatusResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 
 
@@ -274,6 +277,12 @@ public interface CastEvent<T> {
 	@ThreadSafe
 	public static class SimpleCastEventListenerList implements CastEventListenerList {
 
+		private static final Logger LOGGER = LoggerFactory.getLogger(SimpleCastEventListenerList.class);
+
+		/** The identifier for the cast device used in logging */
+		@Nonnull
+		protected final String remoteName;
+
 		/** The {@link List} containing the listeners */
 		protected final CopyOnWriteArrayList<CastEventListener> listeners = new CopyOnWriteArrayList<>();
 
@@ -288,6 +297,16 @@ public interface CastEvent<T> {
 		@Nonnull
 		@GuardedBy("filtersLock")
 		protected final Map<CastEventListener, Set<CastEventType>> filters = new HashMap<>();
+
+		/**
+		 * Creates a new instance with the specified remote name.
+		 *
+		 * @param remoteName the identifier for the cast device used in logging.
+		 */
+		public SimpleCastEventListenerList(@Nonnull String remoteName) {
+			requireNotBlank(remoteName, "remoteName");
+			this.remoteName = remoteName;
+		}
 
 		@Override
 		public boolean add(@Nullable CastEventListener listener, CastEventType... eventTypes) {
@@ -409,6 +428,15 @@ public interface CastEvent<T> {
 			synchronized (filtersLock) {
 				filtersSnapshot = new HashMap<>(filters);
 			}
+			if (LOGGER.isTraceEnabled(Channel.CHROMECAST_API_MARKER)) {
+				LOGGER.trace(
+					Channel.CHROMECAST_API_MARKER,
+					"Notifying cast event listeners of the following event from {}: {}",
+					remoteName,
+					event
+				);
+			}
+
 			CastEventListener listener;
 			Set<CastEventType> targetTypes;
 			for (Iterator<CastEventListener> iterator = listeners.iterator(); iterator.hasNext();) {
@@ -443,7 +471,7 @@ public interface CastEvent<T> {
 		 * Event is fired when an unclaimed {@link CloseResponse} is received,
 		 * which shouldn't normally happen
 		 */
-		CLOSE(null), //TODO: (Nad) A special data type carrying source and destination might be needed.
+		CLOSE(CloseMessageEvent.class),
 
 		/**
 		 * Event is fired when the connection state with the cast device changes
@@ -451,7 +479,7 @@ public interface CastEvent<T> {
 		CONNECTED(Boolean.class),
 
 		/** Event is fired when an unclaimed custom message is received */
-		CUSTOM_MESSAGE(CustomMessageEvent.class), //TODO: (Nad) Decide on name
+		CUSTOM_MESSAGE(CustomMessageEvent.class),
 
 		/**
 		 * Event is fired when an unclaimed {@link DeviceAddedResponse} is

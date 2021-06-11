@@ -45,7 +45,7 @@ public class CastDevice {
 	public static final String SERVICE_TYPE = "_googlecast._tcp.local.";
 
 	@Nonnull
-	protected final CastEventListenerList listeners = new SimpleCastEventListenerList();
+	protected final CastEventListenerList listeners;
 
 	@Nonnull
 	protected final String dnsName;
@@ -130,6 +130,7 @@ public class CastDevice {
 		}
 		this.iconPath = serviceInfo.getPropertyString("ic");
 		this.displayName = generateDisplayName();
+		this.listeners = new SimpleCastEventListenerList(displayName);
 		this.channel = new Channel(address, port, displayName, listeners);
 	}
 
@@ -197,6 +198,7 @@ public class CastDevice {
 		this.protocolVersion = protocolVersion;
 		this.iconPath = iconPath;
 		this.displayName = generateDisplayName();
+		this.listeners = new SimpleCastEventListenerList(displayName);
 		this.channel = new Channel(address, port, displayName, listeners);
 	}
 
