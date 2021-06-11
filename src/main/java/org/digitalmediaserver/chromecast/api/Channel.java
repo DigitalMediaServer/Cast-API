@@ -89,7 +89,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class Channel implements Closeable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Channel.class);
-	public static final Marker CHROMECAST_API_MARKER = MarkerFactory.getMarker("chromecast-api"); //TODO: (Nad) Use Marker everywhere..
+	public static final Marker CHROMECAST_API_MARKER = MarkerFactory.getMarker("chromecast-api");
 
 	/** The delay between {@code PING} requests in milliseconds */
 	protected static final long PING_PERIOD = 10 * 1000; //TODO: (Nad) 5 sec suggested in doc, was 30
@@ -394,9 +394,6 @@ public class Channel implements Closeable {
 	) throws IOException {
 		Long requestId = requestCounter.getAndIncrement();
 		message.setRequestId(requestId);
-		if (!requestId.equals(message.getRequestId())) {
-			throw new IllegalStateException("Request Id getter/setter contract violation"); //TODO: (Nad) Runtime.. bad?
-		}
 
 		if (responseClass == null) {
 			write(namespace, message, senderId, destinationId);
@@ -455,7 +452,7 @@ public class Channel implements Closeable {
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
-	public ReceiverStatus getReceiverStatus() throws IOException { //TODO: (Nad) DO the same in Session..? (responseTimeout)
+	public ReceiverStatus getReceiverStatus() throws IOException {
 		return getReceiverStatus(DEFAULT_RESPONSE_TIMEOUT);
 	}
 
@@ -1353,7 +1350,7 @@ public class Channel implements Closeable {
 							gradualVolumeTimer = new Timer(remoteName + " gradual volume timer");
 						}
 						gradualVolumeTask = task;
-						gradualVolumeTimer.schedule(task, 500, 500);
+						gradualVolumeTimer.schedule(task, 150, 150);
 					} else if (gradualVolumeTimer != null) {
 						gradualVolumeTimer.cancel();
 						gradualVolumeTimer = null;
@@ -1521,13 +1518,13 @@ public class Channel implements Closeable {
 		return true;
 	}
 
-	public static void validateNamespace(@Nonnull String nameSpace) throws IllegalArgumentException { //TODO: (Nad) Use..u
-		requireNotBlank(nameSpace, "namespace");
-		if (nameSpace.length() > 128) {
-			throw new IllegalArgumentException("Invalid namespace length " + nameSpace.length());
-		} else if (!nameSpace.startsWith("urn:x-cast:")) {
+	public static void validateNamespace(@Nonnull String namespace) throws IllegalArgumentException { //TODO: (Nad) Use..u
+		requireNotBlank(namespace, "namespace");
+		if (namespace.length() > 128) {
+			throw new IllegalArgumentException("Invalid namespace length " + namespace.length());
+		} else if (!namespace.startsWith("urn:x-cast:")) {
 			throw new IllegalArgumentException("Namespace must begin with the prefix \"urn:x-cast:\"");
-		} else if (nameSpace.length() == 11) {
+		} else if (namespace.length() == 11) {
 			throw new IllegalArgumentException("Namespace must begin with the prefix \"urn:x-cast:\" and have non-empty suffix");
 		}
 	}
@@ -1653,8 +1650,13 @@ public class Channel implements Closeable {
 				try {
 					doSetVolume(newVolume, false, DEFAULT_RESPONSE_TIMEOUT);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block //TODO: (Nad) Make
-					e.printStackTrace();
+					LOGGER.warn(
+						CHROMECAST_API_MARKER,
+						"An error occurred while gradually adjusting the volume " +
+						"level of {}, stopping gradual adjustment: {}", remoteName,
+						e.getMessage()
+					);
+					LOGGER.trace(CHROMECAST_API_MARKER, "", e);
 					shutdownTask();
 				}
 			}
@@ -1848,7 +1850,6 @@ public class Channel implements Closeable {
 		@Override
 		public void run() {
 			try {
-				LOGGER.error(CHROMECAST_API_MARKER, "Parsing message: {}", jsonMessage); //TODO: (Nad) Temp test
 				JsonNode parsedMessage = jsonMapper.readTree(jsonMessage);
 				String responseType;
 				long requestId;
