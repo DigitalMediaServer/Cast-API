@@ -24,8 +24,10 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.security.KeyManagementException;
@@ -53,6 +55,7 @@ import javax.annotation.concurrent.GuardedBy;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import org.digitalmediaserver.chromecast.api.CastChannel.CastMessage;
+import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListener;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListenerList;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 import org.digitalmediaserver.chromecast.api.CastEvent.DefaultCastEvent;
@@ -89,7 +92,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class Channel implements Closeable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Channel.class);
+
+	/** The logging {@link Marker} to use for logging */
 	public static final Marker CHROMECAST_API_MARKER = MarkerFactory.getMarker("chromecast-api");
+
+	/** The standard port used for cast devices */
+	public static final int STANDARD_DEVICE_PORT = 8009;
 
 	/** The delay between {@code PING} requests in milliseconds */
 	protected static final long PING_PERIOD = 10 * 1000; //TODO: (Nad) 5 sec suggested in doc, was 30
@@ -97,18 +105,31 @@ public class Channel implements Closeable {
 	/** The default response timeout in milliseconds */
 	public static final long DEFAULT_RESPONSE_TIMEOUT = 30 * 1000;
 
+	/** Google's fixed receiver ID to use for the cast device itself */
 	public static final String PLATFORM_RECEIVER_ID = "receiver-0";
+
+	/**
+	 * Google's fixed sender ID to use for the "sender platform" (as opposed to
+	 * the sender application)
+	 */
 	public static final String PLATFORM_SENDER_ID = "sender-0";
 
+	/**
+	 * An array of what is defined as "standard response" types, to be treated
+	 * as immutable
+	 */
 	protected static final JsonSubTypes.Type[] STANDARD_RESPONSE_TYPES =
 		StandardResponse.class.getAnnotation(JsonSubTypes.class).value();
 
+	/** The {@link Executor} that is used for asynchronous operations */
 	@Nonnull
 	protected static final Executor EXECUTOR = createExecutor();
 
+	/** The registered {@link CastEventListener}s */
 	@Nonnull
 	protected final CastEventListenerList listeners;
 
+	/** The socket synchronization object */
 	@Nonnull
 	protected final Object socketLock = new Object();
 
@@ -119,9 +140,7 @@ public class Channel implements Closeable {
 	@GuardedBy("socketLock")
 	protected Socket socket;
 
-	/**
-	 * Address of ChromeCast
-	 */
+	/** The IP address and port of the cast device */
 	@Nonnull
 	protected final InetSocketAddress address;
 
@@ -129,14 +148,13 @@ public class Channel implements Closeable {
 	@Nonnull
 	protected final String remoteName;
 
-	/**
-	 * Timer for PING requests
-	 */
+	/** {@link Timer} for PING requests */
 	@GuardedBy("socketLock")
 	protected Timer pingTimer;
 
 	/**
-	 * The {@link Thread} that delegates incoming requests to processing threads.
+	 * The {@link Thread} that delegates incoming requests to processing
+	 * threads
 	 */
 	@GuardedBy("socketLock")
 	protected InputHandler inputHandler;
@@ -160,16 +178,18 @@ public class Channel implements Closeable {
 	@Nonnull
 	protected final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 
+	/** The sessions synchronization object */
 	@Nonnull
 	protected final Object sessionsLock = new Object();
 
 	/**
-	 * Destination ids of sessions opened within this channel
+	 * The currently known {@link Session}s belonging to this {@link Channel}
 	 */
 	@Nonnull
 	@GuardedBy("sessionsLock")
 	protected final Set<Session> sessions = new HashSet<>();
 
+	/** The cached volume synchronization object */
 	@Nonnull
 	protected final Object cachedVolumeLock = new Object();
 
@@ -178,6 +198,7 @@ public class Channel implements Closeable {
 	@GuardedBy("cachedVolumeLock")
 	protected Volume cachedVolume;
 
+	/** The gradual volume synchronization object */
 	@Nonnull
 	protected final Object gradualVolumeLock = new Object();
 
@@ -191,14 +212,32 @@ public class Channel implements Closeable {
 	@GuardedBy("gradualVolumeLock")
 	protected TimerTask gradualVolumeTask;
 
+	/**
+	 * Creates a new channel using the specified parameters and the standard
+	 * port.
+	 *
+	 * @param host the host IP address or hostname of the cast device.
+	 * @param remoteName the name to use for the cast device in logging.
+	 * @param listeners the {@link CastEventListenerList} to use when sending
+	 *            events.
+	 */
 	public Channel(
 		@Nonnull String host,
 		@Nonnull String remoteName,
 		@Nonnull CastEventListenerList listeners
 	) {
-		this(host, 8009, remoteName, listeners);
+		this(host, STANDARD_DEVICE_PORT, remoteName, listeners);
 	}
 
+	/**
+	 * Creates a new channel using the specified parameters.
+	 *
+	 * @param host the host IP address or hostname of the cast device.
+	 * @param port the port of the cast device.
+	 * @param remoteName the name to use for the cast device in logging.
+	 * @param listeners the {@link CastEventListenerList} to use when sending
+	 *            events.
+	 */
 	public Channel(
 		@Nonnull String host,
 		int port,
@@ -209,6 +248,70 @@ public class Channel implements Closeable {
 		requireNotBlank(remoteName, "remoteName");
 		requireNotNull(listeners, "listeners");
 		this.address = new InetSocketAddress(host, port);
+		this.remoteName = remoteName;
+		this.listeners = listeners;
+	}
+
+	/**
+	 * Creates a new channel using the specified parameters and the standard
+	 * port.
+	 *
+	 * @param address the IP address of the cast device.
+	 * @param remoteName the name to use for the cast device in logging.
+	 * @param listeners the {@link CastEventListenerList} to use when sending
+	 *            events.
+	 * @throws IllegalArgumentException If {@code listeners} is {@code null} or
+	 *             if {@code remoteName} is blank.
+	 */
+	public Channel(
+		@Nonnull InetAddress address,
+		@Nonnull String remoteName,
+		@Nonnull CastEventListenerList listeners
+	) {
+		this(address == null ? null : new InetSocketAddress(address, STANDARD_DEVICE_PORT), remoteName, listeners);
+	}
+
+	/**
+	 * Creates a new channel using the specified parameters.
+	 *
+	 * @param address the IP address of the cast device.
+	 * @param port the port of the cast device.
+	 * @param remoteName the name to use for the cast device in logging.
+	 * @param listeners the {@link CastEventListenerList} to use when sending
+	 *            events.
+	 * @throws IllegalArgumentException If {@code listeners} is {@code null}, if
+	 *             {@code remoteName} is blank or {@code port} is outside the
+	 *             range of valid port numbers.
+	 */
+	public Channel(
+		@Nonnull InetAddress address,
+		int port,
+		@Nonnull String remoteName,
+		@Nonnull CastEventListenerList listeners
+	) {
+		this(address == null || port == 0 ? null : new InetSocketAddress(address, port), remoteName, listeners);
+	}
+
+	/**
+	 * Creates a new channel using the specified parameters.
+	 *
+	 * @param socketAddress the {@link SocketAddress} of the cast device.
+	 * @param remoteName the name to use for the cast device in logging.
+	 * @param listeners the {@link CastEventListenerList} to use when sending
+	 *            events.
+	 * @throws IllegalArgumentException If {@code socketAddress} or
+	 *             {@code listeners} is {@code null} or if {@code remoteName} is
+	 *             blank.
+	 */
+	public Channel(
+		@Nonnull InetSocketAddress socketAddress,
+		@Nonnull String remoteName,
+		@Nonnull CastEventListenerList listeners
+	) {
+		requireNotNull(socketAddress, "socketAddress");
+		requireNotBlank(remoteName, "remoteName");
+		requireNotNull(listeners, "listeners");
+		this.address = socketAddress;
 		this.remoteName = remoteName;
 		this.listeners = listeners;
 	}
@@ -380,6 +483,8 @@ public class Channel implements Closeable {
 	 * @return The {@link Response} object of the specified type if
 	 *         {@code responseClass} is non-{@code null}, {@code null} if
 	 *         {@code responseClass} is {@code null}.
+	 * @throws IllegalArgumentException If {@code namespace} is invalid (see
+	 *             {@link #validateNamespace(String)} for constraints).
 	 * @throws IOException If {@code responseClass} is non-{@code null} and the
 	 *             response from the cast device a different type than what was
 	 *             expected, or if an error occurs during the operation.
@@ -392,6 +497,7 @@ public class Channel implements Closeable {
 		Class<T> responseClass,
 		long responseTimeout
 	) throws IOException {
+		validateNamespace(namespace);
 		Long requestId = requestCounter.getAndIncrement();
 		message.setRequestId(requestId);
 
@@ -1322,7 +1428,7 @@ public class Channel implements Closeable {
 			if (
 				(currentLevelObj = lastVolume.getLevel()) != null &&
 				(targetLevelObj = volume.getLevel()) != null &&
-//				lastVolume.getControlType() == VolumeControlType.MASTER && //TODO: (Nad) Temp test
+				lastVolume.getControlType() == VolumeControlType.MASTER &&
 				(stepIntervalObj = lastVolume.getStepInterval()) != null
 			) {
 				GradualVolumeTask task = null;
@@ -1379,6 +1485,7 @@ public class Channel implements Closeable {
 		return result;
 	}
 
+	//Doc IllegalArgumentException from send()
 	public <T extends Response> T sendGenericRequest(
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
@@ -1389,6 +1496,7 @@ public class Channel implements Closeable {
 		return send(namespace, request, senderId, destinationId, responseClass, DEFAULT_RESPONSE_TIMEOUT);
 	}
 
+	//Doc IllegalArgumentException from send()
 	public <T extends Response> T sendGenericRequest(
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
@@ -1518,14 +1626,16 @@ public class Channel implements Closeable {
 		return true;
 	}
 
-	public static void validateNamespace(@Nonnull String namespace) throws IllegalArgumentException { //TODO: (Nad) Use..u
+	public static void validateNamespace(@Nonnull String namespace) throws IllegalArgumentException {
 		requireNotBlank(namespace, "namespace");
 		if (namespace.length() > 128) {
 			throw new IllegalArgumentException("Invalid namespace length " + namespace.length());
 		} else if (!namespace.startsWith("urn:x-cast:")) {
 			throw new IllegalArgumentException("Namespace must begin with the prefix \"urn:x-cast:\"");
 		} else if (namespace.length() == 11) {
-			throw new IllegalArgumentException("Namespace must begin with the prefix \"urn:x-cast:\" and have non-empty suffix");
+			throw new IllegalArgumentException(
+				"Namespace must begin with the prefix \"urn:x-cast:\" and have non-empty suffix"
+			);
 		}
 	}
 
