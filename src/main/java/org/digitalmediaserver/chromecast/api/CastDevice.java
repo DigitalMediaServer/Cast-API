@@ -15,7 +15,11 @@
  */
 package org.digitalmediaserver.chromecast.api;
 
+import static org.digitalmediaserver.chromecast.api.Util.requireNotBlank;
+import static org.digitalmediaserver.chromecast.api.Util.requireNotNull;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
@@ -37,8 +41,10 @@ import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 import org.digitalmediaserver.chromecast.api.CastEvent.SimpleCastEventListenerList;
 import org.digitalmediaserver.chromecast.api.Volume.VolumeControlType;
 
+
 /**
- * ChromeCast device - main object used for interaction with ChromeCast dongle.
+ * This class represents a Google cast device. It can be a ChromeCast, an
+ * Android TV or any other device that adheres to the "cast rules"
  */
 public class CastDevice {
 
@@ -53,9 +59,9 @@ public class CastDevice {
 	@Nonnull
 	protected final String dnsName;
 
+	/** The IP address and port number of the cast device */
 	@Nonnull
-	protected final String address;
-	protected final int port;
+	protected final InetSocketAddress socketAddress;
 
 	@Nullable
 	protected final String deviceURL;
@@ -91,17 +97,29 @@ public class CastDevice {
 		this(mDNS.getServiceInfo(SERVICE_TYPE, dnsName), autoReconnect);
 	}
 
+	/**
+	 * Creates a new instance by extracting the required parameters from the
+	 * specified {@link ServiceInfo}.
+	 *
+	 * @param serviceInfo the {@link ServiceInfo} instance to extract the device
+	 *            information from. It must be fully resolved.
+	 * @param autoReconnect {@code true} to try to automatically reconnect "on
+	 *            demand", {@code false} to handle connection "manually" by
+	 *            listening to {@code CONNECTED} events.
+	 * @throws NullPointerException if {@code serviceInfo} is {@code null}.
+	 */
 	public CastDevice(@Nonnull ServiceInfo serviceInfo, boolean autoReconnect) {
 		this.dnsName = serviceInfo.getName();
+		InetAddress address;
 		if (serviceInfo.getInet4Addresses().length > 0) {
-			this.address = serviceInfo.getInet4Addresses()[0].getHostAddress();
+			address = serviceInfo.getInet4Addresses()[0];
 		} else if (serviceInfo.getInet6Addresses().length > 0) {
-			this.address = serviceInfo.getInet6Addresses()[0].getHostAddress();
+			address = serviceInfo.getInet6Addresses()[0];
 		} else {
-			throw new IllegalArgumentException("No address found for cast device");
+			throw new IllegalArgumentException("No address found for the cast device: " + serviceInfo);
 		}
+		this.socketAddress = new InetSocketAddress(address, serviceInfo.getPort());
 		this.autoReconnect = autoReconnect;
-		this.port = serviceInfo.getPort();
 		this.deviceURL = serviceInfo.getURLs().length == 0 ? null : serviceInfo.getURLs()[0];
 		this.serviceName = serviceInfo.getApplication();
 		this.uniqueId = serviceInfo.getPropertyString("id");
@@ -134,10 +152,10 @@ public class CastDevice {
 		this.iconPath = serviceInfo.getPropertyString("ic");
 		this.displayName = generateDisplayName();
 		this.listeners = new SimpleCastEventListenerList(displayName);
-		this.channel = new Channel(address, port, displayName, listeners);
+		this.channel = new Channel(socketAddress, displayName, listeners);
 	}
 
-	public CastDevice(
+	public CastDevice( //TODO: (Nad) JavaDocs....
 		@Nonnull String dnsName,
 		@Nonnull String address,
 		@Nullable String applicationsURL,
@@ -153,7 +171,7 @@ public class CastDevice {
 		this(
 			dnsName,
 			address,
-			8009,
+			Channel.STANDARD_DEVICE_PORT,
 			applicationsURL,
 			serviceName,
 			uniqueId,
@@ -166,9 +184,27 @@ public class CastDevice {
 		);
 	}
 
+	/**
+	 *
+	 * @param dnsName
+	 * @param hostname
+	 * @param port
+	 * @param applicationsURL
+	 * @param serviceName
+	 * @param uniqueId
+	 * @param capabilities
+	 * @param friendlyName
+	 * @param modelName
+	 * @param protocolVersion
+	 * @param iconPath
+	 * @param autoReconnect
+	 * @throws IllegalArgumentException If {@code dnsName} is blank, if
+	 *             {@code port} is outside the range of valid port values or if
+	 *             {@code hostname} is {@code null}.
+	 */
 	public CastDevice(
 		@Nonnull String dnsName,
-		@Nonnull String address,
+		@Nonnull String hostname,
 		int port,
 		@Nullable String applicationsURL,
 		@Nullable String serviceName,
@@ -180,16 +216,11 @@ public class CastDevice {
 		@Nullable String iconPath,
 		boolean autoReconnect
 	) {
-		if (Util.isBlank(dnsName)) {
-			throw new IllegalArgumentException("dnsName cannot be blank");
-		}
-		if (Util.isBlank(address)) {
-			throw new IllegalArgumentException("address cannot be blank");
-		}
+		requireNotBlank(dnsName, "dnsName");
+		requireNotNull(hostname, "hostname");
 		this.autoReconnect = autoReconnect;
 		this.dnsName = dnsName;
-		this.address = address;
-		this.port = port;
+		this.socketAddress = new InetSocketAddress(hostname, port);
 		this.deviceURL = applicationsURL;
 		this.serviceName = serviceName;
 		this.uniqueId = uniqueId;
@@ -202,7 +233,59 @@ public class CastDevice {
 		this.iconPath = iconPath;
 		this.displayName = generateDisplayName();
 		this.listeners = new SimpleCastEventListenerList(displayName);
-		this.channel = new Channel(address, port, displayName, listeners);
+		this.channel = new Channel(socketAddress, displayName, listeners);
+	}
+
+	/**
+	 *
+	 * @param dnsName
+	 * @param address
+	 * @param port
+	 * @param applicationsURL
+	 * @param serviceName
+	 * @param uniqueId
+	 * @param capabilities
+	 * @param friendlyName
+	 * @param modelName
+	 * @param protocolVersion
+	 * @param iconPath
+	 * @param autoReconnect
+	 * @throws IllegalArgumentException If {@code dnsName} is blank, if
+	 *             {@code port} is outside the range of valid port values or if
+	 *             {@code address} is {@code null}.
+	 */
+	public CastDevice(
+		@Nonnull String dnsName,
+		@Nonnull InetAddress address,
+		int port,
+		@Nullable String applicationsURL,
+		@Nullable String serviceName,
+		@Nullable String uniqueId,
+		@Nullable Set<CastDeviceCapability> capabilities,
+		@Nullable String friendlyName,
+		@Nullable String modelName,
+		int protocolVersion,
+		@Nullable String iconPath,
+		boolean autoReconnect
+	) {
+		requireNotBlank(dnsName, "dnsName");
+		requireNotNull(address, "address");
+		this.autoReconnect = autoReconnect;
+		this.dnsName = dnsName;
+		this.socketAddress = new InetSocketAddress(address, port);
+		this.deviceURL = applicationsURL;
+		this.serviceName = serviceName;
+		this.uniqueId = uniqueId;
+		this.capabilities = capabilities == null || capabilities.isEmpty() ?
+			Collections.singleton(CastDeviceCapability.NONE) :
+			Collections.unmodifiableSet(EnumSet.copyOf(capabilities));
+		this.friendlyName = friendlyName;
+		this.modelName = modelName;
+		this.protocolVersion = protocolVersion;
+		this.iconPath = iconPath;
+		this.displayName = generateDisplayName();
+		this.listeners = new SimpleCastEventListenerList(displayName);
+		this.channel = new Channel(socketAddress, displayName, listeners);
 	}
 
 	/**
@@ -215,18 +298,39 @@ public class CastDevice {
 	}
 
 	/**
-	 * @return The IP address or host name of the device.
+	 * @return The IP address of the cast device. It won't normally be
+	 *         {@code null}, but there's a small chance that it can, if this
+	 *         {@link CastDevice} was created using a hostname that could not be
+	 *         resolved to an IP address.
 	 */
-	@Nonnull
-	public String getAddress() {
-		return address;
+	@Nullable
+	public InetAddress getAddress() {
+		return socketAddress.getAddress();
 	}
 
 	/**
-	 * @return The TCP port number that the device is listening to.
+	 * @return The IP address or hostname of the cast device, depending on how
+	 *         this {@link CastDevice} was created.
+	 */
+	public String getHostname() {
+		return socketAddress.getHostString();
+	}
+
+	/**
+	 * @return The port number the cast device is listening to.
 	 */
 	public int getPort() {
-		return port;
+		return socketAddress.getPort();
+	}
+
+
+	/**
+	 * @return The address and port of the cast device as a
+	 *         {@link InetSocketAddress}.
+	 */
+	@Nonnull
+	public InetSocketAddress getSocketAddress() {
+		return socketAddress;
 	}
 
 	/**
@@ -509,8 +613,8 @@ public class CastDevice {
 	@Override
 	public int hashCode() {
 		return Objects.hash(
-			address, capabilities, deviceURL, displayName, dnsName, friendlyName,
-			modelName, port, protocolVersion, serviceName, uniqueId
+			capabilities, deviceURL, displayName, dnsName, friendlyName,
+			modelName, protocolVersion, serviceName, socketAddress, uniqueId
 		);
 	}
 
@@ -523,24 +627,41 @@ public class CastDevice {
 			return false;
 		}
 		CastDevice other = (CastDevice) obj;
-		return
-			Objects.equals(address, other.address) && Objects.equals(capabilities, other.capabilities) &&
-			Objects.equals(deviceURL, other.deviceURL) && Objects.equals(displayName, other.displayName) &&
-			Objects.equals(dnsName, other.dnsName) && Objects.equals(friendlyName, other.friendlyName) &&
-			Objects.equals(modelName, other.modelName) && port == other.port && protocolVersion == other.protocolVersion &&
-			Objects.equals(serviceName, other.serviceName) && Objects.equals(uniqueId, other.uniqueId);
+		return Objects.equals(capabilities, other.capabilities) && Objects.equals(deviceURL, other.deviceURL)
+			&& Objects.equals(displayName, other.displayName) && Objects.equals(dnsName, other.dnsName)
+			&& Objects.equals(friendlyName, other.friendlyName) && Objects.equals(modelName, other.modelName)
+			&& protocolVersion == other.protocolVersion && Objects.equals(serviceName, other.serviceName)
+			&& Objects.equals(socketAddress, other.socketAddress) && Objects.equals(uniqueId, other.uniqueId);
 	}
 
 	@Override
-	public String toString() { //TODO: (Nad) Look at
-		return String.format(
-			"ChromeCast{name: %s, title: %s, model: %s, address: %s, port: %d}",
-			this.dnsName,
-			this.friendlyName,
-			this.modelName,
-			this.address,
-			this.port
-		);
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append(getClass().getSimpleName()).append(" [");
+		if (dnsName != null) {
+			builder.append("dnsName=").append(dnsName).append(", ");
+		}
+		if (socketAddress != null) {
+			builder.append("Address=").append(socketAddress.getHostString())
+				.append(':').append(socketAddress.getPort()).append(", ");
+		}
+		if (uniqueId != null) {
+			builder.append("uniqueId=").append(uniqueId).append(", ");
+		}
+		if (capabilities != null) {
+			builder.append("capabilities=").append(capabilities).append(", ");
+		}
+		if (friendlyName != null) {
+			builder.append("friendlyName=").append(friendlyName).append(", ");
+		}
+		if (modelName != null) {
+			builder.append("modelName=").append(modelName).append(", ");
+		}
+		if (displayName != null) {
+			builder.append("displayName=").append(displayName).append(", ");
+		}
+		builder.append("autoReconnect=").append(autoReconnect).append("]");
+		return builder.toString();
 	}
 
 	/**
