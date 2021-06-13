@@ -400,7 +400,7 @@ public class Channel implements Closeable {
 
 	/**
 	 * Closes this {@link Channel} and any {@link Session}s belonging to it. If
-	 * this {@link Channel} is already closed, it simply returns.
+	 * this {@link Channel} is already closed, this is a no-op.
 	 *
 	 * @throws IOException If an error occurs during the operation.
 	 */
@@ -457,7 +457,7 @@ public class Channel implements Closeable {
 
 	/**
 	 * @return {@code true} if this {@link Channel} is closed, {@code false}
-	 *         otherwise.
+	 *         if it's open.
 	 */
 	public boolean isClosed() {
 		synchronized (socketLock) {
@@ -559,6 +559,7 @@ public class Channel implements Closeable {
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
+	@Nullable
 	public ReceiverStatus getReceiverStatus() throws IOException {
 		return getReceiverStatus(DEFAULT_RESPONSE_TIMEOUT);
 	}
@@ -572,6 +573,7 @@ public class Channel implements Closeable {
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
+	@Nullable
 	public ReceiverStatus getReceiverStatus(long responseTimeout) throws IOException {
 		ReceiverStatusResponse status = send(
 			"urn:x-cast:com.google.cast.receiver",
