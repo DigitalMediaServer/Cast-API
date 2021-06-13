@@ -66,7 +66,18 @@ import org.digitalmediaserver.chromecast.api.ChromeCastException.UntypedChromeCa
 import org.digitalmediaserver.chromecast.api.ImmutableCastMessage.ImmutableBinaryCastMessage;
 import org.digitalmediaserver.chromecast.api.ImmutableCastMessage.ImmutableStringCastMessage;
 import org.digitalmediaserver.chromecast.api.Session.SessionClosedListener;
+import org.digitalmediaserver.chromecast.api.StandardRequest.GetAppAvailability;
+import org.digitalmediaserver.chromecast.api.StandardRequest.GetStatus;
+import org.digitalmediaserver.chromecast.api.StandardRequest.Launch;
+import org.digitalmediaserver.chromecast.api.StandardRequest.Load;
+import org.digitalmediaserver.chromecast.api.StandardRequest.Pause;
+import org.digitalmediaserver.chromecast.api.StandardRequest.Play;
 import org.digitalmediaserver.chromecast.api.StandardRequest.ResumeState;
+import org.digitalmediaserver.chromecast.api.StandardRequest.Seek;
+import org.digitalmediaserver.chromecast.api.StandardRequest.SetVolume;
+import org.digitalmediaserver.chromecast.api.StandardRequest.Stop;
+import org.digitalmediaserver.chromecast.api.StandardRequest.StopMedia;
+import org.digitalmediaserver.chromecast.api.StandardRequest.VolumeRequest;
 import org.digitalmediaserver.chromecast.api.StandardResponse.AppAvailabilityResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.ErrorResponse;
 import org.digitalmediaserver.chromecast.api.StandardResponse.LaunchErrorResponse;
@@ -577,7 +588,7 @@ public class Channel implements Closeable {
 	public ReceiverStatus getReceiverStatus(long responseTimeout) throws IOException {
 		ReceiverStatusResponse status = send(
 			"urn:x-cast:com.google.cast.receiver",
-			StandardRequest.status(),
+			new GetStatus(),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
 			ReceiverStatusResponse.class,
@@ -621,7 +632,7 @@ public class Channel implements Closeable {
 	public boolean isApplicationAvailable(String applicationId, long responseTimeout) throws IOException {
 		AppAvailabilityResponse availability = send(
 			"urn:x-cast:com.google.cast.receiver",
-			StandardRequest.getAppAvailability(applicationId),
+			new GetAppAvailability(applicationId),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
 			AppAvailabilityResponse.class,
@@ -668,7 +679,7 @@ public class Channel implements Closeable {
 	public ReceiverStatus launch(String applicationId, boolean synchronous, long responseTimeout) throws IOException {
 		ReceiverStatusResponse status = send(
 			"urn:x-cast:com.google.cast.receiver",
-			StandardRequest.launch(applicationId),
+			new Launch(applicationId),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
 			synchronous ? ReceiverStatusResponse.class : null,
@@ -711,6 +722,7 @@ public class Channel implements Closeable {
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link ReceiverStatus} or {@code null} if
 	 *         {@code synchronous} is {@code false}.
+	 * @throws NullPointerException If {@code application} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -721,7 +733,7 @@ public class Channel implements Closeable {
 	) throws IOException {
 		ReceiverStatusResponse status = send(
 			"urn:x-cast:com.google.cast.receiver",
-			StandardRequest.stop(application.getSessionId()),
+			new Stop(application.getSessionId()),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
 			synchronous ? ReceiverStatusResponse.class : null,
@@ -870,7 +882,7 @@ public class Channel implements Closeable {
 	) throws IOException {
 		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
-			StandardRequest.status(),
+			new GetStatus(),
 			senderId,
 			destinationId,
 			MediaStatusResponse.class,
@@ -977,7 +989,7 @@ public class Channel implements Closeable {
 	) throws IOException {
 		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
-			StandardRequest.load(sessionId, media, autoplay, currentTime, customData),
+			new Load(sessionId, media, autoplay, currentTime, customData),
 			senderId,
 			destinationId,
 			synchronous ? MediaStatusResponse.class : null,
@@ -1054,7 +1066,7 @@ public class Channel implements Closeable {
 	) throws IOException {
 		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
-			StandardRequest.play(sessionId, mediaSessionId),
+			new Play(mediaSessionId, sessionId),
 			senderId,
 			destinationId,
 			synchronous ? MediaStatusResponse.class : null,
@@ -1131,7 +1143,7 @@ public class Channel implements Closeable {
 	) throws IOException {
 		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
-			StandardRequest.pause(sessionId, mediaSessionId),
+			new Pause(mediaSessionId, sessionId),
 			senderId,
 			destinationId,
 			synchronous ? MediaStatusResponse.class : null,
@@ -1229,7 +1241,7 @@ public class Channel implements Closeable {
 	) throws IOException {
 		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
-			StandardRequest.seek(sessionId, mediaSessionId, currentTime, resumeState),
+			new Seek(mediaSessionId, sessionId, currentTime, resumeState),
 			senderId,
 			destinationId,
 			synchronous ? MediaStatusResponse.class : null,
@@ -1306,7 +1318,7 @@ public class Channel implements Closeable {
 	) throws IOException {
 		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
-			StandardRequest.stopMedia(mediaSessionId, null),
+			new StopMedia(mediaSessionId, null),
 			senderId,
 			destinationId,
 			synchronous ? MediaStatusResponse.class : null,
@@ -1405,7 +1417,7 @@ public class Channel implements Closeable {
 	) throws IOException {
 		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
-			StandardRequest.volumeRequest(sessionId, mediaSessionId, volume, null),
+			new VolumeRequest(sessionId, mediaSessionId, volume, null),
 			senderId,
 			destinationId,
 			synchronous ? MediaStatusResponse.class : null,
@@ -1490,7 +1502,7 @@ public class Channel implements Closeable {
 	protected ReceiverStatus doSetVolume(Volume volume, boolean synchronous, long responseTimeout) throws IOException {
 		ReceiverStatusResponse status = send(
 			"urn:x-cast:com.google.cast.receiver",
-			StandardRequest.setVolume(volume),
+			new SetVolume(volume),
 			PLATFORM_SENDER_ID,
 			PLATFORM_RECEIVER_ID,
 			synchronous ? ReceiverStatusResponse.class : null,
