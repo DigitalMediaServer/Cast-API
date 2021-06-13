@@ -174,7 +174,7 @@ public interface CastEvent<T> {
 		 * {@link CastEventListenerList} for the specified
 		 * {@link CastEventType}s.
 		 *
-		 * @param listener the listener to register.
+		 * @param listener the {@link CastEventListener} to register.
 		 * @param eventTypes the event type(s) to listen to.
 		 * @return {@code true} if a change was made to the listener list,
 		 *         {@code false} if this registration deadn't lead to any

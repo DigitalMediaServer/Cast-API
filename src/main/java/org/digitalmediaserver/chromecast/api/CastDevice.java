@@ -44,7 +44,7 @@ import org.digitalmediaserver.chromecast.api.Volume.VolumeControlType;
 
 /**
  * This class represents a Google cast device. It can be a ChromeCast, an
- * Android TV or any other device that adheres to the "cast rules"
+ * Android TV or any other device that adheres to the "cast protocol".
  */
 public class CastDevice {
 
@@ -63,42 +63,65 @@ public class CastDevice {
 	@Nonnull
 	protected final InetSocketAddress socketAddress;
 
+	/** The "base URL" of the cast device */
 	@Nullable
 	protected final String deviceURL;
 
+	/** The {@code DNS-SD} service name */
 	@Nullable
 	protected final String serviceName;
 
+	/** The unique ID of the cast device */
 	@Nullable
 	protected final String uniqueId;
 
+	/** The {@link Set} of {@link CastDeviceCapability}s for the cast device */
 	@Nonnull
 	protected final Set<CastDeviceCapability> capabilities;
 
+	/** The "friendly name" of the cast device */
 	@Nullable
 	protected final String friendlyName;
 
+	/** The model name of the cast device */
 	@Nullable
 	protected final String modelName;
 
+	/** The protocol version supported by the cast device */
 	protected final int protocolVersion;
 
+	/** The (device URL) relative path to its icon */
 	@Nullable
 	protected final String iconPath;
 
+	/** A generated name intended to be suitable to present users */
 	@Nonnull
 	protected final String displayName;
 
+	/** The {@link Channel} associated with this {@link CastDevice} */
 	@Nonnull
 	protected final Channel channel;
+
+	/** Whether automatic {@link Channel} reconnection "on demand" is enabled */
 	protected final boolean autoReconnect;
 
+	/**
+	 * Creates a new instance by extracting the required information from the
+	 * specified {@link JmDNS} instance using the specified DNS name.
+	 *
+	 * @param mDNS the {@link JmDNS} instance.
+	 * @param dnsName the DNS name.
+	 * @param autoReconnect {@code true} to try to automatically reconnect "on
+	 *            demand", {@code false} to handle connection "manually" by
+	 *            listening to {@code CONNECTED} events.
+	 * @throws NullPointerException if {@code mDNS} is {@code null}.
+	 */
 	public CastDevice(@Nonnull JmDNS mDNS, @Nonnull String dnsName, boolean autoReconnect) {
 		this(mDNS.getServiceInfo(SERVICE_TYPE, dnsName), autoReconnect);
 	}
 
 	/**
-	 * Creates a new instance by extracting the required parameters from the
+	 * Creates a new instance by extracting the required information from the
 	 * specified {@link ServiceInfo}.
 	 *
 	 * @param serviceInfo the {@link ServiceInfo} instance to extract the device
@@ -155,10 +178,31 @@ public class CastDevice {
 		this.channel = new Channel(socketAddress, displayName, listeners);
 	}
 
-	public CastDevice( //TODO: (Nad) JavaDocs....
+	/**
+	 * Creates a new instance using the specified parameters and
+	 * {@link Channel#STANDARD_DEVICE_PORT}.
+	 *
+	 * @param dnsName the DNS name used by the cast device.
+	 * @param hostname the hostname/address of the cast device.
+	 * @param deviceURL the "base URL" of the cast device.
+	 * @param serviceName the {@code DNS-SD} service name, usually "googlecast".
+	 * @param uniqueId the unique ID of the cast device.
+	 * @param capabilities the {@link Set} of {@link CastDeviceCapability}s that
+	 *            applies for the cast device.
+	 * @param friendlyName the "friendly name" of the cast device.
+	 * @param modelName the model name of the cast device.
+	 * @param protocolVersion the protocol version supported by the cast device.
+	 * @param iconPath the (device URL) relative path to its icon.
+	 * @param autoReconnect {@code true} to try to automatically reconnect "on
+	 *            demand", {@code false} to handle connection "manually" by
+	 *            listening to {@code CONNECTED} events.
+	 * @throws IllegalArgumentException If {@code dnsName} is blank or if
+	 *             {@code hostname} is {@code null}.
+	 */
+	public CastDevice(
 		@Nonnull String dnsName,
-		@Nonnull String address,
-		@Nullable String applicationsURL,
+		@Nonnull String hostname,
+		@Nullable String deviceURL,
 		@Nullable String serviceName,
 		@Nullable String uniqueId,
 		@Nullable Set<CastDeviceCapability> capabilities,
@@ -170,9 +214,9 @@ public class CastDevice {
 	) {
 		this(
 			dnsName,
-			address,
+			hostname,
 			Channel.STANDARD_DEVICE_PORT,
-			applicationsURL,
+			deviceURL,
 			serviceName,
 			uniqueId,
 			capabilities,
@@ -185,19 +229,23 @@ public class CastDevice {
 	}
 
 	/**
+	 * Creates a new instance using the specified parameters.
 	 *
-	 * @param dnsName
-	 * @param hostname
-	 * @param port
-	 * @param applicationsURL
-	 * @param serviceName
-	 * @param uniqueId
-	 * @param capabilities
-	 * @param friendlyName
-	 * @param modelName
-	 * @param protocolVersion
-	 * @param iconPath
-	 * @param autoReconnect
+	 * @param dnsName the DNS name used by the cast device.
+	 * @param hostname the hostname/address of the cast device.
+	 * @param port the port the cast device is listening to.
+	 * @param deviceURL the "base URL" of the cast device.
+	 * @param serviceName the {@code DNS-SD} service name, usually "googlecast".
+	 * @param uniqueId the unique ID of the casst device.
+	 * @param capabilities the {@link Set} of {@link CastDeviceCapability}s that
+	 *            applies for the cast device.
+	 * @param friendlyName the "friendly name" of the cast device.
+	 * @param modelName the model name of the cast device.
+	 * @param protocolVersion the protocol version supported by the cast device.
+	 * @param iconPath the (device URL) relative path to its icon.
+	 * @param autoReconnect {@code true} to try to automatically reconnect "on
+	 *            demand", {@code false} to handle connection "manually" by
+	 *            listening to {@code CONNECTED} events.
 	 * @throws IllegalArgumentException If {@code dnsName} is blank, if
 	 *             {@code port} is outside the range of valid port values or if
 	 *             {@code hostname} is {@code null}.
@@ -206,7 +254,7 @@ public class CastDevice {
 		@Nonnull String dnsName,
 		@Nonnull String hostname,
 		int port,
-		@Nullable String applicationsURL,
+		@Nullable String deviceURL,
 		@Nullable String serviceName,
 		@Nullable String uniqueId,
 		@Nullable Set<CastDeviceCapability> capabilities,
@@ -221,7 +269,7 @@ public class CastDevice {
 		this.autoReconnect = autoReconnect;
 		this.dnsName = dnsName;
 		this.socketAddress = new InetSocketAddress(hostname, port);
-		this.deviceURL = applicationsURL;
+		this.deviceURL = deviceURL;
 		this.serviceName = serviceName;
 		this.uniqueId = uniqueId;
 		this.capabilities = capabilities == null || capabilities.isEmpty() ?
@@ -237,19 +285,74 @@ public class CastDevice {
 	}
 
 	/**
+	 * Creates a new instance using the specified parameters and
+	 * {@link Channel#STANDARD_DEVICE_PORT}.
 	 *
-	 * @param dnsName
-	 * @param address
-	 * @param port
-	 * @param applicationsURL
-	 * @param serviceName
-	 * @param uniqueId
-	 * @param capabilities
-	 * @param friendlyName
-	 * @param modelName
-	 * @param protocolVersion
-	 * @param iconPath
-	 * @param autoReconnect
+	 * @param dnsName the DNS name used by the cast device.
+	 * @param address the IP address of the cast device.
+	 * @param deviceURL the "base URL" of the cast device.
+	 * @param serviceName the {@code DNS-SD} service name, usually "googlecast".
+	 * @param uniqueId the unique ID of the casst device.
+	 * @param capabilities the {@link Set} of {@link CastDeviceCapability}s that
+	 *            applies for the cast device.
+	 * @param friendlyName the "friendly name" of the cast device.
+	 * @param modelName the model name of the cast device.
+	 * @param protocolVersion the protocol version supported by the cast device.
+	 * @param iconPath the (device URL) relative path to its icon.
+	 * @param autoReconnect {@code true} to try to automatically reconnect "on
+	 *            demand", {@code false} to handle connection "manually" by
+	 *            listening to {@code CONNECTED} events.
+	 * @throws IllegalArgumentException If {@code dnsName} is blank, if
+	 *             {@code port} is outside the range of valid port values or if
+	 *             {@code address} is {@code null}.
+	 */
+	public CastDevice(
+		@Nonnull String dnsName,
+		@Nonnull InetAddress address,
+		@Nullable String deviceURL,
+		@Nullable String serviceName,
+		@Nullable String uniqueId,
+		@Nullable Set<CastDeviceCapability> capabilities,
+		@Nullable String friendlyName,
+		@Nullable String modelName,
+		int protocolVersion,
+		@Nullable String iconPath,
+		boolean autoReconnect
+	) {
+		this(
+			dnsName,
+			address,
+			Channel.STANDARD_DEVICE_PORT,
+			deviceURL,
+			serviceName,
+			uniqueId,
+			capabilities,
+			friendlyName,
+			modelName,
+			protocolVersion,
+			iconPath,
+			autoReconnect
+		);
+	}
+
+	/**
+	 * Creates a new instance using the specified parameters.
+	 *
+	 * @param dnsName the DNS name used by the cast device.
+	 * @param address the IP address of the cast device.
+	 * @param port the port the cast device is listening to.
+	 * @param deviceURL the "base URL" of the cast device.
+	 * @param serviceName the {@code DNS-SD} service name, usually "googlecast".
+	 * @param uniqueId the unique ID of the cast device.
+	 * @param capabilities the {@link Set} of {@link CastDeviceCapability}s that
+	 *            applies for the cast device.
+	 * @param friendlyName the "friendly name" of the cast device.
+	 * @param modelName the model name of the cast device.
+	 * @param protocolVersion the protocol version supported by the cast device.
+	 * @param iconPath the (device URL) relative path to its icon.
+	 * @param autoReconnect {@code true} to try to automatically reconnect "on
+	 *            demand", {@code false} to handle connection "manually" by
+	 *            listening to {@code CONNECTED} events.
 	 * @throws IllegalArgumentException If {@code dnsName} is blank, if
 	 *             {@code port} is outside the range of valid port values or if
 	 *             {@code address} is {@code null}.
@@ -258,7 +361,7 @@ public class CastDevice {
 		@Nonnull String dnsName,
 		@Nonnull InetAddress address,
 		int port,
-		@Nullable String applicationsURL,
+		@Nullable String deviceURL,
 		@Nullable String serviceName,
 		@Nullable String uniqueId,
 		@Nullable Set<CastDeviceCapability> capabilities,
@@ -273,7 +376,7 @@ public class CastDevice {
 		this.autoReconnect = autoReconnect;
 		this.dnsName = dnsName;
 		this.socketAddress = new InetSocketAddress(address, port);
-		this.deviceURL = applicationsURL;
+		this.deviceURL = deviceURL;
 		this.serviceName = serviceName;
 		this.uniqueId = uniqueId;
 		this.capabilities = capabilities == null || capabilities.isEmpty() ?
@@ -342,7 +445,7 @@ public class CastDevice {
 	}
 
 	/**
-	 * @return The {@code DNS-SD} service name. Usually "googlecast".
+	 * @return The {@code DNS-SD} service name, usually "googlecast".
 	 */
 	@Nullable
 	public String getServiceName() {
@@ -350,8 +453,8 @@ public class CastDevice {
 	}
 
 	/**
-	 * @return The name of the device as entered by the person who installed it.
-	 *         Usually something like "Living Room Chromecast".
+	 * @return The name of the cast device as entered by the person who
+	 *         installed it. Usually something like "Living Room Chromecast".
 	 */
 	@Nullable
 	public String getFriendlyName() {
@@ -369,7 +472,7 @@ public class CastDevice {
 	 * <li>{@code SHIELD Android TV}</li>
 	 * </ul>
 	 *
-	 * @return The model name of the device.
+	 * @return The model name of the cast device.
 	 */
 	@Nullable
 	public String getModelName() {
@@ -378,41 +481,53 @@ public class CastDevice {
 
 	/**
 	 * @return A {@link Set} of {@link CastDeviceCapability} announced by the
-	 *         device.
+	 *         cast device.
 	 */
 	@Nonnull
 	public Set<CastDeviceCapability> getCapabilities() {
 		return capabilities;
 	}
 
+	/**
+	 * @return The unique identifier of the cast device.
+	 */
 	@Nullable
 	public String getUniqueId() {
 		return uniqueId;
 	}
 
+	/**
+	 * @return The protocol version supported by the cast device.
+	 */
 	public int getProtocolVersion() {
 		return protocolVersion;
 	}
 
 	/**
-	 * @return The "path" part of the URL to the device icon.
+	 * @return The "path" part of the URL to the cast device icon.
 	 */
 	public String getIconPath() {
 		return iconPath;
 	}
 
 	/**
-	 * @return A generated name intended to be suitable to present to the user.
+	 * @return A generated name intended to be suitable to present users.
 	 */
 	public String getDisplayName() {
 		return displayName;
 	}
 
 	/**
-	 * Returns the {@link #channel}. May open it if <code>autoReconnect</code>
-	 * is set to "true" (default value) and it's not yet or no longer open.
+	 * Returns the associated {@link Channel} if it is open or if
+	 * {@code autoReconnect} is {@code true} and reconnect succeeds.
+	 * <p>
+	 * If the {@link Channel} isn't open and {@code autoReconnect} is
+	 * {@code false} or reconnection fails, an {@link IOException} is thrown.
 	 *
-	 * @return an open channel. //TODO: (Nad) Fix JavaDoc
+	 * @return The open {@link Channel}.
+	 * @throws SocketException If the {@link Channel} is closed and
+	 *             {@code autoReconnect} is {@code false}.
+	 * @throws IOException If an error occurs during reconnect.
 	 */
 	@Nonnull
 	protected Channel channel() throws IOException {
@@ -429,14 +544,40 @@ public class CastDevice {
 		return channel;
 	}
 
-	public void connect() throws IOException, KeyManagementException, NoSuchAlgorithmException {
-		channel.connect();
+	/**
+	 * Establishes a connection to the remote cast device on the associated
+	 * {@link Channel}.
+	 *
+	 * @return {@code true} if a connection was established, {@code false} if
+	 *         there was no need.
+	 *
+	 * @throws KeyManagementException If there's a problem with key management
+	 *             that prevents connection.
+	 * @throws NoSuchAlgorithmException If the required cryptographic algorithm
+	 *             isn't available in the JVM.
+	 * @throws ChromeCastException If there was an authentication problem with
+	 *             the cast device.
+	 * @throws IOException If an error occurs during the operation.
+	 */
+	public boolean connect() throws IOException, KeyManagementException, NoSuchAlgorithmException {
+		return channel.connect();
 	}
 
+	/**
+	 * Closes this the associated {@link Channel} and any {@link Session}s
+	 * belonging to it. If the {@link Channel} is already closed, this is a
+	 * no-op.
+	 *
+	 * @throws IOException If an error occurs during the operation.
+	 */
 	public void disconnect() throws IOException {
 		channel.close();
 	}
 
+	/**
+	 * @return {@code true} if the associated {@link Channel} is closed,
+	 *         {@code false} if it's open.
+	 */
 	public boolean isConnected() {
 		return !channel.isClosed();
 	}
@@ -454,55 +595,138 @@ public class CastDevice {
 	}
 
 	/**
-	 * @return current chromecast status - volume, running applications, etc.
-	 * @throws IOException
+	 * Requests a status from the cast device and returns the resulting
+	 * {@link ReceiverStatus} if one is obtained, using
+	 * {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the timeout.
+	 * <p>
+	 * This is a blocking call that waits for the response or times out.
+	 *
+	 * @return The resulting {@link ReceiverStatus}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
 	 */
+	@Nullable
 	public ReceiverStatus getReceiverStatus() throws IOException {
 		return channel().getReceiverStatus();
 	}
 
 	/**
-	 * @return descriptor of currently running application
-	 * @throws IOException
-	 */
-	public Application getRunningApplication() throws IOException {
-		ReceiverStatus status = getReceiverStatus();
-		return status.getRunningApplication();
-	}
-
-	/**
-	 * @param appId application identifier
-	 * @return true if application is available to this chromecast device, false
-	 *         otherwise
-	 * @throws IOException
-	 */
-	public boolean isApplicationAvailable(String appId) throws IOException {
-		return channel().isApplicationAvailable(appId);
-	}
-
-	/**
-	 * @param appId application identifier
-	 * @return true if application with specified identifier is running now
-	 * @throws IOException
-	 */
-	public boolean isApplicationRunning(String appId) throws IOException {
-		ReceiverStatus status = getReceiverStatus();
-		return status.getRunningApplication() != null && appId.equals(status.getRunningApplication().getAppId());
-	}
-
-	/**
-	 * @param appId application identifier
-	 * @return application descriptor if app successfully launched, null
-	 *         otherwise
-	 * @throws IOException
+	 * Requests a status from the cast device and returns the resulting
+	 * {@link ReceiverStatus} if one is obtained.
+	 * <p>
+	 * This is a blocking call that waits for the response or times out.
+	 *
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be
+	 *            used.
+	 * @return The resulting {@link ReceiverStatus}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
 	 */
 	@Nullable
-	public ReceiverStatus launchApplication(String appId, boolean synchronous) throws IOException {
-		return channel().launch(appId, synchronous);
+	public ReceiverStatus getReceiverStatus(long responseTimeout) throws IOException {
+		return channel().getReceiverStatus(responseTimeout);
 	}
 
 	/**
-	 * Stops specified {@link Application} if it is running.
+	 * This is a convenience method that calls {@link #getReceiverStatus()} and
+	 * then {@link ReceiverStatus#getRunningApplication()}.
+	 * <p>
+	 * This is a blocking call that waits for the response or times out.
+	 *
+	 * @return The {@link Application} describing the current running
+	 *         application, if any, or {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public Application getRunningApplication() throws IOException {
+		ReceiverStatus status = getReceiverStatus();
+		return status == null ? null : status.getRunningApplication();
+	}
+
+	/**
+	 * Queries the cast device if the application represented by the specified
+	 * application ID is available, using
+	 * {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the timeout value.
+	 *
+	 * @param applicationId the application ID for which to query availability.
+	 * @return {@code true} if the application is available, {@code false} if
+	 *         it's not.
+	 * @throws IOException If the response times out or if an error occurs
+	 *             during the operation.
+	 */
+	public boolean isApplicationAvailable(String applicationId) throws IOException {
+		return channel().isApplicationAvailable(applicationId);
+	}
+
+	/**
+	 * This is a convenience method that calls {@link #getReceiverStatus()} and
+	 * then compares the specified application ID with the result of
+	 * {@link ReceiverStatus#getRunningApplication()}.
+	 * <p>
+	 * This is a blocking call that waits for the response or times out.
+	 *
+	 * @param applicationId application ID to check if is the "currently running
+	 *            application".
+	 * @return {@code true} if application with specified identifier is
+	 *         "currently running", {@code false} otherwise.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	public boolean isApplicationRunning(String applicationId) throws IOException {
+		ReceiverStatus status = getReceiverStatus();
+		Application application = status == null ? null : status.getRunningApplication();
+		return application == null ? false : applicationId.equals(application.getAppId());
+	}
+
+	/**
+	 * Asks the cast device to launch the application represented by the
+	 * specified application ID, using {@link Channel#DEFAULT_RESPONSE_TIMEOUT}
+	 * as the timeout value.
+	 *
+	 * @param applicationId the application ID for the application to launch.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @return The resulting {@link ReceiverStatus} or {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws SocketException If the {@link Channel} is closed and
+	 *             {@code autoReconnect} is {@code false}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public ReceiverStatus launchApplication(String applicationId, boolean synchronous) throws IOException {
+		return channel().launch(applicationId, synchronous);
+	}
+
+	/**
+	 * Asks the cast device to launch the application represented by the
+	 * specified application ID.
+	 *
+	 * @param applicationId the application ID for the application to launch.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link ReceiverStatus} or {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws SocketException If the {@link Channel} is closed and
+	 *             {@code autoReconnect} is {@code false}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public ReceiverStatus launch(String applicationId, boolean synchronous, long responseTimeout) throws IOException {
+		return channel().launch(applicationId, synchronous, responseTimeout);
+	}
+
+	/**
+	 * Asks the cast device to stop the specified {@link Application}, using
+	 * {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the timeout value.
 	 *
 	 * @param application the {@link Application} to stop.
 	 * @param synchronous if {@code true}, the method will block and wait for a
@@ -510,6 +734,8 @@ public class CastDevice {
 	 *            will not block and {@code null} will always be returned.
 	 * @return The resulting {@link ReceiverStatus} if {@code synchronous} is
 	 *         {@code true} and one is returned from the cast device.
+	 * @throws SocketException If the {@link Channel} is closed and
+	 *             {@code autoReconnect} is {@code false}.
 	 * @throws IOException If an error occurs during the operation.
 	 */
 	@Nullable
@@ -520,6 +746,44 @@ public class CastDevice {
 		return channel().stopApplication(application, synchronous);
 	}
 
+	/**
+	 * Asks the cast device to stop the specified {@link Application}.
+	 *
+	 * @param application the {@link Application} to stop.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link ReceiverStatus} or {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws SocketException If the {@link Channel} is closed and
+	 *             {@code autoReconnect} is {@code false}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public ReceiverStatus stopApplication(
+		@Nonnull Application application,
+		boolean synchronous,
+		long responseTimeout
+	) throws IOException {
+		return channel().stopApplication(application, synchronous, responseTimeout);
+	}
+
+	/**
+	 * Establishes a {@link Session} with the specified {@link Application}
+	 * unless one already exists, in which case the existing {@link Session} is
+	 * returned.
+	 *
+	 * @param senderId the sender ID to use.
+	 * @param application the {@link Application} to connect to.
+	 * @return The existing or new {@link Session}.
+	 * @throws SocketException If the {@link Channel} is closed and
+	 *             {@code autoReconnect} is {@code false}.
+	 * @throws IOException If an error occurs during the operation.
+	 */
 	public Session startSession(
 		@Nonnull String senderId,
 		@Nonnull Application application
@@ -527,6 +791,24 @@ public class CastDevice {
 		return channel().startSession(senderId, application, null, VirtualConnectionType.STRONG);
 	}
 
+	/**
+	 * Establishes a {@link Session} with the specified {@link Application}
+	 * unless one already exists, in which case the existing {@link Session} is
+	 * returned.
+	 *
+	 * @param senderId the sender ID to use.
+	 * @param application the {@link Application} to connect to.
+	 * @param userAgent the user-agent String or {@code null}. It's not entirely
+	 *            clear what this is used for other than reporting to Google, so
+	 *            it might be that it's better left {@code null}.
+	 * @param connectionType The {@link VirtualConnectionType} to use. Please
+	 *            note that only {@link VirtualConnectionType#STRONG} and
+	 *            {@link VirtualConnectionType#INVISIBLE} are allowed.
+	 * @return The existing or new {@link Session}.
+	 * @throws SocketException If the {@link Channel} is closed and
+	 *             {@code autoReconnect} is {@code false}.
+	 * @throws IOException If an error occurs during the operation.
+	 */
 	public Session startSession(
 		@Nonnull String senderId,
 		@Nonnull Application application,
@@ -548,6 +830,8 @@ public class CastDevice {
 	 * target level will be started.
 	 *
 	 * @param level the new volume level.
+	 * @throws SocketException If the {@link Channel} is closed and
+	 *             {@code autoReconnect} is {@code false}.
 	 * @throws IOException If the cast device has
 	 *             {@link VolumeControlType#FIXED} or an error occurs during the
 	 *             operation.
@@ -558,7 +842,7 @@ public class CastDevice {
 		} else if (level > 1.0) {
 			level = 1.0;
 		}
-		channel.setVolume(new Volume(null, Double.valueOf(level), null, null));
+		channel().setVolume(new Volume(null, Double.valueOf(level), null, null));
 	}
 
 	/**
@@ -568,12 +852,14 @@ public class CastDevice {
 	 *
 	 * @param muteState {@code true} to set muted state, {@code false} to set
 	 *            unmuted state.
+	 * @throws SocketException If the {@link Channel} is closed and
+	 *             {@code autoReconnect} is {@code false}.
 	 * @throws IOException If the cast device has
 	 *             {@link VolumeControlType#FIXED} or an error occurs during the
 	 *             operation.
 	 */
 	public void setMuteState(boolean muteState) throws IOException {
-		channel.setVolume(new Volume(null, null, Boolean.valueOf(muteState), null));
+		channel().setVolume(new Volume(null, null, Boolean.valueOf(muteState), null));
 	}
 
 	/**
@@ -590,6 +876,8 @@ public class CastDevice {
 	 * target level will be started.
 	 *
 	 * @param volume the {@link Volume} to set.
+	 * @throws SocketException If the {@link Channel} is closed and
+	 *             {@code autoReconnect} is {@code false}.
 	 * @throws IOException If the cast device has
 	 *             {@link VolumeControlType#FIXED} or an error occurs during the
 	 *             operation.
@@ -599,13 +887,29 @@ public class CastDevice {
 		if (volume == null) {
 			return;
 		}
-		channel.setVolume(volume);
+		channel().setVolume(volume);
 	}
 
+	/**
+	 * Registers the specified {@link CastEventListener} for the specified
+	 * {@link CastEventType}s.
+	 *
+	 * @param listener the {@link CastEventListener} to register.
+	 * @param eventTypes the event type(s) to listen to.
+	 * @return {@code true} if the listener was registered, {@code false} if it
+	 *         already was registered.
+	 */
 	public boolean addEventListener(@Nullable CastEventListener listener, CastEventType... eventTypes) {
 		return listeners.add(listener, eventTypes);
 	}
 
+	/**
+	 * Unregisters the specified {@link CastEventListener}.
+	 *
+	 * @param listener the {@link CastEventListener} to unregister.
+	 * @return {@code true} if the listener was unregistered, {@code false} it
+	 *         wasn't registered to begin with.
+	 */
 	public boolean removeEventListener(@Nullable CastEventListener listener) {
 		return listeners.remove(listener);
 	}
@@ -627,11 +931,11 @@ public class CastDevice {
 			return false;
 		}
 		CastDevice other = (CastDevice) obj;
-		return Objects.equals(capabilities, other.capabilities) && Objects.equals(deviceURL, other.deviceURL)
-			&& Objects.equals(displayName, other.displayName) && Objects.equals(dnsName, other.dnsName)
-			&& Objects.equals(friendlyName, other.friendlyName) && Objects.equals(modelName, other.modelName)
-			&& protocolVersion == other.protocolVersion && Objects.equals(serviceName, other.serviceName)
-			&& Objects.equals(socketAddress, other.socketAddress) && Objects.equals(uniqueId, other.uniqueId);
+		return Objects.equals(capabilities, other.capabilities) && Objects.equals(deviceURL, other.deviceURL) &&
+			Objects.equals(displayName, other.displayName) && Objects.equals(dnsName, other.dnsName) &&
+			Objects.equals(friendlyName, other.friendlyName) && Objects.equals(modelName, other.modelName) &&
+			protocolVersion == other.protocolVersion && Objects.equals(serviceName, other.serviceName) &&
+			Objects.equals(socketAddress, other.socketAddress) && Objects.equals(uniqueId, other.uniqueId);
 	}
 
 	@Override
