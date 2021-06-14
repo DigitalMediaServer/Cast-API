@@ -22,9 +22,10 @@ import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+
 /**
- * Parent class for transport object representing messages sent TO ChromeCast
- * device.
+ * Parent class for transport objects representing messages sent <i>to</i> cast
+ * devices.
  */
 public abstract class StandardRequest extends StandardMessage implements Request {
 
@@ -42,57 +43,81 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	}
 
 	/**
-	 * Request for current status of ChromeCast device.
+	 * A request for the current status of a cast device.
 	 */
 	public static class GetStatus extends StandardRequest {
 	}
 
 	/**
-	 * Request for availability of applications with specified identifiers.
+	 * A request for availability of applications with specific identifiers.
 	 */
 	public static class GetAppAvailability extends StandardRequest {
 
 		@JsonProperty
 		private final String[] appId;
 
+		/**
+		 * Creates a new instance using the specified application ID(s).
+		 *
+		 * @param appId the application ID(s) to use.
+		 */
 		public GetAppAvailability(String... appId) {
 			this.appId = appId;
 		}
 
+		/**
+		 * @return The array of application IDs in this request.
+		 */
 		public String[] getAppId() {
 			return appId;
 		}
 	}
 
 	/**
-	 * Request to launch application with specified identifiers.
+	 * A request to launch an application with a specific application ID.
 	 */
 	public static class Launch extends StandardRequest {
 
 		@JsonProperty
 		private final String appId;
 
+		/**
+		 * Creates a new instance using the specified application ID.
+		 *
+		 * @param appId the application ID of the application to launch.
+		 */
 		public Launch(@JsonProperty("appId") String appId) {
 			this.appId = appId;
 		}
 
+		/**
+		 * @return The application ID.
+		 */
 		public String getAppId() {
 			return appId;
 		}
 	}
 
 	/**
-	 * Request to stop the currently running application.
+	 * A Request to stop an application associated with a specific session ID.
 	 */
 	public static class Stop extends StandardRequest {
 
 		@JsonProperty
 		private final String sessionId;
 
+		/**
+		 * Creates a new instance using the specified session ID.
+		 *
+		 * @param sessionId the session ID to use.
+		 */
 		public Stop(String sessionId) {
 			this.sessionId = sessionId;
 		}
 
+		/**
+		 * @return The session ID of this request.
+		 */
 		public String getSessionId() {
 			return sessionId;
 		}
@@ -166,7 +191,8 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	}
 
 	/**
-	 * Abstract request for an action with the current media.
+	 * An abstract request for an action with a media referenced by a specific
+	 * media session ID.
 	 */
 	public abstract static class MediaRequest extends StandardRequest {
 
@@ -205,7 +231,8 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	}
 
 	/**
-	 * A request to start/resume playback.
+	 * A request to start/resume playback of a media referenced by a specific
+	 * media session ID.
 	 */
 	public static class Play extends MediaRequest {
 
@@ -223,7 +250,8 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	}
 
 	/**
-	 * A request to pause playback.
+	 * A request to pause playback of a media referenced by a specific media
+	 * session ID.
 	 */
 	public static class Pause extends MediaRequest {
 
@@ -241,7 +269,8 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	}
 
 	/**
-	 * Request to change current playback position.
+	 * A request to change current playback position of a media referenced by a
+	 * specific media session ID.
 	 */
 	public static class Seek extends MediaRequest {
 
@@ -342,7 +371,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	}
 
 	/**
-	 * A request to set volume level or mute at the receiver.
+	 * A request to set the volume level or the mute state of the receiver.
 	 */
 	public static class SetVolume extends StandardRequest {
 
@@ -369,7 +398,8 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	}
 
 	/**
-	 * A request to set the stream volume of the playing media.
+	 * A request to set the stream volume of a media referenced by a specific
+	 * media session ID.
 	 * <p>
 	 * <b>Note</b> This should be a {@link MediaRequest}, but since that would
 	 * also make it a {@link StandardMessage} which maps {@code type} using
@@ -480,18 +510,19 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	}
 
 	/**
-	 * A request to set the stream volume of the playing media.
+	 * A request to stop and unload a media referenced by a specific media
+	 * session ID.
 	 * <p>
 	 * <b>Note</b> This should be a {@link MediaRequest}, but since that would
 	 * also make it a {@link StandardMessage} which maps {@code type} using
 	 * Jackson subtypes, it isn't. The reason is that another implementation,
-	 * {@link SetVolume}, is already mapped to "{@code SET_VOLUME}" which is the
-	 * same {@code type} as this request uses. The differences between the two
-	 * is the namespace, but that isn't captured by the Jackson subtype logic,
-	 * which is why this implementation is only a {@link Request} that "manually
+	 * {@link Stop}, is already mapped to "{@code STOP}" which is the same
+	 * {@code type} as this request uses. The differences between the two is the
+	 * namespace, but that isn't captured by the Jackson subtype logic, which is
+	 * why this implementation is only a {@link Request} that "manually
 	 * implements" the remaining fields required for a {@link MediaRequest}.
 	 */
-	public static class StopMedia implements Request { //TODO: (Nad) Fix JavaDocs
+	public static class StopMedia implements Request {
 
 		/** The media session ID */
 		@JsonProperty
@@ -513,14 +544,9 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		/**
 		 * Creates a new request using the specified parameters.
 		 *
-		 * @param sessionId the session ID to use.
-		 * @param mediaSessionId the media session ID for which the seek request
+		 * @param mediaSessionId the media session ID for which the stop request
 		 *            applies.
-		 * @param volume the new volume of the stream. At least one of level or
-		 *            muted must be set.
 		 * @param customData the custom data for the receiver application.
-		 * @throws IllegalArgumentException If {@code sessionId} or
-		 *             {@code volume} is {@code null}.
 		 */
 		public StopMedia(long mediaSessionId, @Nullable Map<String, Object> customData) {
 			this.mediaSessionId = mediaSessionId;
