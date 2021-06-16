@@ -882,11 +882,52 @@ public class Media {
 			return tracks;
 		}
 
+		public MediaBuilder addTrack(@Nullable Track track) {
+			if (track != null) {
+				if (tracks == null) {
+					tracks = new ArrayList<>();
+				}
+				tracks.add(track);
+			}
+			return this;
+		}
+
+		public MediaBuilder addTrack(int index, @Nullable Track track) { //TODO: (Nad) JAvaDocs
+			if (track != null) {
+				if (tracks == null) {
+					tracks = new ArrayList<>();
+				}
+				tracks.add(index, track);
+			}
+			return this;
+		}
+
+		public MediaBuilder clearTracks() {
+			if (tracks != null) {
+				tracks.clear();
+			}
+			return this;
+		}
+
+		public MediaBuilder removeTrack(int index) {
+			if (tracks != null) {
+				tracks.remove(index);
+			}
+			return this;
+		}
+
+		public MediaBuilder removeTrack(@Nullable Track track) {
+			if (track != null && tracks != null) {
+				tracks.remove(track);
+			}
+			return this;
+		}
+
 		/**
 		 * @param tracks the media {@link Track}s.
 		 * @return This {@link MediaBuilder}.
 		 */
-		public MediaBuilder tracks(List<Track> tracks) {
+		public MediaBuilder tracks(List<Track> tracks) { //TODO: (Nad) Keep this?
 			this.tracks = tracks;
 			return this;
 		}

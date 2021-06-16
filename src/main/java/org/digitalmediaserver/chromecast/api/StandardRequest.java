@@ -17,7 +17,7 @@ package org.digitalmediaserver.chromecast.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -128,65 +128,228 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	 */
 	public static class Load extends StandardRequest {
 
+		/**
+		 * The {@link List} of track IDs that are active. If the array is not
+		 * provided, the default tracks will be active
+		 */
+		@Nullable
 		@JsonProperty
-		private final String sessionId;
-		@JsonProperty
-		private final Media media;
-		@JsonProperty
-		private final boolean autoplay;
-		@JsonProperty
-		private final double currentTime;
+		@JsonInclude(JsonInclude.Include.NON_EMPTY)
+		private final List<Integer> activeTrackIds;
 
+		/**
+		 * If the autoplay parameter is specified and {@code true}, the media
+		 * player will begin playing the content when it is loaded. Even if
+		 * autoplay is not specified, the media player implementation may choose
+		 * to begin playback immediately
+		 */
+		@Nullable
+		@JsonProperty
+		@JsonInclude(JsonInclude.Include.NON_NULL)
+		private final Boolean autoplay;
+
+		/** Optional user credentials */
+		@Nullable
+		@JsonProperty
+		@JsonInclude(JsonInclude.Include.NON_NULL)
+		private final String credentials;
+
+		/**
+		 * Optional credentials type. The type '{@code cloud}' is a reserved
+		 * type used by load requests that were originated by voice assistant
+		 * commands.
+		 */
+		@Nullable
+		@JsonProperty
+		@JsonInclude(JsonInclude.Include.NON_NULL)
+		private final String credentialsType;
+
+		/**
+		 * Seconds since beginning of content. If the content is live content,
+		 * and {@code currentTime} is not specified, the stream will start at
+		 * the live position.
+		 */
+		@Nullable
+		@JsonProperty
+		@JsonInclude(JsonInclude.Include.NON_NULL)
+		private final Double currentTime;
+
+		/**
+		 * The custom application data to send to the remote application with
+		 * the load command
+		 */
+		@Nullable
 		@JsonProperty
 		@JsonInclude(JsonInclude.Include.NON_EMPTY)
 		private final Map<String, Object> customData;
 
+		/** Additional load options */
+		@Nullable
+		@JsonProperty
+		@JsonInclude(JsonInclude.Include.NON_NULL)
+		private final LoadOptions loadOptions;
+
+		/** The {@link Media} to load */
+		@Nonnull
+		@JsonProperty
+		private final Media media;
+
+		/** The media playback rate */
+		@Nullable
+		@JsonProperty
+		@JsonInclude(JsonInclude.Include.NON_NULL)
+		private final Double playbackRate;
+
+		/** The queue data */
+		@Nullable
+		@JsonProperty
+		@JsonInclude(JsonInclude.Include.NON_NULL)
+		private final QueueData queueData;
+
 		/**
 		 * Creates a new request to load the specified {@link Media}.
 		 *
-		 * @param sessionId the session ID to use.
-		 * @param media the {@link Media} to load.
+		 * @param activeTrackIds the {@link List} of track IDs that are active.
+		 *            If the list is not provided, the default tracks will be
+		 *            active.
 		 * @param autoplay {@code true} to ask the remote application to start
 		 *            playback as soon as the {@link Media} has been loaded,
 		 *            {@code false} to ask it to transition to a paused state
-		 *            after loading.
-		 * @param currentTime the position in seconds where playback are to be
-		 *            started in the loaded {@link Media}.
+		 *            after loading. If {@code autoplay} is not specified, the
+		 *            media player implementation may choose to begin playback
+		 *            immediately.
+		 * @param credentials the user credentials, if any.
+		 * @param credentialsType the credentials type, if any. The type
+		 *            '{@code cloud}' is a reserved type used by load requests
+		 *            that were originated by voice assistant commands.
+		 * @param currentTime the position in seconds from the start for where
+		 *            playback is to start in the loaded {@link Media}. If the
+		 *            content is live content, and {@code currentTime} is not
+		 *            specified, the stream will start at the live position.
 		 * @param customData the custom application data to send to the remote
 		 *            application with the load command.
+		 * @param loadOptions the additional load options, if any.
+		 * @param media the {@link Media} to load.
+		 * @param mediaSessionId the ID of the media session that the request
+		 *            applies to.
+		 * @param playbackRate the media playback rate.
+		 * @param queueData the queue data.
+		 * @throws IllegalArgumentException If {@code media} is {@code null}.
 		 */
 		public Load(
-			String sessionId,
-			Media media,
-			boolean autoplay,
-			double currentTime,
-			Map<String, Object> customData
+			@Nullable List<Integer> activeTrackIds,
+			@Nullable Boolean autoplay,
+			@Nullable String credentials,
+			@Nullable String credentialsType,
+			@Nullable Double currentTime,
+			@Nullable Map<String, Object> customData,
+			@Nullable LoadOptions loadOptions,
+			@Nonnull Media media,
+			@Nullable Double playbackRate,
+			@Nullable QueueData queueData
 		) {
-			this.sessionId = sessionId;
-			this.media = media;
+			Util.requireNotNull(media, "media");
+			this.activeTrackIds = activeTrackIds;
 			this.autoplay = autoplay;
+			this.credentials = credentials;
+			this.credentialsType = credentialsType;
 			this.currentTime = currentTime;
 			this.customData = customData;
+			this.loadOptions = loadOptions;
+			this.media = media;
+			this.playbackRate = playbackRate;
+			this.queueData = queueData;
 		}
 
-		public String getSessionId() {
-			return sessionId;
+		/**
+		 * @return The {@link List} of track IDs that are active. If the list is
+		 *         not provided, the default tracks will be active.
+		 */
+		@Nullable
+		public List<Integer> getActiveTrackIds() {
+			return activeTrackIds;
 		}
 
+		/**
+		 * @return {@code true} to ask the remote application to start playback
+		 *         as soon as the {@link Media} has been loaded, {@code false}
+		 *         to ask it to transition to a paused state after loading. If
+		 *         {@code autoplay} is not specified, the media player
+		 *         implementation may choose to begin playback immediately.
+		 */
+		@Nullable
+		public Boolean getAutoplay() {
+			return autoplay;
+		}
+
+		/**
+		 * @return The user credentials, if any.
+		 */
+		@Nullable
+		public String getCredentials() {
+			return credentials;
+		}
+
+		/**
+		 * @return The credentials type, if any. The type '{@code cloud}' is a
+		 *         reserved type used by load requests that were originated by
+		 *         voice assistant commands.
+		 */
+		@Nullable
+		public String getCredentialsType() {
+			return credentialsType;
+		}
+
+		/**
+		 * @return The position in seconds from the start for where
+		 *            playback is to start in the loaded {@link Media}. If the
+		 *            content is live content, and {@code currentTime} is not
+		 *            specified, the stream will start at the live position.
+		 */
+		@Nullable
+		public Double getCurrentTime() {
+			return currentTime;
+		}
+
+		/**
+		 * @return The custom application data to send to the remote application
+		 *         with the load command.
+		 */
+		@Nullable
+		public Map<String, Object> getCustomData() {
+			return customData;
+		}
+
+		/**
+		 * @return The additional load options, if any.
+		 */
+		@Nullable
+		public LoadOptions getLoadOptions() {
+			return loadOptions;
+		}
+
+		/**
+		 * @return The {@link Media} to load.
+		 */
+		@Nonnull
 		public Media getMedia() {
 			return media;
 		}
 
-		public boolean isAutoplay() {
-			return autoplay;
+		/**
+		 * @return The media playback rate.
+		 */
+		@Nullable
+		public Double getPlaybackRate() {
+			return playbackRate;
 		}
 
-		public double getCurrentTime() {
-			return currentTime;
-		}
-
-		public Object getCustomData() {
-			return customData;
+		/**
+		 * @return The queue data.
+		 */
+		@Nullable
+		public QueueData getQueueData() {
+			return queueData;
 		}
 	}
 
@@ -198,7 +361,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 
 		/** The media session ID */
 		@JsonProperty
-		private final long mediaSessionId;
+		private final int mediaSessionId;
 
 		/** The session ID */
 		@JsonProperty
@@ -210,7 +373,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		 * @param mediaSessionId the media session ID.
 		 * @param sessionId the session ID.
 		 */
-		public MediaRequest(long mediaSessionId, String sessionId) {
+		public MediaRequest(int mediaSessionId, String sessionId) {
 			this.mediaSessionId = mediaSessionId;
 			this.sessionId = sessionId;
 		}
@@ -244,7 +407,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		 *            applies.
 		 * @param sessionId the session ID to use.
 		 */
-		public Play(long mediaSessionId, String sessionId) {
+		public Play(int mediaSessionId, String sessionId) {
 			super(mediaSessionId, sessionId);
 		}
 	}
@@ -263,7 +426,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		 *            request applies.
 		 * @param sessionId the session ID to use.
 		 */
-		public Pause(long mediaSessionId, String sessionId) {
+		public Pause(int mediaSessionId, String sessionId) {
 			super(mediaSessionId, sessionId);
 		}
 	}
@@ -307,7 +470,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		 *            before seeking.
 		 */
 		public Seek(
-			long mediaSessionId,
+			int mediaSessionId,
 			@Nonnull String sessionId,
 			double currentTime,
 			@Nullable ResumeState resumeState
@@ -333,7 +496,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		 *            before seeking.
 		 */
 		public Seek(
-			long mediaSessionId,
+			int mediaSessionId,
 			@Nonnull String sessionId,
 			double currentTime,
 			@Nullable Map<String, Object> customData,
@@ -414,7 +577,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 
 		/** The media session ID */
 		@JsonProperty
-		private final long mediaSessionId;
+		private final int mediaSessionId;
 
 		/** The session ID */
 		@JsonProperty
@@ -455,7 +618,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		 */
 		public VolumeRequest(
 			String sessionId,
-			long mediaSessionId,
+			int mediaSessionId,
 			@Nonnull MediaVolume volume,
 			@Nullable Map<String, Object> customData
 		) {
@@ -526,7 +689,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 
 		/** The media session ID */
 		@JsonProperty
-		private final long mediaSessionId;
+		private final int mediaSessionId;
 
 		/** the request ID */
 		@JsonProperty
@@ -548,7 +711,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		 *            applies.
 		 * @param customData the custom data for the receiver application.
 		 */
-		public StopMedia(long mediaSessionId, @Nullable Map<String, Object> customData) {
+		public StopMedia(int mediaSessionId, @Nullable Map<String, Object> customData) {
 			this.mediaSessionId = mediaSessionId;
 			this.customData = customData;
 		}
