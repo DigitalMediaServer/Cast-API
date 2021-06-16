@@ -16,6 +16,7 @@
 package org.digitalmediaserver.chromecast.api;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -155,215 +156,215 @@ public class Session {
 		}
 	}
 
-	/**
-	 * Asks the remote application to load the specified {@link Media} using the
-	 * specified parameters and {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the
-	 * timeout value.
-	 * <p>
-	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
-	 *
-	 * @param mediaBuilder the {@link MediaBuilder} to use to create the
-	 *            {@link Media} to load.
-	 * @param autoplay {@code true} to ask the remote application to start
-	 *            playback as soon as the {@link Media} has been loaded,
-	 *            {@code false} to ask it to transition to a paused state after
-	 *            loading.
-	 * @param currentTime the position in seconds where playback are to be
-	 *            started in the loaded {@link Media}.
-	 * @param synchronous {@code true} to make this call blocking until a
-	 *            response is received or times out, {@code false} to make it
-	 *            return immediately always returning {@code null}.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
-	 * @throws IOException If the response times out or an error occurs during
-	 *             the operation.
-	 */
-	@Nullable
-	public MediaStatus load(
-		MediaBuilder mediaBuilder,
-		boolean autoplay,
-		double currentTime,
-		boolean synchronous
-	) throws IOException {
-		return channel.load(
-			senderId,
-			destinationId,
-			id,
-			mediaBuilder == null ? null : mediaBuilder.build(),
-			autoplay,
-			currentTime,
-			synchronous,
-			null
-		);
-	}
-
-	/**
-	 * Asks the remote application to load the specified {@link Media} using the
-	 * specified parameters.
-	 * <p>
-	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
-	 *
-	 * @param mediaBuilder the {@link MediaBuilder} to use to create the
-	 *            {@link Media} to load.
-	 * @param autoplay {@code true} to ask the remote application to start
-	 *            playback as soon as the {@link Media} has been loaded,
-	 *            {@code false} to ask it to transition to a paused state after
-	 *            loading.
-	 * @param currentTime the position in seconds where playback are to be
-	 *            started in the loaded {@link Media}.
-	 * @param synchronous {@code true} to make this call blocking until a
-	 *            response is received or times out, {@code false} to make it
-	 *            return immediately always returning {@code null}.
-	 * @param responseTimeout the response timeout in milliseconds if
-	 *            {@code synchronous} is {@code true}. If zero or negative,
-	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
-	 * @throws IOException If the response times out or an error occurs during
-	 *             the operation.
-	 */
-	@Nullable
-	public MediaStatus load(
-		MediaBuilder mediaBuilder,
-		boolean autoplay,
-		double currentTime,
-		boolean synchronous,
-		long responseTimeout
-	) throws IOException {
-		return channel.load(
-			senderId,
-			destinationId,
-			id,
-			mediaBuilder == null ? null : mediaBuilder.build(),
-			autoplay,
-			currentTime,
-			synchronous,
-			responseTimeout,
-			null
-		);
-	}
-
-	/**
-	 * Asks the remote application to load the specified {@link Media} using the
-	 * specified parameters and {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the
-	 * timeout value.
-	 * <p>
-	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
-	 *
-	 * @param media the {@link Media} to load.
-	 * @param autoplay {@code true} to ask the remote application to start
-	 *            playback as soon as the {@link Media} has been loaded,
-	 *            {@code false} to ask it to transition to a paused state after
-	 *            loading.
-	 * @param currentTime the position in seconds where playback are to be
-	 *            started in the loaded {@link Media}.
-	 * @param synchronous {@code true} to make this call blocking until a
-	 *            response is received or times out, {@code false} to make it
-	 *            return immediately always returning {@code null}.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
-	 * @throws IOException If the response times out or an error occurs during
-	 *             the operation.
-	 */
-	@Nullable
-	public MediaStatus load(
-		Media media,
-		boolean autoplay,
-		double currentTime,
-		boolean synchronous
-	) throws IOException {
-		return channel.load(senderId, destinationId, id, media, autoplay, currentTime, synchronous, null);
-	}
-
-	/**
-	 * Asks the remote application to load the specified {@link Media} using the
-	 * specified parameters.
-	 * <p>
-	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
-	 *
-	 * @param media the {@link Media} to load.
-	 * @param autoplay {@code true} to ask the remote application to start
-	 *            playback as soon as the {@link Media} has been loaded,
-	 *            {@code false} to ask it to transition to a paused state after
-	 *            loading.
-	 * @param currentTime the position in seconds where playback are to be
-	 *            started in the loaded {@link Media}.
-	 * @param synchronous {@code true} to make this call block until a response
-	 *            is received or times out, {@code false} to make it return
-	 *            immediately always returning {@code null}.
-	 * @param responseTimeout the response timeout in milliseconds if
-	 *            {@code synchronous} is {@code true}. If zero or negative,
-	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
-	 * @throws IOException If the response times out or an error occurs during
-	 *             the operation.
-	 */
-	@Nullable
-	public MediaStatus load(
-		Media media,
-		boolean autoplay,
-		double currentTime,
-		boolean synchronous,
-		long responseTimeout
-	) throws IOException {
-		return channel.load(
-			senderId,
-			destinationId,
-			id,
-			media,
-			autoplay,
-			currentTime,
-			synchronous,
-			responseTimeout,
-			null
-		);
-	}
-
-	/**
-	 * Asks the remote application to load the specified {@link Media} using the
-	 * specified parameters and {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the
-	 * timeout value.
-	 * <p>
-	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
-	 *
-	 * @param media the {@link Media} to load.
-	 * @param autoplay {@code true} to ask the remote application to start
-	 *            playback as soon as the {@link Media} has been loaded,
-	 *            {@code false} to ask it to transition to a paused state after
-	 *            loading.
-	 * @param currentTime the position in seconds where playback are to be
-	 *            started in the loaded {@link Media}.
-	 * @param synchronous {@code true} to make this call block until a response
-	 *            is received or times out, {@code false} to make it return
-	 *            immediately always returning {@code null}.
-	 * @param customData the custom application data to send to the remote
-	 *            application with the load command.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
-	 * @throws IOException If the response times out or an error occurs during
-	 *             the operation.
-	 */
-	@Nullable
-	public MediaStatus load(
-		Media media,
-		boolean autoplay,
-		double currentTime,
-		boolean synchronous,
-		Map<String, Object> customData
-	) throws IOException {
-		return channel.load(senderId, destinationId, id, media, autoplay, currentTime, synchronous, customData);
-	}
+//	/**
+//	 * Asks the remote application to load the specified {@link Media} using the
+//	 * specified parameters and {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the
+//	 * timeout value.
+//	 * <p>
+//	 * This can only succeed if the remote application supports the
+//	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+//	 *
+//	 * @param mediaBuilder the {@link MediaBuilder} to use to create the
+//	 *            {@link Media} to load.
+//	 * @param autoplay {@code true} to ask the remote application to start
+//	 *            playback as soon as the {@link Media} has been loaded,
+//	 *            {@code false} to ask it to transition to a paused state after
+//	 *            loading.
+//	 * @param currentTime the position in seconds where playback are to be
+//	 *            started in the loaded {@link Media}.
+//	 * @param synchronous {@code true} to make this call blocking until a
+//	 *            response is received or times out, {@code false} to make it
+//	 *            return immediately always returning {@code null}.
+//	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+//	 *         {@code true} and a reply is received in time, {@code null} if
+//	 *         {@code synchronous} is {@code false}.
+//	 * @throws IOException If the response times out or an error occurs during
+//	 *             the operation.
+//	 */
+//	@Nullable
+//	public MediaStatus load(
+//		MediaBuilder mediaBuilder,
+//		boolean autoplay,
+//		double currentTime,
+//		boolean synchronous
+//	) throws IOException {
+//		return channel.load(
+//			senderId,
+//			destinationId,
+//			id,
+//			mediaBuilder == null ? null : mediaBuilder.build(),
+//			autoplay,
+//			currentTime,
+//			synchronous,
+//			null
+//		);
+//	}
+//
+//	/**
+//	 * Asks the remote application to load the specified {@link Media} using the
+//	 * specified parameters.
+//	 * <p>
+//	 * This can only succeed if the remote application supports the
+//	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+//	 *
+//	 * @param mediaBuilder the {@link MediaBuilder} to use to create the
+//	 *            {@link Media} to load.
+//	 * @param autoplay {@code true} to ask the remote application to start
+//	 *            playback as soon as the {@link Media} has been loaded,
+//	 *            {@code false} to ask it to transition to a paused state after
+//	 *            loading.
+//	 * @param currentTime the position in seconds where playback are to be
+//	 *            started in the loaded {@link Media}.
+//	 * @param synchronous {@code true} to make this call blocking until a
+//	 *            response is received or times out, {@code false} to make it
+//	 *            return immediately always returning {@code null}.
+//	 * @param responseTimeout the response timeout in milliseconds if
+//	 *            {@code synchronous} is {@code true}. If zero or negative,
+//	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+//	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+//	 *         {@code true} and a reply is received in time, {@code null} if
+//	 *         {@code synchronous} is {@code false}.
+//	 * @throws IOException If the response times out or an error occurs during
+//	 *             the operation.
+//	 */
+//	@Nullable
+//	public MediaStatus load(
+//		MediaBuilder mediaBuilder,
+//		boolean autoplay,
+//		double currentTime,
+//		boolean synchronous,
+//		long responseTimeout
+//	) throws IOException {
+//		return channel.load(
+//			senderId,
+//			destinationId,
+//			id,
+//			mediaBuilder == null ? null : mediaBuilder.build(),
+//			autoplay,
+//			currentTime,
+//			synchronous,
+//			responseTimeout,
+//			null
+//		);
+//	}
+//
+//	/**
+//	 * Asks the remote application to load the specified {@link Media} using the
+//	 * specified parameters and {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the
+//	 * timeout value.
+//	 * <p>
+//	 * This can only succeed if the remote application supports the
+//	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+//	 *
+//	 * @param media the {@link Media} to load.
+//	 * @param autoplay {@code true} to ask the remote application to start
+//	 *            playback as soon as the {@link Media} has been loaded,
+//	 *            {@code false} to ask it to transition to a paused state after
+//	 *            loading.
+//	 * @param currentTime the position in seconds where playback are to be
+//	 *            started in the loaded {@link Media}.
+//	 * @param synchronous {@code true} to make this call blocking until a
+//	 *            response is received or times out, {@code false} to make it
+//	 *            return immediately always returning {@code null}.
+//	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+//	 *         {@code true} and a reply is received in time, {@code null} if
+//	 *         {@code synchronous} is {@code false}.
+//	 * @throws IOException If the response times out or an error occurs during
+//	 *             the operation.
+//	 */
+//	@Nullable
+//	public MediaStatus load(
+//		Media media,
+//		boolean autoplay,
+//		double currentTime,
+//		boolean synchronous
+//	) throws IOException {
+//		return channel.load(senderId, destinationId, id, media, autoplay, currentTime, synchronous, null);
+//	}
+//
+//	/**
+//	 * Asks the remote application to load the specified {@link Media} using the
+//	 * specified parameters.
+//	 * <p>
+//	 * This can only succeed if the remote application supports the
+//	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+//	 *
+//	 * @param media the {@link Media} to load.
+//	 * @param autoplay {@code true} to ask the remote application to start
+//	 *            playback as soon as the {@link Media} has been loaded,
+//	 *            {@code false} to ask it to transition to a paused state after
+//	 *            loading.
+//	 * @param currentTime the position in seconds where playback are to be
+//	 *            started in the loaded {@link Media}.
+//	 * @param synchronous {@code true} to make this call block until a response
+//	 *            is received or times out, {@code false} to make it return
+//	 *            immediately always returning {@code null}.
+//	 * @param responseTimeout the response timeout in milliseconds if
+//	 *            {@code synchronous} is {@code true}. If zero or negative,
+//	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+//	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+//	 *         {@code true} and a reply is received in time, {@code null} if
+//	 *         {@code synchronous} is {@code false}.
+//	 * @throws IOException If the response times out or an error occurs during
+//	 *             the operation.
+//	 */
+//	@Nullable
+//	public MediaStatus load(
+//		Media media,
+//		boolean autoplay,
+//		double currentTime,
+//		boolean synchronous,
+//		long responseTimeout
+//	) throws IOException {
+//		return channel.load(
+//			senderId,
+//			destinationId,
+//			id,
+//			media,
+//			autoplay,
+//			currentTime,
+//			synchronous,
+//			responseTimeout,
+//			null
+//		);
+//	}
+//
+//	/**
+//	 * Asks the remote application to load the specified {@link Media} using the
+//	 * specified parameters and {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the
+//	 * timeout value.
+//	 * <p>
+//	 * This can only succeed if the remote application supports the
+//	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+//	 *
+//	 * @param media the {@link Media} to load.
+//	 * @param autoplay {@code true} to ask the remote application to start
+//	 *            playback as soon as the {@link Media} has been loaded,
+//	 *            {@code false} to ask it to transition to a paused state after
+//	 *            loading.
+//	 * @param currentTime the position in seconds where playback are to be
+//	 *            started in the loaded {@link Media}.
+//	 * @param synchronous {@code true} to make this call block until a response
+//	 *            is received or times out, {@code false} to make it return
+//	 *            immediately always returning {@code null}.
+//	 * @param customData the custom application data to send to the remote
+//	 *            application with the load command.
+//	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+//	 *         {@code true} and a reply is received in time, {@code null} if
+//	 *         {@code synchronous} is {@code false}.
+//	 * @throws IOException If the response times out or an error occurs during
+//	 *             the operation.
+//	 */
+//	@Nullable
+//	public MediaStatus load(
+//		Media media,
+//		boolean autoplay,
+//		double currentTime,
+//		boolean synchronous,
+//		Map<String, Object> customData
+//	) throws IOException {
+//		return channel.load(senderId, destinationId, id, media, autoplay, currentTime, synchronous, customData);
+//	}
 
 	/**
 	 * Asks the remote application to load the specified {@link Media}
@@ -394,24 +395,56 @@ public class Session {
 	 *             the operation.
 	 */
 	@Nullable
-	public MediaStatus load(
-		Media media,
-		boolean autoplay,
-		double currentTime,
+	public MediaStatus load( //TODO: (Nad) JAvaDocs
+		@Nonnull Media media,
+		@Nullable Boolean autoplay,
+		@Nullable Double currentTime,
+		@Nullable Map<String, Object> customData,
 		boolean synchronous,
-		long responseTimeout,
-		Map<String, Object> customData
+		long responseTimeout
 	) throws IOException {
 		return channel.load(
 			senderId,
 			destinationId,
-			id,
-			media,
 			autoplay,
 			currentTime,
+			media,
+			customData,
 			synchronous,
-			responseTimeout,
-			customData
+			responseTimeout
+		);
+	}
+
+	@Nullable
+	public MediaStatus load( //TODO: (Nad) JAvaDocs
+		@Nonnull Media media,
+		@Nullable List<Integer> activeTrackIds,
+		@Nullable Boolean autoplay,
+		@Nullable String credentials,
+		@Nullable String credentialsType,
+		@Nullable Double currentTime,
+		@Nullable Map<String, Object> customData,
+		@Nullable LoadOptions loadOptions,
+		@Nullable Double playbackRate,
+		@Nullable QueueData queueData,
+		boolean synchronous,
+		long responseTimeout
+	) throws IOException {
+		return channel.load(
+			senderId,
+			destinationId,
+			activeTrackIds,
+			autoplay,
+			credentials,
+			credentialsType,
+			currentTime,
+			customData,
+			loadOptions,
+			media,
+			playbackRate,
+			queueData,
+			synchronous,
+			responseTimeout
 		);
 	}
 
@@ -435,7 +468,7 @@ public class Session {
 	 *             the operation.
 	 */
 	@Nullable
-	public MediaStatus play(long mediaSessionId, boolean synchronous) throws IOException {
+	public MediaStatus play(int mediaSessionId, boolean synchronous) throws IOException {
 		return channel.play(senderId, destinationId, id, mediaSessionId, synchronous);
 	}
 
@@ -461,7 +494,7 @@ public class Session {
 	 *             the operation.
 	 */
 	@Nullable
-	public MediaStatus play(long mediaSessionId, boolean synchronous, long responseTimeout) throws IOException {
+	public MediaStatus play(int mediaSessionId, boolean synchronous, long responseTimeout) throws IOException {
 		return channel.play(senderId, destinationId, id, mediaSessionId, synchronous, responseTimeout);
 	}
 
@@ -485,7 +518,7 @@ public class Session {
 	 *             the operation.
 	 */
 	@Nullable
-	public MediaStatus pause(long mediaSessionId, boolean synchronous) throws IOException {
+	public MediaStatus pause(int mediaSessionId, boolean synchronous) throws IOException {
 		return channel.pause(senderId, destinationId, id, mediaSessionId, synchronous);
 	}
 
@@ -511,7 +544,7 @@ public class Session {
 	 *             the operation.
 	 */
 	@Nullable
-	public MediaStatus pause(long mediaSessionId, boolean synchronous, long responseTimeout) throws IOException {
+	public MediaStatus pause(int mediaSessionId, boolean synchronous, long responseTimeout) throws IOException {
 		return channel.pause(senderId, destinationId, id, mediaSessionId, synchronous, responseTimeout);
 	}
 
@@ -540,7 +573,7 @@ public class Session {
 	 */
 	@Nullable
 	public MediaStatus seek(
-		long mediaSessionId,
+		int mediaSessionId,
 		double currentTime,
 		@Nullable ResumeState resumeState,
 		boolean synchronous
@@ -575,7 +608,7 @@ public class Session {
 	 */
 	@Nullable
 	public MediaStatus seek(
-		long mediaSessionId,
+		int mediaSessionId,
 		double currentTime,
 		@Nullable ResumeState resumeState,
 		boolean synchronous,
@@ -613,7 +646,7 @@ public class Session {
 	 *             the operation.
 	 */
 	@Nullable
-	public MediaStatus stop(long mediaSessionId, boolean synchronous) throws IOException {
+	public MediaStatus stop(int mediaSessionId, boolean synchronous) throws IOException {
 		return channel.stopMedia(senderId, destinationId, mediaSessionId, synchronous);
 	}
 
@@ -639,7 +672,7 @@ public class Session {
 	 *             the operation.
 	 */
 	@Nullable
-	public MediaStatus stop(long mediaSessionId, boolean synchronous, long responseTimeout) throws IOException {
+	public MediaStatus stop(int mediaSessionId, boolean synchronous, long responseTimeout) throws IOException {
 		return channel.stopMedia(senderId, destinationId, mediaSessionId, synchronous, responseTimeout);
 	}
 
@@ -667,7 +700,7 @@ public class Session {
 	 */
 	@Nullable
 	public MediaStatus setVolume(
-		long mediaSessionId,
+		int mediaSessionId,
 		@Nonnull MediaVolume volume,
 		boolean synchronous
 	) throws IOException {

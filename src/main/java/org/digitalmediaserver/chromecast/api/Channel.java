@@ -36,6 +36,7 @@ import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -921,26 +922,24 @@ public class Channel implements Closeable {
 	 *             the operation.
 	 */
 	@Nullable
-	public MediaStatus load(
+	public MediaStatus load( //TODO: (Nad) JAvaDocs
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
-		@Nonnull String sessionId,
+		@Nullable Boolean autoplay,
+		@Nullable Double currentTime,
 		Media media,
-		boolean autoplay,
-		double currentTime,
-		boolean synchronous,
-		@Nullable Map<String, Object> customData
+		@Nullable Map<String, Object> customData,
+		boolean synchronous
 	) throws IOException {
 		return load(
 			senderId,
 			destinationId,
-			sessionId,
-			media,
 			autoplay,
 			currentTime,
+			media,
+			customData,
 			synchronous,
-			DEFAULT_RESPONSE_TIMEOUT,
-			customData
+			DEFAULT_RESPONSE_TIMEOUT
 		);
 	}
 
@@ -979,17 +978,81 @@ public class Channel implements Closeable {
 	public MediaStatus load(
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
-		@Nonnull String sessionId,
+		@Nullable Boolean autoplay,
+		@Nullable Double currentTime,
 		Media media,
-		boolean autoplay,
-		double currentTime,
+		@Nullable Map<String, Object> customData,
 		boolean synchronous,
-		long responseTimeout,
-		@Nullable Map<String, Object> customData
+		long responseTimeout
 	) throws IOException {
 		MediaStatusResponse status = send(
 			"urn:x-cast:com.google.cast.media",
-			new Load(sessionId, media, autoplay, currentTime, customData),
+			new Load(null, autoplay, null, null, currentTime, customData, null, media, null, null),
+			senderId,
+			destinationId,
+			synchronous ? MediaStatusResponse.class : null,
+			responseTimeout
+		);
+		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+	}
+
+	/**
+	 * Asks the targeted remote application to load the specified {@link Media}
+	 * using the specified parameters.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param senderId the sender ID to use.
+	 * @param destinationId the destination ID to use.
+	 * @param activeTrackIds
+	 * @param autoplay {@code true} to ask the remote application to start
+	 *            playback as soon as the {@link Media} has been loaded,
+	 *            {@code false} to ask it to transition to a paused state after
+	 *            loading.
+	 * @param credentials
+	 * @param credentialsType
+	 * @param currentTime the position in seconds where playback are to be
+	 *            started in the loaded {@link Media}.
+	 * @param customData the custom application data to send to the remote
+	 *            application with the load command.
+	 * @param loadOptions
+	 * @param media the {@link Media} to load.
+	 * @param mediaSessionId
+	 * @param playbackRate
+	 * @param queueData
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public MediaStatus load(
+		@Nonnull String senderId,
+		@Nonnull String destinationId,
+		@Nullable List<Integer> activeTrackIds,
+		@Nullable Boolean autoplay,
+		@Nullable String credentials,
+		@Nullable String credentialsType,
+		@Nullable Double currentTime,
+		@Nullable Map<String, Object> customData,
+		@Nullable LoadOptions loadOptions,
+		@Nonnull Media media,
+		@Nullable Double playbackRate,
+		@Nullable QueueData queueData,
+		boolean synchronous,
+		long responseTimeout
+	) throws IOException {
+		MediaStatusResponse status = send(
+			"urn:x-cast:com.google.cast.media",
+			new Load(activeTrackIds, autoplay, credentials, credentialsType, currentTime, customData, loadOptions, media, playbackRate, queueData),
 			senderId,
 			destinationId,
 			synchronous ? MediaStatusResponse.class : null,
@@ -1025,7 +1088,7 @@ public class Channel implements Closeable {
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
 		@Nonnull String sessionId,
-		long mediaSessionId,
+		int mediaSessionId,
 		boolean synchronous
 	) throws IOException {
 		return play(senderId, destinationId, sessionId, mediaSessionId, synchronous, DEFAULT_RESPONSE_TIMEOUT);
@@ -1060,7 +1123,7 @@ public class Channel implements Closeable {
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
 		@Nonnull String sessionId,
-		long mediaSessionId,
+		int mediaSessionId,
 		boolean synchronous,
 		long responseTimeout
 	) throws IOException {
@@ -1102,7 +1165,7 @@ public class Channel implements Closeable {
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
 		@Nonnull String sessionId,
-		long mediaSessionId,
+		int mediaSessionId,
 		boolean synchronous
 	) throws IOException {
 		return pause(senderId, destinationId, sessionId, mediaSessionId, synchronous, DEFAULT_RESPONSE_TIMEOUT);
@@ -1137,7 +1200,7 @@ public class Channel implements Closeable {
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
 		@Nonnull String sessionId,
-		long mediaSessionId,
+		int mediaSessionId,
 		boolean synchronous,
 		long responseTimeout
 	) throws IOException {
@@ -1183,7 +1246,7 @@ public class Channel implements Closeable {
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
 		@Nonnull String sessionId,
-		long mediaSessionId,
+		int mediaSessionId,
 		double currentTime,
 		@Nullable ResumeState resumeState,
 		boolean synchronous
@@ -1233,7 +1296,7 @@ public class Channel implements Closeable {
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
 		@Nonnull String sessionId,
-		long mediaSessionId,
+		int mediaSessionId,
 		double currentTime,
 		@Nullable ResumeState resumeState,
 		boolean synchronous,
@@ -1277,7 +1340,7 @@ public class Channel implements Closeable {
 	public MediaStatus stopMedia(
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
-		long mediaSessionId,
+		int mediaSessionId,
 		boolean synchronous
 	) throws IOException {
 		return stopMedia(senderId, destinationId, mediaSessionId, synchronous, DEFAULT_RESPONSE_TIMEOUT);
@@ -1312,7 +1375,7 @@ public class Channel implements Closeable {
 	public MediaStatus stopMedia(
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
-		long mediaSessionId,
+		int mediaSessionId,
 		boolean synchronous,
 		long responseTimeout
 	) throws IOException {
@@ -1360,7 +1423,7 @@ public class Channel implements Closeable {
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
 		@Nonnull String sessionId,
-		long mediaSessionId,
+		int mediaSessionId,
 		@Nonnull MediaVolume volume,
 		boolean synchronous
 	) throws IOException {
@@ -1410,7 +1473,7 @@ public class Channel implements Closeable {
 		@Nonnull String senderId,
 		@Nonnull String destinationId,
 		@Nonnull String sessionId,
-		long mediaSessionId,
+		int mediaSessionId,
 		@Nonnull MediaVolume volume,
 		boolean synchronous,
 		long responseTimeout
