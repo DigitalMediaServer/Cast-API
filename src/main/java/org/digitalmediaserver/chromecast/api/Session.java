@@ -22,7 +22,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
-import org.digitalmediaserver.chromecast.api.Media.MediaBuilder;
 import org.digitalmediaserver.chromecast.api.StandardRequest.ResumeState;
 
 
@@ -42,9 +41,9 @@ import org.digitalmediaserver.chromecast.api.StandardRequest.ResumeState;
 @ThreadSafe
 public class Session {
 
-	/** The sender ID used by this {@link Session} */
+	/** The source ID used by this {@link Session} */
 	@Nonnull
-	protected final String senderId;
+	protected final String sourceId;
 
 	/** The session ID used by this {@link Session} */
 	@Nonnull
@@ -70,33 +69,33 @@ public class Session {
 	/**
 	 * Creates a new instance using the specified parameters.
 	 *
-	 * @param senderId the sender ID to use.
+	 * @param sourceId the source ID to use.
 	 * @param sessionId the session ID to use.
 	 * @param destinationId the destination ID to use.
 	 * @param channel the {@link Channel} to use.
 	 */
 	public Session(
-		@Nonnull String senderId,
+		@Nonnull String sourceId,
 		@Nonnull String sessionId,
 		@Nonnull String destinationId,
 		@Nonnull Channel channel
 	) {
-		Util.requireNotBlank(senderId, "senderId");
+		Util.requireNotBlank(sourceId, "sourceId");
 		Util.requireNotBlank(sessionId, "sessionId");
 		Util.requireNotBlank(destinationId, "destinationId");
 		Util.requireNotNull(channel, "channel");
-		this.senderId = senderId;
+		this.sourceId = sourceId;
 		this.id = sessionId;
 		this.destinationId = destinationId;
 		this.channel = channel;
 	}
 
 	/**
-	 * @return The sender ID used by this {@link Session}.
+	 * @return The source ID used by this {@link Session}.
 	 */
 	@Nonnull
-	public String getSenderId() {
-		return senderId;
+	public String getSourceId() {
+		return sourceId;
 	}
 
 	/**
@@ -157,7 +156,7 @@ public class Session {
 	}
 
 //	/**
-//	 * Asks the remote application to load the specified {@link Media} using the
+//	 * Asks the remote application to load the specified {@link Media} using the //TODO: (Nad) Figure out
 //	 * specified parameters and {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the
 //	 * timeout value.
 //	 * <p>
@@ -189,7 +188,7 @@ public class Session {
 //		boolean synchronous
 //	) throws IOException {
 //		return channel.load(
-//			senderId,
+//			sourceId,
 //			destinationId,
 //			id,
 //			mediaBuilder == null ? null : mediaBuilder.build(),
@@ -236,7 +235,7 @@ public class Session {
 //		long responseTimeout
 //	) throws IOException {
 //		return channel.load(
-//			senderId,
+//			sourceId,
 //			destinationId,
 //			id,
 //			mediaBuilder == null ? null : mediaBuilder.build(),
@@ -279,7 +278,7 @@ public class Session {
 //		double currentTime,
 //		boolean synchronous
 //	) throws IOException {
-//		return channel.load(senderId, destinationId, id, media, autoplay, currentTime, synchronous, null);
+//		return channel.load(sourceId, destinationId, id, media, autoplay, currentTime, synchronous, null);
 //	}
 //
 //	/**
@@ -317,7 +316,7 @@ public class Session {
 //		long responseTimeout
 //	) throws IOException {
 //		return channel.load(
-//			senderId,
+//			sourceId,
 //			destinationId,
 //			id,
 //			media,
@@ -363,7 +362,7 @@ public class Session {
 //		boolean synchronous,
 //		Map<String, Object> customData
 //	) throws IOException {
-//		return channel.load(senderId, destinationId, id, media, autoplay, currentTime, synchronous, customData);
+//		return channel.load(sourceId, destinationId, id, media, autoplay, currentTime, synchronous, customData);
 //	}
 
 	/**
@@ -404,8 +403,7 @@ public class Session {
 		long responseTimeout
 	) throws IOException {
 		return channel.load(
-			senderId,
-			destinationId,
+			this,
 			autoplay,
 			currentTime,
 			media,
@@ -431,8 +429,7 @@ public class Session {
 		long responseTimeout
 	) throws IOException {
 		return channel.load(
-			senderId,
-			destinationId,
+			this,
 			activeTrackIds,
 			autoplay,
 			credentials,
@@ -469,7 +466,7 @@ public class Session {
 	 */
 	@Nullable
 	public MediaStatus play(int mediaSessionId, boolean synchronous) throws IOException {
-		return channel.play(senderId, destinationId, id, mediaSessionId, synchronous);
+		return channel.play(this, mediaSessionId, synchronous);
 	}
 
 	/**
@@ -495,7 +492,7 @@ public class Session {
 	 */
 	@Nullable
 	public MediaStatus play(int mediaSessionId, boolean synchronous, long responseTimeout) throws IOException {
-		return channel.play(senderId, destinationId, id, mediaSessionId, synchronous, responseTimeout);
+		return channel.play(this, mediaSessionId, synchronous, responseTimeout);
 	}
 
 	/**
@@ -519,7 +516,7 @@ public class Session {
 	 */
 	@Nullable
 	public MediaStatus pause(int mediaSessionId, boolean synchronous) throws IOException {
-		return channel.pause(senderId, destinationId, id, mediaSessionId, synchronous);
+		return channel.pause(this, mediaSessionId, synchronous);
 	}
 
 	/**
@@ -545,7 +542,7 @@ public class Session {
 	 */
 	@Nullable
 	public MediaStatus pause(int mediaSessionId, boolean synchronous, long responseTimeout) throws IOException {
-		return channel.pause(senderId, destinationId, id, mediaSessionId, synchronous, responseTimeout);
+		return channel.pause(this, mediaSessionId, synchronous, responseTimeout);
 	}
 
 	/**
@@ -578,7 +575,7 @@ public class Session {
 		@Nullable ResumeState resumeState,
 		boolean synchronous
 	) throws IOException {
-		return channel.seek(senderId, destinationId, id, mediaSessionId, currentTime, resumeState, synchronous);
+		return channel.seek(this, mediaSessionId, currentTime, resumeState, synchronous);
 	}
 
 	/**
@@ -615,9 +612,7 @@ public class Session {
 		long responseTimeout
 	) throws IOException {
 		return channel.seek(
-			senderId,
-			destinationId,
-			id,
+			this,
 			mediaSessionId,
 			currentTime,
 			resumeState,
@@ -647,7 +642,7 @@ public class Session {
 	 */
 	@Nullable
 	public MediaStatus stop(int mediaSessionId, boolean synchronous) throws IOException {
-		return channel.stopMedia(senderId, destinationId, mediaSessionId, synchronous);
+		return channel.stopMedia(this, mediaSessionId, synchronous);
 	}
 
 	/**
@@ -673,7 +668,7 @@ public class Session {
 	 */
 	@Nullable
 	public MediaStatus stop(int mediaSessionId, boolean synchronous, long responseTimeout) throws IOException {
-		return channel.stopMedia(senderId, destinationId, mediaSessionId, synchronous, responseTimeout);
+		return channel.stopMedia(this, mediaSessionId, synchronous, responseTimeout);
 	}
 
 	/**
@@ -704,7 +699,7 @@ public class Session {
 		@Nonnull MediaVolume volume,
 		boolean synchronous
 	) throws IOException {
-		return channel.setMediaVolume(senderId, destinationId, id, mediaSessionId, volume, synchronous);
+		return channel.setMediaVolume(this, mediaSessionId, volume, synchronous);
 	}
 
 	/**
@@ -720,7 +715,7 @@ public class Session {
 	 */
 	@Nullable
 	public MediaStatus getMediaStatus() throws IOException {
-		return channel.getMediaStatus(senderId, destinationId);
+		return channel.getMediaStatus(this);
 	}
 
 	/**
@@ -739,7 +734,7 @@ public class Session {
 	 */
 	@Nullable
 	public MediaStatus getMediaStatus(long responseTimeout) throws IOException {
-		return channel.getMediaStatus(senderId, destinationId, responseTimeout);
+		return channel.getMediaStatus(this, responseTimeout);
 	}
 
 	/**
@@ -749,8 +744,8 @@ public class Session {
 	 * @param <T> the class of the {@link Response} object.
 	 * @param namespace the namespace to use.
 	 * @param request the {@link Request} to send.
-	 * @param responseClass the response class to to block and wait for or
-	 *            {@code null} to return immediately.
+	 * @param responseClass the response class to to block and wait for a
+	 *            response or {@code null} to return immediately.
 	 * @return The {@link Response} if the response is received in time, or
 	 *         {@code null} if the {@code responseClass} is {@code null} or a
 	 *         timeout occurs.
@@ -761,15 +756,15 @@ public class Session {
 		Request request,
 		Class<T> responseClass
 	) throws IOException {
-		return channel.sendGenericRequest(senderId, destinationId, namespace, request, responseClass);
+		return channel.sendGenericRequest(this, namespace, request, responseClass);
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
 		builder.append(getClass().getSimpleName()).append(" [");
-		if (senderId != null) {
-			builder.append("senderId=").append(senderId).append(", ");
+		if (sourceId != null) {
+			builder.append("sourceId=").append(sourceId).append(", ");
 		}
 		if (id != null) {
 			builder.append("id=").append(id).append(", ");
