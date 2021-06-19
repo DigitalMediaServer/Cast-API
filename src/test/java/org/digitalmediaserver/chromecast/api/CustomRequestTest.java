@@ -130,6 +130,7 @@ public class CustomRequestTest {
 			}
 		};
 		KioskStatusResponse response = cast.channel().send(
+			null,
 			"urn:x-cast:de.michaelkuerbis.kiosk",
 			new KioskStatusRequest(),
 			"sender-0",

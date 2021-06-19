@@ -102,7 +102,8 @@ public class Track {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final String subtype;
+	private final Integer subtype;
+//	private final String subtype;
 
 	/**
 	 * It can be the URL of the track or any other identifier that allows the
@@ -182,7 +183,8 @@ public class Track {
 		@JsonProperty("language") String language,
 		@JsonProperty("name") String name,
 		@JsonProperty("roles") List<String> roles,
-		@JsonProperty("subtype") String subtype,
+		@JsonProperty("subtype") Integer subtype,
+//		@JsonProperty("subtype") String subtype,
 		@JsonProperty("trackContentId") String trackContentId,
 		@JsonProperty("trackContentType") String trackContentType,
 		@JsonProperty("trackId") int trackId,
@@ -268,7 +270,8 @@ public class Track {
 	 * @return The type of text track. For text tracks only.
 	 */
 	@Nullable
-	public String getSubtype() {
+	public Integer getSubtype() {
+//	public String getSubtype() {
 		return subtype;
 	}
 

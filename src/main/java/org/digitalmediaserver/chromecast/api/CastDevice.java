@@ -777,7 +777,7 @@ public class CastDevice {
 	 * unless one already exists, in which case the existing {@link Session} is
 	 * returned.
 	 *
-	 * @param senderId the sender ID to use.
+	 * @param sourceId the source ID to use.
 	 * @param application the {@link Application} to connect to.
 	 * @return The existing or new {@link Session}.
 	 * @throws SocketException If the {@link Channel} is closed and
@@ -785,10 +785,10 @@ public class CastDevice {
 	 * @throws IOException If an error occurs during the operation.
 	 */
 	public Session startSession(
-		@Nonnull String senderId,
+		@Nonnull String sourceId,
 		@Nonnull Application application
 	) throws IOException {
-		return channel().startSession(senderId, application, null, VirtualConnectionType.STRONG);
+		return channel().startSession(sourceId, application, null, VirtualConnectionType.STRONG);
 	}
 
 	/**
@@ -796,7 +796,7 @@ public class CastDevice {
 	 * unless one already exists, in which case the existing {@link Session} is
 	 * returned.
 	 *
-	 * @param senderId the sender ID to use.
+	 * @param sourceId the source ID to use.
 	 * @param application the {@link Application} to connect to.
 	 * @param userAgent the user-agent String or {@code null}. It's not entirely
 	 *            clear what this is used for other than reporting to Google, so
@@ -810,12 +810,12 @@ public class CastDevice {
 	 * @throws IOException If an error occurs during the operation.
 	 */
 	public Session startSession(
-		@Nonnull String senderId,
+		@Nonnull String sourceId,
 		@Nonnull Application application,
 		@Nullable String userAgent,
 		@Nonnull VirtualConnectionType connectionType
 	) throws IOException {
-		return channel().startSession(senderId, application, userAgent, connectionType);
+		return channel().startSession(sourceId, application, userAgent, connectionType);
 	}
 
 	/**
@@ -888,6 +888,78 @@ public class CastDevice {
 			return;
 		}
 		channel().setVolume(volume);
+	}
+
+	/**
+	 * Sends the specified {@link Request} with the specified namespace using
+	 * the specified source and destination IDs and
+	 * {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the timeout value. This is
+	 * for requests that aren't associated with a {@link Session}.
+	 *
+	 * @param <T> the class of the {@link Response} object.
+	 * @param sourceId the source ID to use.
+	 * @param destinationId the destination ID to use.
+	 * @param namespace the namespace to use.
+	 * @param request the {@link Request} to send.
+	 * @param responseClass the response class to to block and wait for a
+	 *            response or {@code null} to return immediately.
+	 * @return The {@link Response} if the response is received in time, or
+	 *         {@code null} if the {@code responseClass} is {@code null} or a
+	 *         timeout occurs.
+	 * @throws IllegalArgumentException If {@code namespace} is {@code null} or
+	 *             invalid (see {@link #validateNamespace(String)} for
+	 *             constraints).
+	 * @throws IOException If an error occurs during the operation.
+	 */
+	public <T extends Response> T sendGenericRequest(
+		@Nonnull String sourceId,
+		@Nonnull String destinationId,
+		@Nonnull String namespace,
+		Request request,
+		Class<T> responseClass
+	) throws IOException {
+		return channel().sendGenericRequest(sourceId, destinationId, namespace, request, responseClass);
+	}
+
+	/**
+	 * Sends the specified {@link Request} with the specified namespace using
+	 * the specified source and destination IDs. This is for requests that
+	 * aren't associated with a {@link Session}.
+	 *
+	 * @param <T> the class of the {@link Response} object.
+	 * @param sourceId the source ID to use.
+	 * @param destinationId the destination ID to use.
+	 * @param namespace the namespace to use.
+	 * @param request the {@link Request} to send.
+	 * @param responseClass the response class to to block and wait for a
+	 *            response or {@code null} to return immediately.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code responseClass} is non-{@code null}. If zero or
+	 *            negative, {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The {@link Response} if the response is received in time, or
+	 *         {@code null} if the {@code responseClass} is {@code null} or a
+	 *         timeout occurs.
+	 * @throws IllegalArgumentException If {@code namespace} is {@code null} or
+	 *             invalid (see {@link #validateNamespace(String)} for
+	 *             constraints).
+	 * @throws IOException If an error occurs during the operation.
+	 */
+	public <T extends Response> T sendGenericRequest(
+		@Nonnull String sourceId,
+		@Nonnull String destinationId,
+		@Nonnull String namespace,
+		Request request,
+		Class<T> responseClass,
+		long responseTimeout
+	) throws IOException {
+		return channel().sendGenericRequest(
+			sourceId,
+			destinationId,
+			namespace,
+			request,
+			responseClass,
+			responseTimeout
+		);
 	}
 
 	/**

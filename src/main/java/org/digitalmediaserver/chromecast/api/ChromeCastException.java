@@ -25,7 +25,7 @@ import org.digitalmediaserver.chromecast.api.StandardResponse.ErrorResponse;
  * Generic error, which may happen during interaction with ChromeCast device.
  * Contains some descriptive message.
  */
-public class ChromeCastException extends IOException {
+public class ChromeCastException extends IOException { //TODO: (Nad) Rename
 
 	private static final long serialVersionUID = 1L;
 
