@@ -77,11 +77,11 @@ public class TextTrackStyle {
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private final TextTrackFontGenericFamily fontGenericFamily;
 
-	/** The font scaling factor for the text track (the default is 1) */
+	/** The font scaling factor for the text track (the default is 1.0) */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Integer fontScale;
+	private final Double fontScale;
 
 	/** The text track font style */
 	@Nullable
@@ -126,6 +126,48 @@ public class TextTrackStyle {
 	/**
 	 * Creates a new instance using the specific parameters.
 	 *
+	 * @param foregroundColor the foreground 32 bit RGBA color.
+	 * @param backgroundColor the background 32 bit RGBA color. The alpha
+	 *            channel should be used for transparent backgrounds.
+	 * @param edgeType the type of edge.
+	 * @param edgeColor the RGBA color for the edge, this value will be ignored
+	 *            if {@code edgeType} is {@link TextTrackEdgeType#NONE}.
+	 * @param fontFamily the font family. If the font is not available in the
+	 *            receiver the {@code fontGenericFamily} will be used.
+	 * @param fontGenericFamily the text track generic font family.
+	 * @param fontScale the font scaling factor for the text track (the default
+	 *            is 1.0).
+	 * @param fontStyle the text track font style.
+	 */
+	public TextTrackStyle(
+		@Nullable String foregroundColor,
+		@Nullable String backgroundColor,
+		@Nullable TextTrackEdgeType edgeType,
+		@Nullable String edgeColor,
+		@Nullable String fontFamily,
+		@Nullable TextTrackFontGenericFamily fontGenericFamily,
+		@Nullable Double fontScale,
+		@Nullable TextTrackFontStyle fontStyle
+	) {
+		this(
+			backgroundColor,
+			null,
+			edgeColor,
+			edgeType,
+			fontFamily,
+			fontGenericFamily,
+			fontScale,
+			fontStyle,
+			foregroundColor,
+			null,
+			null,
+			null
+		);
+	}
+
+	/**
+	 * Creates a new instance using the specific parameters.
+	 *
 	 * @param backgroundColor the background 32 bit RGBA color. The alpha
 	 *            channel should be used for transparent backgrounds.
 	 * @param customData the custom data set by the receiver application.
@@ -136,7 +178,7 @@ public class TextTrackStyle {
 	 *            receiver the {@code fontGenericFamily} will be used.
 	 * @param fontGenericFamily the text track generic font family.
 	 * @param fontScale the font scaling factor for the text track (the default
-	 *            is 1).
+	 *            is 1.0).
 	 * @param fontStyle the text track font style.
 	 * @param foregroundColor the foreground 32 bit RGBA color.
 	 * @param windowColor the 32 bit RGBA color for the window. This value will
@@ -150,18 +192,18 @@ public class TextTrackStyle {
 	 *            CEA-608 and CEA-708. In WebVTT it is called a region.
 	 */
 	public TextTrackStyle(
-		@JsonProperty("backgroundColor") String backgroundColor,
-		@JsonProperty("customData") Map<String, Object> customData,
-		@JsonProperty("edgeColor") String edgeColor,
-		@JsonProperty("edgeType") TextTrackEdgeType edgeType,
-		@JsonProperty("fontFamily") String fontFamily,
-		@JsonProperty("fontGenericFamily") TextTrackFontGenericFamily fontGenericFamily,
-		@JsonProperty("fontScale") Integer fontScale,
-		@JsonProperty("fontStyle") TextTrackFontStyle fontStyle,
-		@JsonProperty("foregroundColor") String foregroundColor,
-		@JsonProperty("windowColor") String windowColor,
-		@JsonProperty("windowRoundedCornerRadius") Integer windowRoundedCornerRadius,
-		@JsonProperty("windowType") TextTrackWindowType windowType
+		@JsonProperty("backgroundColor") @Nullable String backgroundColor,
+		@JsonProperty("customData") @Nullable Map<String, Object> customData,
+		@JsonProperty("edgeColor") @Nullable String edgeColor,
+		@JsonProperty("edgeType") @Nullable TextTrackEdgeType edgeType,
+		@JsonProperty("fontFamily") @Nullable String fontFamily,
+		@JsonProperty("fontGenericFamily") @Nullable TextTrackFontGenericFamily fontGenericFamily,
+		@JsonProperty("fontScale") @Nullable Double fontScale,
+		@JsonProperty("fontStyle") @Nullable TextTrackFontStyle fontStyle,
+		@JsonProperty("foregroundColor") @Nullable String foregroundColor,
+		@JsonProperty("windowColor") @Nullable String windowColor,
+		@JsonProperty("windowRoundedCornerRadius") @Nullable Integer windowRoundedCornerRadius,
+		@JsonProperty("windowType") @Nullable TextTrackWindowType windowType
 	) {
 		this.backgroundColor = backgroundColor;
 		if (customData == null || customData.isEmpty()) {
@@ -234,10 +276,10 @@ public class TextTrackStyle {
 
 	/**
 	 * @return The The font scaling factor for the text track (the default is
-	 *         1).
+	 *         1.0).
 	 */
 	@Nullable
-	public Integer getFontScale() {
+	public Double getFontScale() {
 		return fontScale;
 	}
 
