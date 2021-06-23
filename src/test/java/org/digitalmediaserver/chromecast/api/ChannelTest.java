@@ -16,6 +16,7 @@
 package org.digitalmediaserver.chromecast.api;
 
 import static org.junit.Assert.*;
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -32,7 +33,7 @@ import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListener;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListenerList;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 import org.digitalmediaserver.chromecast.api.CastEvent.SimpleCastEventListenerList;
-import org.digitalmediaserver.chromecast.api.Channel.StringMessageHandler;
+import org.digitalmediaserver.chromecast.api.Channel.InputHandler;
 import org.digitalmediaserver.chromecast.api.ImmutableCastMessage.ImmutableStringCastMessage;
 import org.digitalmediaserver.chromecast.api.Media.StreamType;
 import org.digitalmediaserver.chromecast.api.MediaStatus.IdleReason;
@@ -72,10 +73,8 @@ public class ChannelTest {
 				FixtureHelper.fixtureAsString("/mediaStatus-single.json").replaceFirst("\"type\"", "\"responseType\"")
 			)
 			.build();
-		StringMessageHandler handler = channel.new StringMessageHandler(
-			(ImmutableStringCastMessage) ImmutableCastMessage.create(message)
-		);
-		handler.run();
+		InputHandler handler = channel.new InputHandler(new ByteArrayInputStream(new byte[0]));
+		handler.processStringMessage((ImmutableStringCastMessage) ImmutableCastMessage.create(message), message.getPayloadUtf8());
 		assertEquals(1, events.size());
 		CastEvent<?> event = events.get(0);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
@@ -125,8 +124,7 @@ public class ChannelTest {
 			.fixtureAsString("/mediaStatus-audio-with-extraStatus.json")
 			.replaceFirst("\"type\"", "\"responseType\"")
 		).build();
-		handler = channel.new StringMessageHandler((ImmutableStringCastMessage) ImmutableCastMessage.create(message));
-		handler.run();
+		handler.processStringMessage((ImmutableStringCastMessage) ImmutableCastMessage.create(message), message.getPayloadUtf8());
 		assertEquals(2, events.size());
 		event = events.get(1);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
@@ -169,8 +167,7 @@ public class ChannelTest {
 		message = message.toBuilder().setPayloadUtf8(
 			FixtureHelper.fixtureAsString("/mediaStatus-chromecast-audio.json").replaceFirst("\"type\"", "\"responseType\"")
 		).build();
-		handler = channel.new StringMessageHandler((ImmutableStringCastMessage) ImmutableCastMessage.create(message));
-		handler.run();
+		handler.processStringMessage((ImmutableStringCastMessage) ImmutableCastMessage.create(message), message.getPayloadUtf8());
 		assertEquals(3, events.size());
 		event = events.get(2);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
@@ -229,8 +226,7 @@ public class ChannelTest {
 		message = message.toBuilder().setPayloadUtf8(
 			FixtureHelper.fixtureAsString("/mediaStatus-no-metadataType.json").replaceFirst("\"type\"", "\"responseType\"")
 		).build();
-		handler = channel.new StringMessageHandler((ImmutableStringCastMessage) ImmutableCastMessage.create(message));
-		handler.run();
+		handler.processStringMessage((ImmutableStringCastMessage) ImmutableCastMessage.create(message), message.getPayloadUtf8());
 		assertEquals(4, events.size());
 		event = events.get(3);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
@@ -313,8 +309,7 @@ public class ChannelTest {
 		message = message.toBuilder().setPayloadUtf8(
 			FixtureHelper.fixtureAsString("/mediaStatus-pandora.json").replaceFirst("\"type\"", "\"responseType\"")
 		).build();
-		handler = channel.new StringMessageHandler((ImmutableStringCastMessage) ImmutableCastMessage.create(message));
-		handler.run();
+		handler.processStringMessage((ImmutableStringCastMessage) ImmutableCastMessage.create(message), message.getPayloadUtf8());
 		assertEquals(5, events.size());
 		event = events.get(4);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
@@ -394,8 +389,7 @@ public class ChannelTest {
 		message = message.toBuilder().setPayloadUtf8(
 			FixtureHelper.fixtureAsString("/mediaStatus-unknown-metadataType.json").replaceFirst("\"type\"", "\"responseType\"")
 		).build();
-		handler = channel.new StringMessageHandler((ImmutableStringCastMessage) ImmutableCastMessage.create(message));
-		handler.run();
+		handler.processStringMessage((ImmutableStringCastMessage) ImmutableCastMessage.create(message), message.getPayloadUtf8());
 		assertEquals(6, events.size());
 		event = events.get(5);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
@@ -477,8 +471,7 @@ public class ChannelTest {
 		message = message.toBuilder().setPayloadUtf8(
 			FixtureHelper.fixtureAsString("/mediaStatus-with-idleReason.json").replaceFirst("\"type\"", "\"responseType\"")
 		).build();
-		handler = channel.new StringMessageHandler((ImmutableStringCastMessage) ImmutableCastMessage.create(message));
-		handler.run();
+		handler.processStringMessage((ImmutableStringCastMessage) ImmutableCastMessage.create(message), message.getPayloadUtf8());
 		assertEquals(7, events.size());
 		event = events.get(6);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
@@ -520,8 +513,7 @@ public class ChannelTest {
 		message = message.toBuilder().setPayloadUtf8(
 			FixtureHelper.fixtureAsString("/mediaStatus-without-idleReason.json").replaceFirst("\"type\"", "\"responseType\"")
 		).build();
-		handler = channel.new StringMessageHandler((ImmutableStringCastMessage) ImmutableCastMessage.create(message));
-		handler.run();
+		handler.processStringMessage((ImmutableStringCastMessage) ImmutableCastMessage.create(message), message.getPayloadUtf8());
 		assertEquals(8, events.size());
 		event = events.get(7);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
@@ -563,8 +555,7 @@ public class ChannelTest {
 		message = message.toBuilder().setPayloadUtf8(
 			FixtureHelper.fixtureAsString("/mediaStatus-with-videoinfo.json").replaceFirst("\"type\"", "\"responseType\"")
 		).build();
-		handler = channel.new StringMessageHandler((ImmutableStringCastMessage) ImmutableCastMessage.create(message));
-		handler.run();
+		handler.processStringMessage((ImmutableStringCastMessage) ImmutableCastMessage.create(message), message.getPayloadUtf8());
 		assertEquals(9, events.size());
 		event = events.get(8);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
@@ -616,8 +607,7 @@ public class ChannelTest {
 		message = message.toBuilder().setPayloadUtf8(
 			FixtureHelper.fixtureAsString("/mediaStatuses.json").replaceFirst("\"type\"", "\"responseType\"")
 		).build();
-		handler = channel.new StringMessageHandler((ImmutableStringCastMessage) ImmutableCastMessage.create(message));
-		handler.run();
+		handler.processStringMessage((ImmutableStringCastMessage) ImmutableCastMessage.create(message), message.getPayloadUtf8());
 		assertEquals(10, events.size());
 		event = events.get(9);
 		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
@@ -698,8 +688,7 @@ public class ChannelTest {
 		message = message.toBuilder().setPayloadUtf8(
 			FixtureHelper.fixtureAsString("/timetick.json").replaceFirst("\"type\"", "\"responseType\"")
 		).build();
-		handler = channel.new StringMessageHandler((ImmutableStringCastMessage) ImmutableCastMessage.create(message));
-		handler.run();
+		handler.processStringMessage((ImmutableStringCastMessage) ImmutableCastMessage.create(message), message.getPayloadUtf8());
 		assertEquals(11, events.size());
 		event = events.get(10);
 		assertEquals(CastEventType.CUSTOM_MESSAGE, event.getEventType());
@@ -717,8 +706,7 @@ public class ChannelTest {
 			.setNamespace("urn:x-cast:com.example.app")
 			.setPayloadUtf8(jsonMapper.writeValueAsString(customMessage))
 			.build();
-		handler = channel.new StringMessageHandler((ImmutableStringCastMessage) ImmutableCastMessage.create(message));
-		handler.run();
+		handler.processStringMessage((ImmutableStringCastMessage) ImmutableCastMessage.create(message), message.getPayloadUtf8());
 		assertEquals(12, events.size());
 		event = events.get(11);
 		assertEquals(CastEventType.CUSTOM_MESSAGE, event.getEventType());
@@ -731,8 +719,7 @@ public class ChannelTest {
 		Volume deviceVolume = new Volume(VolumeControlType.ATTENUATION, 123d, false, 0.05);
 		ReceiverStatusResponse receiverStatus = new ReceiverStatusResponse(0L, new ReceiverStatus(deviceVolume, null, false, false));
 		message = message.toBuilder().setPayloadUtf8(jsonMapper.writeValueAsString(receiverStatus)).build();
-		handler = channel.new StringMessageHandler((ImmutableStringCastMessage) ImmutableCastMessage.create(message));
-		handler.run();
+		handler.processStringMessage((ImmutableStringCastMessage) ImmutableCastMessage.create(message), message.getPayloadUtf8());
 		assertEquals(13, events.size());
 		event = events.get(12);
 		assertEquals(CastEventType.RECEIVER_STATUS, event.getEventType());

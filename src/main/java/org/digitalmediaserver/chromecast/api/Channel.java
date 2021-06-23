@@ -42,13 +42,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.Executor;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -133,10 +127,6 @@ public class Channel implements Closeable {
 	 */
 	protected static final JsonSubTypes.Type[] STANDARD_RESPONSE_TYPES =
 		StandardResponse.class.getAnnotation(JsonSubTypes.class).value();
-
-	/** The {@link Executor} that is used for asynchronous operations */
-	@Nonnull
-	protected static final Executor EXECUTOR = createExecutor();
 
 	/** The registered {@link CastEventListener}s */
 	@Nonnull
@@ -399,16 +389,7 @@ public class Channel implements Closeable {
 		}
 
 		// Send connect event
-		if (!listeners.isEmpty()) {
-			EXECUTOR.execute(new Runnable() {
-
-				@Override
-				public void run() {
-					listeners.fire(new DefaultCastEvent<>(CastEventType.CONNECTED, Boolean.TRUE));
-				}
-			});
-		}
-
+		listeners.fire(new DefaultCastEvent<>(CastEventType.CONNECTED, Boolean.TRUE));
 		return true;
 	}
 
@@ -459,15 +440,7 @@ public class Channel implements Closeable {
 		}
 
 		// Send disconnect event
-		if (!listeners.isEmpty()) {
-			EXECUTOR.execute(new Runnable() {
-
-				@Override
-				public void run() {
-					listeners.fire(new DefaultCastEvent<>(CastEventType.CONNECTED, Boolean.FALSE));
-				}
-			});
-		}
+		listeners.fire(new DefaultCastEvent<>(CastEventType.CONNECTED, Boolean.FALSE));
 	}
 
 	/**
@@ -1947,29 +1920,6 @@ public class Channel implements Closeable {
 	}
 
 	/**
-	 * @return The new {@link Executor}.
-	 */
-	protected static Executor createExecutor() {
-		ThreadPoolExecutor result = new ThreadPoolExecutor(
-			0,
-			Integer.MAX_VALUE,
-			300L,
-			TimeUnit.SECONDS,
-			new SynchronousQueue<Runnable>(true),
-			new ThreadFactory() {
-
-				private final AtomicInteger threadNumber = new AtomicInteger(1);
-
-				@Override
-				public Thread newThread(Runnable r) {
-					return new Thread(r, "ChromeCast API worker #" + threadNumber.getAndIncrement());
-				}
-			}
-		);
-		return result;
-	}
-
-	/**
 	 * A {@link TimerTask} that will send {@code PING} messages to the cast
 	 * device upon execution.
 	 *
@@ -2205,7 +2155,7 @@ public class Channel implements Closeable {
 							remoteName,
 							jsonMessage
 						);
-						EXECUTOR.execute(new StringMessageHandler((ImmutableStringCastMessage) message));
+						processStringMessage((ImmutableStringCastMessage) message, jsonMessage);
 					} else if (message != null) {
 						LOGGER.trace(
 							CHROMECAST_API_MARKER,
@@ -2215,7 +2165,12 @@ public class Channel implements Closeable {
 								"unknown number of" :
 								((ImmutableBinaryCastMessage) message).getPayload().size()
 						);
-						EXECUTOR.execute(new BinaryMessageHandler((ImmutableBinaryCastMessage) message));
+						listeners.fire(new DefaultCastEvent<>(CastEventType.CUSTOM_MESSAGE, new CustomMessageEvent(
+							message.getSourceId(),
+							message.getDestinationId(),
+							message.getNamespace(),
+							((ImmutableBinaryCastMessage) message).getPayload()
+						)));
 					} else {
 						LOGGER.warn(
 							CHROMECAST_API_MARKER,
@@ -2262,45 +2217,13 @@ public class Channel implements Closeable {
 		}
 
 		/**
-		 * Tells this {@link InputHandler} to stop processing and shut down.
-		 */
-		public void stopProcessing() {
-			running = false;
-		}
-	}
-
-	/**
-	 * A {@link Runnable} implementation for processing a single incoming
-	 * string-based message.
-	 *
-	 * @author Nadahar
-	 */
-	protected class StringMessageHandler implements Runnable {
-
-		/** The message to process */
-		@Nonnull
-		protected final ImmutableStringCastMessage message;
-
-		/** The string payload of the message */
-		@Nonnull
-		protected final String jsonMessage;
-
-		/**
-		 * Creates a new handler for a single string-based message.
+		 * Processes a single incoming string-based message from the specified
+		 * parameters.
 		 *
-		 * @param message the message to process.
-		 * @throws IllegalArgumentException If {@code message} is {@code null}
-		 *             or the string payload is blank.
+		 * @param message the {@link ImmutableStringCastMessage} to process.
+		 * @param jsonMessage the adapted string payload to use.
 		 */
-		public StringMessageHandler(@Nonnull ImmutableStringCastMessage message) {
-			requireNotNull(message, "message");
-			this.message = message;
-			this.jsonMessage = message.getPayload().replaceFirst("\"type\"", "\"responseType\"");
-			requireNotBlank(jsonMessage, "jsonMessage");
-		}
-
-		@Override
-		public void run() {
+		protected void processStringMessage(@Nonnull ImmutableStringCastMessage message, @Nonnull String jsonMessage) {
 			try {
 				JsonNode parsedMessage = jsonMapper.readTree(jsonMessage);
 				String responseType;
@@ -2419,25 +2342,12 @@ public class Channel implements Closeable {
 				LOGGER.trace(CHROMECAST_API_MARKER, "", e);
 			}
 		}
-	}
 
-	protected class BinaryMessageHandler implements Runnable {
-
-		protected final ImmutableBinaryCastMessage message;
-
-		public BinaryMessageHandler(@Nonnull ImmutableBinaryCastMessage message) {
-			requireNotNull(message, "message");
-			this.message = message;
-		}
-
-		@Override
-		public void run() {
-			listeners.fire(new DefaultCastEvent<>(CastEventType.CUSTOM_MESSAGE, new CustomMessageEvent(
-				message.getSourceId(),
-				message.getDestinationId(),
-				message.getNamespace(),
-				message.getPayload()
-			)));
+		/**
+		 * Tells this {@link InputHandler} to stop processing and shut down.
+		 */
+		public void stopProcessing() {
+			running = false;
 		}
 	}
 
