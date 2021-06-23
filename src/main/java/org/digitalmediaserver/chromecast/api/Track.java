@@ -53,7 +53,7 @@ public class Track {
 	@Nonnull
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	private final Map<String, Object> customData;
+	protected final Map<String, Object> customData;
 
 	/**
 	 * Indicate track is in-band and not side-loaded track. Relevant only for
@@ -62,22 +62,22 @@ public class Track {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Boolean isInband;
+	protected final Boolean isInband;
 
 	/**
-	 * Language tag as per RFC 5646 (If {@code subtype} is “SUBTITLES” it is
-	 * mandatory)
+	 * Language tag as per RFC 5646 (If {@code subtype} is
+	 * {@link TrackSubType#SUBTITLES} it is mandatory)
 	 */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final String language;
+	protected final String language;
 
 	/** A descriptive, human-readable name for the track. For example "Spanish" */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final String name;
+	protected final String name;
 
 	/**
 	 * The role(s) of the track. The following values for each media type are
@@ -96,14 +96,13 @@ public class Track {
 	@Nonnull
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	private final List<String> roles;
+	protected final List<String> roles;
 
 	/** For text tracks, the type of text track */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Integer subtype;
-//	private final String subtype;
+	protected final TrackSubType subtype;
 
 	/**
 	 * It can be the URL of the track or any other identifier that allows the
@@ -113,7 +112,7 @@ public class Track {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final String trackContentId;
+	protected final String trackContentId;
 
 	/**
 	 * It represents the MIME-type of the track content. For example if the
@@ -130,19 +129,19 @@ public class Track {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final String trackContentType;
+	protected final String trackContentType;
 
 	/**
 	 * Unique identifier of the track within the context of a
 	 * {@code MediaInformation} object
 	 */
 	@JsonProperty
-	private final int trackId;
+	protected final int trackId;
 
 	/** The type of track */
 	@Nonnull
 	@JsonProperty
-	private final TrackType type;
+	protected final TrackType type;
 
 	/**
 	 * Creates a new instance using the specified parameters.
@@ -183,8 +182,7 @@ public class Track {
 		@JsonProperty("language") String language,
 		@JsonProperty("name") String name,
 		@JsonProperty("roles") List<String> roles,
-		@JsonProperty("subtype") Integer subtype,
-//		@JsonProperty("subtype") String subtype,
+		@JsonProperty("subtype") TrackSubType subtype,
 		@JsonProperty("trackContentId") String trackContentId,
 		@JsonProperty("trackContentType") String trackContentType,
 		@JsonProperty("trackId") int trackId,
@@ -270,8 +268,7 @@ public class Track {
 	 * @return The type of text track. For text tracks only.
 	 */
 	@Nullable
-	public Integer getSubtype() {
-//	public String getSubtype() {
+	public TrackSubType getSubtype() {
 		return subtype;
 	}
 
@@ -402,4 +399,24 @@ public class Track {
 		VIDEO
 	}
 
+	/**
+	 * The type of text track. For text tracks only.
+	 */
+	public enum TrackSubType {
+
+		/** Subtitles track */
+		SUBTITLES,
+
+		/** Captions track */
+		CAPTIONS,
+
+		/** Descriptions track */
+		DESCRIPTIONS,
+
+		/** Chapters track */
+		CHAPTERS,
+
+		/** Metadata track */
+		METADATA;
+	}
 }
