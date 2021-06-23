@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionException;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
@@ -268,16 +270,12 @@ public interface CastEvent<T> {
 	}
 
 	/**
-	 * A simple (as in not threaded) {@link CastEventListenerList} implementaion
-	 * that invokes {@link CastEventListener}s from the thread that calls
-	 * {@link #fire(CastEvent)}.
+	 * An abstract {@link CastEventListenerList} implementation that implements
+	 * every method except {@link CastEventListenerList#fire(CastEvent)}.
 	 *
 	 * @author Nadahar
 	 */
-	@ThreadSafe
-	public static class SimpleCastEventListenerList implements CastEventListenerList {
-
-		private static final Logger LOGGER = LoggerFactory.getLogger(SimpleCastEventListenerList.class);
+	public abstract static class AbstractCastEventListenerList implements CastEventListenerList {
 
 		/** The identifier for the cast device used in logging */
 		@Nonnull
@@ -299,11 +297,13 @@ public interface CastEvent<T> {
 		protected final Map<CastEventListener, Set<CastEventType>> filters = new HashMap<>();
 
 		/**
-		 * Creates a new instance with the specified remote name.
+		 * Abstract constructor that sets the "remote name" final field.
 		 *
 		 * @param remoteName the identifier for the cast device used in logging.
+		 * @throws IllegalArgumentException If {@code remoteName} is
+		 *             {@code null}.
 		 */
-		public SimpleCastEventListenerList(@Nonnull String remoteName) {
+		protected AbstractCastEventListenerList(@Nonnull String remoteName) {
 			requireNotBlank(remoteName, "remoteName");
 			this.remoteName = remoteName;
 		}
@@ -417,6 +417,30 @@ public interface CastEvent<T> {
 		public Iterator<CastEventListener> iterator() {
 			return listeners.iterator();
 		}
+	}
+
+	/**
+	 * A simple (as in not threaded) {@link CastEventListenerList}
+	 * implementation that invokes {@link CastEventListener}s from the thread
+	 * that calls {@link #fire(CastEvent)}.
+	 *
+	 * @author Nadahar
+	 */
+	@ThreadSafe
+	public static class SimpleCastEventListenerList extends AbstractCastEventListenerList {
+
+		private static final Logger LOGGER = LoggerFactory.getLogger(SimpleCastEventListenerList.class);
+
+		/**
+		 * Creates a new instance with the specified remote name.
+		 *
+		 * @param remoteName the identifier for the cast device used in logging.
+		 * @throws IllegalArgumentException If {@code remoteName} is
+		 *             {@code null}.
+		 */
+		public SimpleCastEventListenerList(@Nonnull String remoteName) {
+			super(remoteName);
+		}
 
 		@Override
 		public void fire(@Nullable CastEvent<?> event) {
@@ -461,6 +485,133 @@ public interface CastEvent<T> {
 						listener.onEvent(event);
 					}
 				}
+			}
+		}
+	}
+
+	/**
+	 * A threaded {@link CastEventListenerList} implementation that invokes
+	 * {@link CastEventListener}s using the specified {@link Executor} when
+	 * {@link #fire(CastEvent)} is called.
+	 *
+	 * @author Nadahar
+	 */
+	@ThreadSafe
+	public static class ThreadedCastEventListenerList extends AbstractCastEventListenerList {
+
+		private static final Logger LOGGER = LoggerFactory.getLogger(ThreadedCastEventListenerList.class);
+
+		/** The {@link Executor} that is used to invoke listeners */
+		@Nonnull
+		protected final Executor notifier;
+
+		/**
+		 * Creates a new instance with the specified notifier and remote name.
+		 *
+		 * @param notifier the {@link Executor} that will invoke the listeners.
+		 * @param remoteName the identifier for the cast device used in logging.
+		 * @throws IllegalArgumentException If {@code notifier} or
+		 *             {@code remoteName} is {@code null}.
+		 */
+		public ThreadedCastEventListenerList(@Nonnull Executor notifier, @Nonnull String remoteName) {
+			super(remoteName);
+			requireNotNull(notifier, "notifier");
+			this.notifier = notifier;
+		}
+
+		/**
+		 * @return The {@link Executor} that notifies listeners.
+		 */
+		@Nonnull
+		public Executor getNotifier() {
+			return notifier;
+		}
+
+		@Override
+		public void fire(@Nullable CastEvent<?> event) {
+			if (event == null) {
+				return;
+			}
+
+			if (listeners.isEmpty()) {
+				if (LOGGER.isDebugEnabled(Channel.CHROMECAST_API_MARKER)) {
+					LOGGER.debug(
+						Channel.CHROMECAST_API_MARKER,
+						"No cast event listener, but would have notified them of the following event from {}: {}",
+						remoteName,
+						event
+					);
+				}
+				return;
+			}
+			if (LOGGER.isDebugEnabled(Channel.CHROMECAST_API_MARKER)) {
+				LOGGER.debug(
+					Channel.CHROMECAST_API_MARKER,
+					"Notifying cast event listeners of the following event from {}: {}",
+					remoteName,
+					event
+				);
+			}
+
+			Map<CastEventListener, Set<CastEventType>> filtersSnapshot;
+			synchronized (filtersLock) {
+				filtersSnapshot = new HashMap<>(filters);
+			}
+
+			try {
+				CastEventListener listener;
+				Set<CastEventType> targetTypes;
+				Invoker invoker;
+				for (Iterator<CastEventListener> iterator = listeners.iterator(); iterator.hasNext();) {
+					listener = iterator.next();
+					targetTypes = filtersSnapshot.get(listener);
+					if (targetTypes == null || targetTypes.contains(event.getEventType())) {
+						if (event.getEventType() == CastEventType.UNKNOWN && event.getData() instanceof JsonNode) {
+							// Data might be mutable, so make a copy for each listener
+							invoker = new Invoker(
+								listener,
+								new DefaultCastEvent<>(CastEventType.UNKNOWN, ((JsonNode) event.getData()).deepCopy())
+							);
+						} else {
+							invoker = new Invoker(listener, event);
+						}
+						notifier.execute(invoker);
+					}
+				}
+			} catch (RejectedExecutionException e) {
+				LOGGER.warn(
+					Channel.CHROMECAST_API_MARKER,
+					"Unable to notify listeners of change event: " + e.getMessage()
+				);
+				LOGGER.trace(Channel.CHROMECAST_API_MARKER, "", e);
+			}
+		}
+
+		/**
+		 * A {@link Runnable} implementation that simply invokes a listener.
+		 */
+		protected static class Invoker implements Runnable {
+
+			@Nonnull
+			private final CastEventListener listener;
+
+			@Nonnull
+			private final CastEvent<?> event;
+
+			/**
+			 * Creates a new instance using the specified parameters.
+			 *
+			 * @param listener the {@link CastEventListener} to invoke.
+			 * @param event the {@link CastEvent} to deliver.
+			 */
+			public Invoker(@Nonnull CastEventListener listener, @Nonnull CastEvent<?> event) {
+				this.listener = listener;
+				this.event = event;
+			}
+
+			@Override
+			public void run() {
+				listener.onEvent(event);
 			}
 		}
 	}

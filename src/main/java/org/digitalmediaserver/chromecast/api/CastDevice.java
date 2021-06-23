@@ -29,6 +29,12 @@ import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Timer;
+import java.util.concurrent.Executor;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
@@ -38,7 +44,7 @@ import javax.jmdns.ServiceInfo;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListener;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListenerList;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
-import org.digitalmediaserver.chromecast.api.CastEvent.SimpleCastEventListenerList;
+import org.digitalmediaserver.chromecast.api.CastEvent.ThreadedCastEventListenerList;
 import org.digitalmediaserver.chromecast.api.Volume.VolumeControlType;
 
 
@@ -50,6 +56,10 @@ public class CastDevice {
 
 	/** The DNS-SD service type for cast devices */
 	public static final String SERVICE_TYPE = "_googlecast._tcp.local.";
+
+	/** The {@link Executor} that is used for asynchronous operations */
+	@Nonnull
+	protected static final Executor EXECUTOR = createExecutor();
 
 	/** The currently registered {@link CastEventListener}s */
 	@Nonnull
@@ -174,7 +184,7 @@ public class CastDevice {
 		}
 		this.iconPath = serviceInfo.getPropertyString("ic");
 		this.displayName = generateDisplayName();
-		this.listeners = new SimpleCastEventListenerList(displayName);
+		this.listeners = new ThreadedCastEventListenerList(EXECUTOR, displayName);
 		this.channel = new Channel(socketAddress, displayName, listeners);
 	}
 
@@ -280,7 +290,7 @@ public class CastDevice {
 		this.protocolVersion = protocolVersion;
 		this.iconPath = iconPath;
 		this.displayName = generateDisplayName();
-		this.listeners = new SimpleCastEventListenerList(displayName);
+		this.listeners = new ThreadedCastEventListenerList(EXECUTOR, displayName);
 		this.channel = new Channel(socketAddress, displayName, listeners);
 	}
 
@@ -387,7 +397,7 @@ public class CastDevice {
 		this.protocolVersion = protocolVersion;
 		this.iconPath = iconPath;
 		this.displayName = generateDisplayName();
-		this.listeners = new SimpleCastEventListenerList(displayName);
+		this.listeners = new ThreadedCastEventListenerList(EXECUTOR, displayName);
 		this.channel = new Channel(socketAddress, displayName, listeners);
 	}
 
@@ -1038,6 +1048,29 @@ public class CastDevice {
 		}
 		builder.append("autoReconnect=").append(autoReconnect).append("]");
 		return builder.toString();
+	}
+
+	/**
+	 * @return The new {@link Executor}.
+	 */
+	protected static Executor createExecutor() {
+		ThreadPoolExecutor result = new ThreadPoolExecutor(
+			0,
+			Integer.MAX_VALUE,
+			300L,
+			TimeUnit.SECONDS,
+			new SynchronousQueue<Runnable>(true),
+			new ThreadFactory() {
+
+				private final AtomicInteger threadNumber = new AtomicInteger(1);
+
+				@Override
+				public Thread newThread(Runnable r) {
+					return new Thread(r, "ChromeCast API worker #" + threadNumber.getAndIncrement());
+				}
+			}
+		);
+		return result;
 	}
 
 	/**
