@@ -2199,7 +2199,7 @@ public class Channel implements Closeable {
 							}
 							continue;
 						}
-						LOGGER.debug(
+						LOGGER.trace(
 							CHROMECAST_API_MARKER,
 							"{} InputHandler: Received string message \"{}\"",
 							remoteName,
@@ -2207,7 +2207,7 @@ public class Channel implements Closeable {
 						);
 						EXECUTOR.execute(new StringMessageHandler((ImmutableStringCastMessage) message));
 					} else if (message != null) {
-						LOGGER.debug(
+						LOGGER.trace(
 							CHROMECAST_API_MARKER,
 							"{} InputHandler: Received message with binary payload ({} bytes)",
 							remoteName,
@@ -2318,17 +2318,15 @@ public class Channel implements Closeable {
 				if (requestId > 0L && (resultProcessor = acquireResultProcessor(requestId)) != null) {
 					resultProcessor.process(jsonMessage);
 				} else if (parsedMessage == null || isCustomMessage(parsedMessage)) {
-					if (!listeners.isEmpty()) {
-						listeners.fire(new DefaultCastEvent<>(
-							CastEventType.CUSTOM_MESSAGE,
-							new CustomMessageEvent(
-								message.getSourceId(),
-								message.getDestinationId(),
-								message.getNamespace(),
-								message.getPayload()
-							)
-						));
-					}
+					listeners.fire(new DefaultCastEvent<>(
+						CastEventType.CUSTOM_MESSAGE,
+						new CustomMessageEvent(
+							message.getSourceId(),
+							message.getDestinationId(),
+							message.getNamespace(),
+							message.getPayload()
+						)
+					));
 				} else if ("CLOSE".equals(responseType)) {
 					if (PLATFORM_RECEIVER_ID.equals(message.getSourceId())) {
 						try {
@@ -2367,21 +2365,19 @@ public class Channel implements Closeable {
 							} else {
 								if (!cancelPendingClosed(peerId)) {
 									// Didn't match any "known" session, pass it on to listeners
-									if (!listeners.isEmpty()) {
-										listeners.fire(new DefaultCastEvent<>(
-											CastEventType.CLOSE,
-											new CloseMessageEvent(
-												message.getSourceId(),
-												message.getDestinationId(),
-												message.getNamespace()
-											)
-										));
-									}
+									listeners.fire(new DefaultCastEvent<>(
+										CastEventType.CLOSE,
+										new CloseMessageEvent(
+											message.getSourceId(),
+											message.getDestinationId(),
+											message.getNamespace()
+										)
+									));
 								}
 							}
 						}
 					}
-				} else if (!listeners.isEmpty()) {
+				} else {
 					StandardResponse response;
 					if (!isBlank(responseType)) {
 						try {
@@ -2436,14 +2432,12 @@ public class Channel implements Closeable {
 
 		@Override
 		public void run() {
-			if (!listeners.isEmpty()) {
-				listeners.fire(new DefaultCastEvent<>(CastEventType.CUSTOM_MESSAGE, new CustomMessageEvent(
-					message.getSourceId(),
-					message.getDestinationId(),
-					message.getNamespace(),
-					message.getPayload()
-				)));
-			}
+			listeners.fire(new DefaultCastEvent<>(CastEventType.CUSTOM_MESSAGE, new CustomMessageEvent(
+				message.getSourceId(),
+				message.getDestinationId(),
+				message.getNamespace(),
+				message.getPayload()
+			)));
 		}
 	}
 
