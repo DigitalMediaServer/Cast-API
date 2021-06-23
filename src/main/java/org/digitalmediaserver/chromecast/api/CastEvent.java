@@ -420,16 +420,23 @@ public interface CastEvent<T> {
 
 		@Override
 		public void fire(@Nullable CastEvent<?> event) {
-			if (event == null || listeners.isEmpty()) {
+			if (event == null) {
 				return;
 			}
 
-			Map<CastEventListener, Set<CastEventType>> filtersSnapshot;
-			synchronized (filtersLock) {
-				filtersSnapshot = new HashMap<>(filters);
+			if (listeners.isEmpty()) {
+				if (LOGGER.isDebugEnabled(Channel.CHROMECAST_API_MARKER)) {
+					LOGGER.debug(
+						Channel.CHROMECAST_API_MARKER,
+						"No cast event listener, but would have notified them of the following event from {}: {}",
+						remoteName,
+						event
+					);
+				}
+				return;
 			}
-			if (LOGGER.isTraceEnabled(Channel.CHROMECAST_API_MARKER)) {
-				LOGGER.trace(
+			if (LOGGER.isDebugEnabled(Channel.CHROMECAST_API_MARKER)) {
+				LOGGER.debug(
 					Channel.CHROMECAST_API_MARKER,
 					"Notifying cast event listeners of the following event from {}: {}",
 					remoteName,
@@ -437,6 +444,10 @@ public interface CastEvent<T> {
 				);
 			}
 
+			Map<CastEventListener, Set<CastEventType>> filtersSnapshot;
+			synchronized (filtersLock) {
+				filtersSnapshot = new HashMap<>(filters);
+			}
 			CastEventListener listener;
 			Set<CastEventType> targetTypes;
 			for (Iterator<CastEventListener> iterator = listeners.iterator(); iterator.hasNext();) {
