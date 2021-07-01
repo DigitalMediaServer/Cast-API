@@ -516,6 +516,33 @@ public class Media {
 		return null;
 	}
 
+	/**
+	 * Creates a new {@link MediaBuilder} initialized with the information from
+	 * this {@link Media}.
+	 *
+	 * @return The new {@link MediaBuilder}.
+	 */
+	@Nonnull
+	@JsonIgnore
+	public MediaBuilder modify() {
+		return new MediaBuilder(
+			contentId,
+			contentType,
+			contentUrl,
+			new LinkedHashMap<>(customData),
+			duration,
+			entity,
+			hlsSegmentFormat,
+			hlsVideoSegmentFormat,
+			mediaCategory,
+			new LinkedHashMap<>(metadata),
+			startAbsoluteTime,
+			streamType,
+			textTrackStyle,
+			new ArrayList<>(tracks)
+		);
+	}
+
 	@Override
 	public int hashCode() {
 		return Objects.hash(
@@ -595,17 +622,17 @@ public class Media {
 	/**
 	 * Creates a new {@link MediaBuilder} using the specified parameters.
 	 *
-	 * @param contentId the content ID, typically the URL of the media.
+	 * @param contentUrl the URL of the media content.
 	 * @param contentType the content MIME-type.
 	 * @param streamType the stream type.
 	 * @return The new {@link MediaBuilder}.
 	 */
 	public static MediaBuilder builder(
-		@Nonnull String contentId,
+		@Nullable String contentUrl,
 		@Nonnull String contentType,
 		@Nonnull StreamType streamType
 	) {
-		return new MediaBuilder(contentId, contentType, streamType);
+		return new MediaBuilder(contentUrl, contentType, streamType);
 	}
 
 	/**
@@ -616,37 +643,47 @@ public class Media {
 	public static class MediaBuilder {
 
 		/** Typically the URL of the media */
-		protected final String contentId;
+		@Nonnull
+		protected String contentId;
 
 		/** The content MIME-type */
-		protected final String contentType;
+		@Nonnull
+		protected String contentType;
 
 		/**
 		 * Optional media URL, to allow using {@code contentId} for real ID. If
 		 * {@code contentUrl} is provided, it will be used as media the URL,
 		 * otherwise {@code contentId} will be used as the media URL.
 		 */
+		@Nullable
 		protected String contentUrl;
 
 		/** Application-specific media information */
+		@Nullable
 		protected Map<String, Object> customData;
 
 		/** The media duration */
+		@Nullable
 		protected Double duration;
 
 		/** Optional Google Assistant deep link to a media entity */
+		@Nullable
 		protected String entity;
 
 		/** The format of the HLS audio segment */
+		@Nullable
 		protected HlsSegmentFormat hlsSegmentFormat;
 
 		/** The format of the HLS video segment */
+		@Nullable
 		protected HlsVideoSegmentFormat hlsVideoSegmentFormat;
 
 		/** The media category (audio, video, picture) */
+		@Nullable
 		protected MediaCategory mediaCategory;
 
 		/** The media metadata */
+		@Nullable
 		protected Map<String, Object> metadata;
 
 		/**
@@ -654,45 +691,131 @@ public class Media {
 		 * live event it would be the time the event started, otherwise it will be
 		 * start of the seekable range when the streaming started.
 		 */
+		@Nullable
 		protected Long startAbsoluteTime;
 
 		/** The stream type (required) */
-		protected final StreamType streamType;
+		@Nonnull
+		protected StreamType streamType;
 
 		/** The style of text track */
+		@Nullable
 		protected TextTrackStyle textTrackStyle;
 
 		/** The media tracks */
+		@Nullable
 		protected List<Track> tracks;
 
 		/**
 		 * Creates a new instance using the specified parameters.
 		 *
-		 * @param contentId the content ID, typically the URL of the media.
+		 * @param contentUrl the URL of the media content.
 		 * @param contentType the content MIME-type.
 		 * @param streamType the stream type.
 		 */
-		public MediaBuilder(@Nonnull String contentId, @Nonnull String contentType, @Nonnull StreamType streamType) {
-			Util.requireNotBlank(contentId, "contentId");
+		public MediaBuilder(@Nullable String contentUrl, @Nonnull String contentType, @Nonnull StreamType streamType) {
 			Util.requireNotBlank(contentType, "contentType");
 			Util.requireNotNull(streamType, "streamType");
-			this.contentId = contentId;
+			this.contentId = "";
+			this.contentUrl = contentUrl;
 			this.contentType = contentType;
 			this.streamType = streamType;
 		}
 
 		/**
+		 * "modify()" constructor that simply copies an existing {@link Media}
+		 * instance's fields.
+		 *
+		 * @param contentId the content ID, typically the URL of the media.
+		 * @param contentType the content MIME-type.
+		 * @param contentUrl the optional media URL, to allow using
+		 *            {@code contentId} for real ID. If {@code contentUrl} is
+		 *            provided, it will be used as media the URL, otherwise
+		 *            {@code contentId} will be used as the media URL.
+		 * @param customData the application-specific media information.
+		 * @param duration the media duration.
+		 * @param entity the optional Google Assistant deep link to a media
+		 *            entity.
+		 * @param hlsSegmentFormat the format of the HLS audio segment.
+		 * @param hlsVideoSegmentFormat the format of the HLS video segment.
+		 * @param mediaCategory the media category.
+		 * @param metadata the media metadata.
+		 * @param startAbsoluteTime the absolute time (Epoch Unix time in
+		 *            seconds) for live streams. For live event it would be the
+		 *            time the event started, otherwise it will be start of the
+		 *            seekable range when the streaming started.
+		 * @param streamType the stream type.
+		 * @param textTrackStyle the style of text track.
+		 * @param tracks the media tracks.
+		 */
+		protected MediaBuilder(
+			@Nonnull String contentId,
+			@Nonnull String contentType,
+			@Nullable String contentUrl,
+			@Nullable Map<String, Object> customData,
+			@Nullable Double duration,
+			@Nullable String entity,
+			@Nullable HlsSegmentFormat hlsSegmentFormat,
+			@Nullable HlsVideoSegmentFormat hlsVideoSegmentFormat,
+			@Nullable MediaCategory mediaCategory,
+			@Nullable Map<String, Object> metadata,
+			@Nullable Long startAbsoluteTime,
+			@Nonnull StreamType streamType,
+			@Nullable TextTrackStyle textTrackStyle,
+			@Nullable List<Track> tracks
+		) {
+			this.contentId = contentId;
+			this.contentType = contentType;
+			this.contentUrl = contentUrl;
+			this.customData = customData;
+			this.duration = duration;
+			this.entity = entity;
+			this.hlsSegmentFormat = hlsSegmentFormat;
+			this.hlsVideoSegmentFormat = hlsVideoSegmentFormat;
+			this.mediaCategory = mediaCategory;
+			this.metadata = metadata;
+			this.startAbsoluteTime = startAbsoluteTime;
+			this.streamType = streamType;
+			this.textTrackStyle = textTrackStyle;
+			this.tracks = tracks;
+		}
+
+		/**
 		 * @return The content ID, typically the URL of the media.
 		 */
+		@Nonnull
 		public String contentId() {
 			return contentId;
 		}
 
 		/**
+		 * @param contentId the content ID, typically the URL of the media.
+		 * @return This {@link MediaBuilder}.
+		 */
+		@Nonnull
+		public MediaBuilder contentId(@Nonnull String contentId) {
+			Util.requireNotNull(contentId, "contentId");
+			this.contentId = contentId;
+			return this;
+		}
+
+		/**
 		 * @return The content MIME-type.
 		 */
+		@Nonnull
 		public String contentType() {
 			return contentType;
+		}
+
+		/**
+		 * @param contentType the content MIME-type.
+		 * @return This {@link MediaBuilder}.
+		 */
+		@Nonnull
+		public MediaBuilder contentTypeId(@Nonnull String contentType) {
+			Util.requireNotBlank(contentType, "contentType");
+			this.contentType = contentType;
+			return this;
 		}
 
 		/**
@@ -701,6 +824,7 @@ public class Media {
 		 *         as media the URL, otherwise {@code contentId} will be used as
 		 *         the media URL.
 		 */
+		@Nullable
 		public String contentUrl() {
 			return contentUrl;
 		}
@@ -712,7 +836,8 @@ public class Media {
 		 *            {@code contentId} will be used as the media URL.
 		 * @return This {@link MediaBuilder}.
 		 */
-		public MediaBuilder contentUrl(String contentUrl) {
+		@Nonnull
+		public MediaBuilder contentUrl(@Nullable String contentUrl) {
 			this.contentUrl = contentUrl;
 			return this;
 		}
@@ -720,6 +845,7 @@ public class Media {
 		/**
 		 * @return The application-specific media information.
 		 */
+		@Nullable
 		public Map<String, Object> customData() {
 			return customData;
 		}
@@ -728,7 +854,8 @@ public class Media {
 		 * @param customData the application-specific media information.
 		 * @return This {@link MediaBuilder}.
 		 */
-		public MediaBuilder customData(Map<String, Object> customData) {
+		@Nonnull
+		public MediaBuilder customData(@Nullable Map<String, Object> customData) {
 			this.customData = customData;
 			return this;
 		}
@@ -736,6 +863,7 @@ public class Media {
 		/**
 		 * @return The media duration.
 		 */
+		@Nullable
 		public Double duration() {
 			return duration;
 		}
@@ -744,7 +872,8 @@ public class Media {
 		 * @param duration the media duration.
 		 * @return This {@link MediaBuilder}.
 		 */
-		public MediaBuilder duration(Double duration) {
+		@Nonnull
+		public MediaBuilder duration(@Nullable Double duration) {
 			this.duration = duration;
 			return this;
 		}
@@ -752,6 +881,7 @@ public class Media {
 		/**
 		 * @return The optional Google Assistant deep link to a media entity.
 		 */
+		@Nullable
 		public String entity() {
 			return entity;
 		}
@@ -761,7 +891,8 @@ public class Media {
 		 *            entity.
 		 * @return This {@link MediaBuilder}.
 		 */
-		public MediaBuilder entity(String entity) {
+		@Nonnull
+		public MediaBuilder entity(@Nullable String entity) {
 			this.entity = entity;
 			return this;
 		}
@@ -769,6 +900,7 @@ public class Media {
 		/**
 		 * @return The format of the HLS audio segment.
 		 */
+		@Nullable
 		public HlsSegmentFormat hlsSegmentFormat() {
 			return hlsSegmentFormat;
 		}
@@ -777,7 +909,8 @@ public class Media {
 		 * @param hlsSegmentFormat the format of the HLS audio segment.
 		 * @return This {@link MediaBuilder}.
 		 */
-		public MediaBuilder hlsSegmentFormat(HlsSegmentFormat hlsSegmentFormat) {
+		@Nonnull
+		public MediaBuilder hlsSegmentFormat(@Nullable HlsSegmentFormat hlsSegmentFormat) {
 			this.hlsSegmentFormat = hlsSegmentFormat;
 			return this;
 		}
@@ -785,6 +918,7 @@ public class Media {
 		/**
 		 * @return The format of the HLS video segment.
 		 */
+		@Nullable
 		public HlsVideoSegmentFormat hlsVideoSegmentFormat() {
 			return hlsVideoSegmentFormat;
 		}
@@ -793,7 +927,8 @@ public class Media {
 		 * @param hlsVideoSegmentFormat the format of the HLS video segment.
 		 * @return This {@link MediaBuilder}.
 		 */
-		public MediaBuilder hlsVideoSegmentFormat(HlsVideoSegmentFormat hlsVideoSegmentFormat) {
+		@Nonnull
+		public MediaBuilder hlsVideoSegmentFormat(@Nullable HlsVideoSegmentFormat hlsVideoSegmentFormat) {
 			this.hlsVideoSegmentFormat = hlsVideoSegmentFormat;
 			return this;
 		}
@@ -801,6 +936,7 @@ public class Media {
 		/**
 		 * @return The media category.
 		 */
+		@Nullable
 		public MediaCategory mediaCategory() {
 			return mediaCategory;
 		}
@@ -809,7 +945,8 @@ public class Media {
 		 * @param mediaCategory the media category.
 		 * @return This {@link MediaBuilder}.
 		 */
-		public MediaBuilder mediaCategory(MediaCategory mediaCategory) {
+		@Nonnull
+		public MediaBuilder mediaCategory(@Nullable MediaCategory mediaCategory) {
 			this.mediaCategory = mediaCategory;
 			return this;
 		}
@@ -817,6 +954,7 @@ public class Media {
 		/**
 		 * @return The media metadata.
 		 */
+		@Nullable
 		public Map<String, Object> metadata() {
 			return metadata;
 		}
@@ -825,7 +963,8 @@ public class Media {
 		 * @param metadata the media metadata.
 		 * @return This {@link MediaBuilder}.
 		 */
-		public MediaBuilder metadata(Map<String, Object> metadata) {
+		@Nonnull
+		public MediaBuilder metadata(@Nullable Map<String, Object> metadata) {
 			this.metadata = metadata;
 			return this;
 		}
@@ -836,6 +975,7 @@ public class Media {
 		 *         started, otherwise it will be start of the seekable range
 		 *         when the streaming started.
 		 */
+		@Nullable
 		public Long startAbsoluteTime() {
 			return startAbsoluteTime;
 		}
@@ -847,7 +987,8 @@ public class Media {
 		 *            seekable range when the streaming started.
 		 * @return This {@link MediaBuilder}.
 		 */
-		public MediaBuilder startAbsoluteTime(Long startAbsoluteTime) {
+		@Nonnull
+		public MediaBuilder startAbsoluteTime(@Nullable Long startAbsoluteTime) {
 			this.startAbsoluteTime = startAbsoluteTime;
 			return this;
 		}
@@ -855,13 +996,26 @@ public class Media {
 		/**
 		 * @return The stream type.
 		 */
+		@Nonnull
 		public StreamType streamType() {
 			return streamType;
 		}
 
 		/**
+		 * @param streamType the stream type.
+		 * @return This {@link MediaBuilder}.
+		 */
+		@Nonnull
+		public MediaBuilder streamType(@Nonnull StreamType streamType) {
+			Util.requireNotNull(streamType, "streamType");
+			this.streamType = streamType;
+			return this;
+		}
+
+		/**
 		 * @return The style of text track.
 		 */
+		@Nullable
 		public TextTrackStyle textTrackStyle() {
 			return textTrackStyle;
 		}
@@ -870,7 +1024,8 @@ public class Media {
 		 * @param textTrackStyle the style of text track.
 		 * @return This {@link MediaBuilder}.
 		 */
-		public MediaBuilder textTrackStyle(TextTrackStyle textTrackStyle) {
+		@Nonnull
+		public MediaBuilder textTrackStyle(@Nullable TextTrackStyle textTrackStyle) {
 			this.textTrackStyle = textTrackStyle;
 			return this;
 		}
@@ -878,10 +1033,20 @@ public class Media {
 		/**
 		 * @return The media {@link Track}s.
 		 */
+		@Nullable
 		public List<Track> tracks() {
 			return tracks;
 		}
 
+		/**
+		 * Appends the specified {@link Track} to the end of this
+		 * {@link MediaBuilder}'s tracks. If {@code tracks} is {@code null}, a
+		 * new {@link ArrayList} is created first.
+		 *
+		 * @param track the {@link Track} to add.
+		 * @return This {@link MediaBuilder}.
+		 */
+		@Nonnull
 		public MediaBuilder addTrack(@Nullable Track track) {
 			if (track != null) {
 				if (tracks == null) {
@@ -892,7 +1057,17 @@ public class Media {
 			return this;
 		}
 
-		public MediaBuilder addTrack(int index, @Nullable Track track) { //TODO: (Nad) JAvaDocs
+		/**
+		 * Inserts the specified {@link Track} at the specified position in this
+		 * {@link MediaBuilder}'s tracks. If {@code tracks} is {@code null}, a
+		 * new {@link ArrayList} is created first.
+		 *
+		 * @param index the index where the {@link Track} should be inserted.
+		 * @param track the {@link Track} to add.
+		 * @return This {@link MediaBuilder}.
+		 */
+		@Nonnull
+		public MediaBuilder addTrack(int index, @Nullable Track track) {
 			if (track != null) {
 				if (tracks == null) {
 					tracks = new ArrayList<>();
@@ -902,6 +1077,12 @@ public class Media {
 			return this;
 		}
 
+		/**
+		 * Removes all tracks from this {@link MediaBuilder}.
+		 *
+		 * @return This {@link MediaBuilder}.
+		 */
+		@Nonnull
 		public MediaBuilder clearTracks() {
 			if (tracks != null) {
 				tracks.clear();
@@ -909,6 +1090,16 @@ public class Media {
 			return this;
 		}
 
+		/**
+		 * Removes the {@link Track} at the specified position in this
+		 * {@link MediaBuilder}.
+		 *
+		 * @param index the index of the {@link Track} to be removed.
+		 * @return This {@link MediaBuilder}.
+		 * @throws IndexOutOfBoundsException If the {@code index} is out of
+		 *             range.
+		 */
+		@Nonnull
 		public MediaBuilder removeTrack(int index) {
 			if (tracks != null) {
 				tracks.remove(index);
@@ -916,6 +1107,14 @@ public class Media {
 			return this;
 		}
 
+		/**
+		 * Removed the first occurrence specified {@link Track} from this
+		 * {@link MediaBuilder}, if it's present.
+		 *
+		 * @param track the {@link Track} to remove.
+		 * @return This {@link MediaBuilder}.
+		 */
+		@Nonnull
 		public MediaBuilder removeTrack(@Nullable Track track) {
 			if (track != null && tracks != null) {
 				tracks.remove(track);
@@ -927,7 +1126,8 @@ public class Media {
 		 * @param tracks the media {@link Track}s.
 		 * @return This {@link MediaBuilder}.
 		 */
-		public MediaBuilder tracks(List<Track> tracks) { //TODO: (Nad) Keep this?
+		@Nonnull
+		public MediaBuilder tracks(@Nullable List<Track> tracks) {
 			this.tracks = tracks;
 			return this;
 		}

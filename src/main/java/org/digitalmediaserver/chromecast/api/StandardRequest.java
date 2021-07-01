@@ -190,8 +190,9 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		private final LoadOptions loadOptions;
 
 		/** The {@link Media} to load */
-		@Nonnull
+		@Nullable
 		@JsonProperty
+		@JsonInclude(JsonInclude.Include.NON_NULL)
 		private final Media media;
 
 		/** The media playback rate */
@@ -200,7 +201,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		@JsonInclude(JsonInclude.Include.NON_NULL)
 		private final Double playbackRate;
 
-		/** The queue data */
+		/** The queue to load */
 		@Nullable
 		@JsonProperty
 		@JsonInclude(JsonInclude.Include.NON_NULL)
@@ -230,10 +231,8 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		 *            application with the load command.
 		 * @param loadOptions the additional load options, if any.
 		 * @param media the {@link Media} to load.
-		 * @param mediaSessionId the ID of the media session that the request
-		 *            applies to.
 		 * @param playbackRate the media playback rate.
-		 * @param queueData the queue data.
+		 * @param queueData the queue to load.
 		 * @throws IllegalArgumentException If {@code media} is {@code null}.
 		 */
 		public Load(
@@ -244,11 +243,10 @@ public abstract class StandardRequest extends StandardMessage implements Request
 			@Nullable Double currentTime,
 			@Nullable Map<String, Object> customData,
 			@Nullable LoadOptions loadOptions,
-			@Nonnull Media media,
+			@Nullable Media media,
 			@Nullable Double playbackRate,
 			@Nullable QueueData queueData
 		) {
-			Util.requireNotNull(media, "media");
 			this.activeTrackIds = activeTrackIds;
 			this.autoplay = autoplay;
 			this.credentials = credentials;
@@ -331,7 +329,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		/**
 		 * @return The {@link Media} to load.
 		 */
-		@Nonnull
+		@Nullable
 		public Media getMedia() {
 			return media;
 		}
@@ -345,7 +343,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		}
 
 		/**
-		 * @return The queue data.
+		 * @return The queue to load.
 		 */
 		@Nullable
 		public QueueData getQueueData() {
