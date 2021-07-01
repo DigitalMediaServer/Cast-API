@@ -61,6 +61,10 @@ import org.digitalmediaserver.chromecast.api.ChromeCastException.UntypedChromeCa
 import org.digitalmediaserver.chromecast.api.ImmutableCastMessage.ImmutableBinaryCastMessage;
 import org.digitalmediaserver.chromecast.api.ImmutableCastMessage.ImmutableStringCastMessage;
 import org.digitalmediaserver.chromecast.api.Session.SessionClosedListener;
+import org.digitalmediaserver.chromecast.api.StandardMessage.CloseConnection;
+import org.digitalmediaserver.chromecast.api.StandardMessage.Connect;
+import org.digitalmediaserver.chromecast.api.StandardMessage.Ping;
+import org.digitalmediaserver.chromecast.api.StandardMessage.Pong;
 import org.digitalmediaserver.chromecast.api.StandardRequest.GetAppAvailability;
 import org.digitalmediaserver.chromecast.api.StandardRequest.GetStatus;
 import org.digitalmediaserver.chromecast.api.StandardRequest.Launch;
@@ -377,7 +381,7 @@ public class Channel implements Closeable {
 			// Send 'CONNECT' message to start session
 			write(
 				"urn:x-cast:com.google.cast.tp.connection",
-				StandardMessage.connect(null, VirtualConnectionType.STRONG),
+				new Connect(null, VirtualConnectionType.STRONG),
 				PLATFORM_SENDER_ID,
 				PLATFORM_RECEIVER_ID
 			);
@@ -779,7 +783,7 @@ public class Channel implements Closeable {
 			}
 			write(
 				"urn:x-cast:com.google.cast.tp.connection",
-				StandardMessage.connect(userAgent, connectionType),
+				new Connect(userAgent, connectionType),
 				sourceId,
 				destinationId
 			);
@@ -814,7 +818,7 @@ public class Channel implements Closeable {
 		}
 		write(
 			"urn:x-cast:com.google.cast.tp.connection",
-			StandardMessage.closeConnection(),
+			new CloseConnection(),
 			session.getSourceId(),
 			session.getDestinationId()
 		);
@@ -1934,7 +1938,7 @@ public class Channel implements Closeable {
 		 */
 		public PingTask() {
 			try {
-				messageString = jsonMapper.writeValueAsString(StandardMessage.ping());
+				messageString = jsonMapper.writeValueAsString(new Ping());
 			} catch (JsonProcessingException e) {
 				throw new AssertionError("Couldn't generate JSON for 'PING' message");
 			}
@@ -2073,7 +2077,7 @@ public class Channel implements Closeable {
 
 			String messageString;
 			try {
-				messageString = jsonMapper.writeValueAsString(StandardMessage.pong());
+				messageString = jsonMapper.writeValueAsString(new Pong());
 			} catch (JsonProcessingException e) {
 				throw new AssertionError("Couldn't generate JSON for 'PONG' message");
 			}

@@ -166,14 +166,15 @@ public class MockedChromeCast {
 				String transportId = UUID.randomUUID().toString();
 				runningApplications.add(new Application(
 					launch.getAppId(),
-					"iconUrl",
 					launch.getAppId(),
+					"iconUrl",
+					Boolean.FALSE,
+					Boolean.FALSE,
+					Collections.<Namespace> emptyList(),
 					transportId,
 					"",
-					false,
-					false,
 					transportId,
-					Collections.<Namespace> emptyList()
+					launch.getAppId()
 				));
 				StandardResponse response = new StandardResponse.ReceiverStatusResponse(launch.getRequestId(), status());
 				return response;

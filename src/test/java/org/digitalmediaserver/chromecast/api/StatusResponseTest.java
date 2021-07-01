@@ -22,7 +22,18 @@ public class StatusResponseTest {
 		nameSpaces.add(new Namespace("some.name.space"));
 		nameSpaces.add(new Namespace("some.other.name.space"));
 		List<Application> applications = new ArrayList<>();
-		applications.add(new Application("appId", "iconURL", "appName", "jkl34d", "single", true, false, "55", nameSpaces));
+		applications.add(new Application(
+			"appId",
+			"appName",
+			"iconURL",
+			Boolean.TRUE,
+			Boolean.FALSE,
+			nameSpaces,
+			"jkl34d",
+			"single",
+			"55",
+			"universalAppId"
+		));
 		ReceiverStatus status = new ReceiverStatus(new Volume(VolumeControlType.ATTENUATION, 0.55, true, 0.01), applications, false, true);
 		ReceiverStatusResponse source = new ReceiverStatusResponse(3591L, status);
 
