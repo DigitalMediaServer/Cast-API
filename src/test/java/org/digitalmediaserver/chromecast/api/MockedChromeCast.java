@@ -51,7 +51,6 @@ public class MockedChromeCast {
 	public CustomHandler customHandler;
 
 	public interface CustomHandler {
-
 		Response handle(JsonNode json);
 	}
 
@@ -73,15 +72,15 @@ public class MockedChromeCast {
 	public class ClientThread extends Thread {
 
 		public volatile boolean stop;
-		public Socket clientSocket;
-		public ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
+		public final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 
 		@Override
 		public void run() {
+			Socket clientSocket = null;
 			try {
 				clientSocket = socket.accept();
 				while (!stop) {
-					handle(read(clientSocket));
+					handle(clientSocket, read(clientSocket));
 				}
 			} catch (IOException ioex) {
 				logger.warn("Error while handling: {}", ioex.toString());
@@ -96,7 +95,7 @@ public class MockedChromeCast {
 			}
 		}
 
-		public void handle(CastMessage message) throws IOException {
+		public void handle(Socket socket, CastMessage message) throws IOException {
 			logger.info("Received message: ");
 			logger.info("   sourceId: " + message.getSourceId());
 			logger.info("   destinationId: " + message.getDestinationId());
@@ -113,7 +112,7 @@ public class MockedChromeCast {
 				logger.info("   destinationId: " + message.getSourceId());
 				logger.info("   namespace: " + message.getNamespace());
 				logger.info("   payloadType: " + PayloadType.BINARY);
-				write(clientSocket,
+				write(socket,
 					CastMessage.newBuilder()
 						.setProtocolVersion(message.getProtocolVersion())
 						.setSourceId(message.getDestinationId())
@@ -140,7 +139,7 @@ public class MockedChromeCast {
 					logger.info("   namespace: " + message.getNamespace());
 					logger.info("   payloadType: " + CastMessage.PayloadType.STRING);
 					logger.info("   payload: " + jsonMapper.writeValueAsString(response));
-					write(clientSocket,
+					write(socket,
 						CastMessage.newBuilder()
 							.setProtocolVersion(message.getProtocolVersion())
 							.setSourceId(message.getDestinationId())
