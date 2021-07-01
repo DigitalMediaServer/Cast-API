@@ -144,9 +144,9 @@ public class MediaStatusResponseTest {
 		ExtendedMediaStatus extendedStatus = status.getExtendedStatus();
 		Media media = extendedStatus.getMedia();
 		assertNotNull(media);
-		assertEquals("http://no.where", media.getContentId());
+		assertEquals("", media.getContentId());
 		assertEquals("none/empty", media.getContentType());
-		assertNull(media.getContentUrl());
+		assertEquals("http://no.where", media.getContentUrl());
 		assertEquals("http://no.where", media.getUrl());
 		assertTrue(media.getCustomData().isEmpty());
 		assertNull(media.getDuration());
@@ -217,8 +217,9 @@ public class MediaStatusResponseTest {
 		assertTrue(item.getCustomData().isEmpty());
 		assertEquals(5, item.getItemId().intValue());
 		media = item.getMedia();
-		assertEquals("someUrl", media.getContentId());
+		assertEquals("", media.getContentId());
 		assertEquals("mimeType", media.getContentType());
+		assertEquals("someUrl", media.getContentUrl());
 		assertEquals(StreamType.NONE, media.getStreamType());
 		assertNull(item.getOrderId());
 		assertNull(item.getPreloadTime());
@@ -251,8 +252,9 @@ public class MediaStatusResponseTest {
 		assertTrue(item.getCustomData().isEmpty());
 		assertEquals(18, item.getItemId().intValue());
 		media = item.getMedia();
-		assertEquals("someOtherUrl", media.getContentId());
+		assertEquals("", media.getContentId());
 		assertEquals("mimeType", media.getContentType());
+		assertEquals("someOtherUrl", media.getContentUrl());
 		assertEquals(StreamType.LIVE, media.getStreamType());
 		assertEquals(9, item.getOrderId().intValue());
 		assertEquals(5.2, item.getPreloadTime().doubleValue(), 0d);

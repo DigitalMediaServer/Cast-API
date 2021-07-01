@@ -64,7 +64,8 @@ public class MediaStatusTest {
 		assertEquals(0f, mediaStatus.getCurrentTime(), 0f);
 
 		final Media media = Media
-			.builder("http://192.168.1.6:8192/audio-123-mp3", "audio/mpeg", StreamType.BUFFERED)
+			.builder(null, "audio/mpeg", StreamType.BUFFERED)
+			.contentId("http://192.168.1.6:8192/audio-123-mp3")
 			.duration(389.355102d)
 			.build();
 

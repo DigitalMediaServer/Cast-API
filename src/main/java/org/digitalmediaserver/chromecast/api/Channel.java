@@ -880,51 +880,48 @@ public class Channel implements Closeable {
 	}
 
 	/**
-	 * Asks the targeted remote application to load the specified {@link Media}
-	 * using the specified parameters, using {@value #DEFAULT_RESPONSE_TIMEOUT}
-	 * as the timeout value.
+	 * Asks the targeted remote application to execute the specified
+	 * {@link Load} request.
 	 * <p>
 	 * This can only succeed if the remote application supports the
 	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
 	 * @param session the {@link Session} to use.
-	 * @param media the {@link Media} to load.
-	 * @param autoplay {@code true} to ask the remote application to start
-	 *            playback as soon as the {@link Media} has been loaded,
-	 *            {@code false} to ask it to transition to a paused state after
-	 *            loading.
-	 * @param currentTime the position in seconds where playback are to be
-	 *            started in the loaded {@link Media}.
+	 * @param loadRequest the {@link Load} request to send.
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
-	 * @param customData the custom application data to send to the remote
-	 *            application with the load command.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
 	 *         {@code synchronous} is {@code false}.
-	 * @throws IllegalArgumentException If {@code session} is {@code null}.
+	 * @throws IllegalArgumentException If {@code session} or
+	 *             {@code loadRequest} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
 	 */
 	@Nullable
 	public MediaStatus load(
 		@Nonnull Session session,
-		@Nullable Boolean autoplay,
-		@Nullable Double currentTime,
-		Media media,
-		@Nullable Map<String, Object> customData,
-		boolean synchronous
+		@Nonnull Load loadRequest,
+		boolean synchronous,
+		long responseTimeout
 	) throws IOException {
-		return load(
+		requireNotNull(session, "session");
+		requireNotNull(loadRequest, "loadRequest");
+		MediaStatusResponse status = send(
 			session,
-			autoplay,
-			currentTime,
-			media,
-			customData,
-			synchronous,
-			DEFAULT_RESPONSE_TIMEOUT
+			"urn:x-cast:com.google.cast.media",
+			loadRequest,
+			session.sourceId,
+			session.destinationId,
+			synchronous ? MediaStatusResponse.class : null,
+			responseTimeout
 		);
+		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
 	/**
@@ -948,12 +945,11 @@ public class Channel implements Closeable {
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @param customData the custom application data to send to the remote
-	 *            application with the load command.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
 	 *         {@code true} and a reply is received in time, {@code null} if
 	 *         {@code synchronous} is {@code false}.
-	 * @throws IllegalArgumentException If {@code session} is {@code null}.
+	 * @throws IllegalArgumentException If {@code session} or {@code media} is
+	 *             {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 */
@@ -962,16 +958,16 @@ public class Channel implements Closeable {
 		@Nonnull Session session,
 		@Nullable Boolean autoplay,
 		@Nullable Double currentTime,
-		Media media,
-		@Nullable Map<String, Object> customData,
+		@Nonnull Media media,
 		boolean synchronous,
 		long responseTimeout
 	) throws IOException {
 		requireNotNull(session, "session");
+		requireNotNull(media, "media");
 		MediaStatusResponse status = send(
 			session,
 			"urn:x-cast:com.google.cast.media",
-			new Load(null, autoplay, null, null, currentTime, customData, null, media, null, null),
+			new Load(null, autoplay, null, null, currentTime, null, null, media, null, null),
 			session.sourceId,
 			session.destinationId,
 			synchronous ? MediaStatusResponse.class : null,
@@ -982,7 +978,8 @@ public class Channel implements Closeable {
 
 	/**
 	 * Asks the targeted remote application to load the specified {@link Media}
-	 * using the specified parameters.
+	 * or {@link QueueData}s using the specified parameters. Either
+	 * {@code media} or {@code queueData} must be non-{@code null}.
 	 * <p>
 	 * This can only succeed if the remote application supports the
 	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
@@ -1020,7 +1017,6 @@ public class Channel implements Closeable {
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
-	 *
 	 */
 	@Nullable
 	public MediaStatus load(
@@ -1032,7 +1028,7 @@ public class Channel implements Closeable {
 		@Nullable Double currentTime,
 		@Nullable Map<String, Object> customData,
 		@Nullable LoadOptions loadOptions,
-		@Nonnull Media media,
+		@Nullable Media media,
 		@Nullable Double playbackRate,
 		@Nullable QueueData queueData,
 		boolean synchronous,

@@ -57,6 +57,9 @@ public class CastDevice {
 	/** The DNS-SD service type for cast devices */
 	public static final String SERVICE_TYPE = "_googlecast._tcp.local.";
 
+	/** The application ID for the "Default Media Receiver" application */
+	public static final String DEFAULT_MEDIA_RECEIVER_APP_ID = "CC1AD845";
+
 	/** The {@link Executor} that is used for asynchronous operations */
 	@Nonnull
 	protected static final Executor EXECUTOR = createExecutor();
