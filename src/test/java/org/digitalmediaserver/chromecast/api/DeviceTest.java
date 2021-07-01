@@ -16,7 +16,6 @@
 package org.digitalmediaserver.chromecast.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.digitalmediaserver.chromecast.api.Volume.VolumeControlType;
 import org.junit.Test;
 
 import java.io.IOException;

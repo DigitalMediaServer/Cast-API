@@ -218,11 +218,11 @@ public final class CastDeviceMonitor {
 				if (info == null || Util.isBlank(id = info.getPropertyString("id"))) {
 					return;
 				}
-				String address;
+				InetAddress address;
 				if (info.getInet4Addresses().length > 0) {
-					address = info.getInet4Addresses()[0].getHostAddress();
+					address = info.getInet4Addresses()[0];
 				} else if (info.getInet6Addresses().length > 0) {
-					address = info.getInet6Addresses()[0].getHostAddress();
+					address = info.getInet6Addresses()[0];
 				} else {
 					return;
 				}
