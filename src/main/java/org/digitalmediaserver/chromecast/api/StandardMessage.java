@@ -43,63 +43,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 	@JsonSubTypes.Type(name = "SEEK", value = StandardRequest.Seek.class)
 })
 
-//static const EnumTable<CastMessageType> kInstance( //TODO: (Nad) Temp
-//    {
-//        {CastMessageType::kPing, "PING"},
-//        {CastMessageType::kPong, "PONG"},
-//        {CastMessageType::kRpc, "RPC"},
-//        {CastMessageType::kGetAppAvailability, "GET_APP_AVAILABILITY"},
-//        {CastMessageType::kGetStatus, "GET_STATUS"},
-//        {CastMessageType::kConnect, "CONNECT"},
-//        {CastMessageType::kCloseConnection, "CLOSE"},
-//        {CastMessageType::kBroadcast, "APPLICATION_BROADCAST"},
-//        {CastMessageType::kLaunch, "LAUNCH"},
-//        {CastMessageType::kStop, "STOP"},
-//        {CastMessageType::kReceiverStatus, "RECEIVER_STATUS"},
-//        {CastMessageType::kMediaStatus, "MEDIA_STATUS"},
-//        {CastMessageType::kLaunchError, "LAUNCH_ERROR"},
-//        {CastMessageType::kOffer, "OFFER"},
-//        {CastMessageType::kAnswer, "ANSWER"},
-//        {CastMessageType::kCapabilitiesResponse, "CAPABILITIES_RESPONSE"},
-//        {CastMessageType::kStatusResponse, "STATUS_RESPONSE"},
-//        {CastMessageType::kMultizoneStatus, "MULTIZONE_STATUS"},
-//        {CastMessageType::kInvalidPlayerState, "INVALID_PLAYER_STATE"},
-//        {CastMessageType::kLoadFailed, "LOAD_FAILED"},
-//        {CastMessageType::kLoadCancelled, "LOAD_CANCELLED"},
-//        {CastMessageType::kInvalidRequest, "INVALID_REQUEST"},
-//        {CastMessageType::kPresentation, "PRESENTATION"},
-//        {CastMessageType::kGetCapabilities, "GET_CAPABILITIES"},
-//        {CastMessageType::kOther},
-//    },
-//    CastMessageType::kMaxValue);
-//
-//static const EnumTable<cast_channel::V2MessageType> kInstance(
-//    {
-//        {cast_channel::V2MessageType::kEditTracksInfo, "EDIT_TRACKS_INFO"},
-//        {cast_channel::V2MessageType::kGetStatus, "GET_STATUS"},
-//        {cast_channel::V2MessageType::kLoad, "LOAD"},
-//        {cast_channel::V2MessageType::kMediaGetStatus, "MEDIA_GET_STATUS"},
-//        {cast_channel::V2MessageType::kMediaSetVolume, "MEDIA_SET_VOLUME"},
-//        {cast_channel::V2MessageType::kPause, "PAUSE"},
-//        {cast_channel::V2MessageType::kPlay, "PLAY"},
-//        {cast_channel::V2MessageType::kPrecache, "PRECACHE"},
-//        {cast_channel::V2MessageType::kQueueInsert, "QUEUE_INSERT"},
-//        {cast_channel::V2MessageType::kQueueLoad, "QUEUE_LOAD"},
-//        {cast_channel::V2MessageType::kQueueRemove, "QUEUE_REMOVE"},
-//        {cast_channel::V2MessageType::kQueueReorder, "QUEUE_REORDER"},
-//        {cast_channel::V2MessageType::kQueueUpdate, "QUEUE_UPDATE"},
-//        {cast_channel::V2MessageType::kQueueNext, "QUEUE_NEXT"},
-//        {cast_channel::V2MessageType::kQueuePrev, "QUEUE_PREV"},
-//        {cast_channel::V2MessageType::kSeek, "SEEK"},
-//        {cast_channel::V2MessageType::kSetVolume, "SET_VOLUME"},
-//        {cast_channel::V2MessageType::kStop, "STOP"},
-//        {cast_channel::V2MessageType::kStopMedia, "STOP_MEDIA"},
-//        {cast_channel::V2MessageType::kOther},
-//    },
-//    cast_channel::V2MessageType::kMaxValue);
-
-
-
 public abstract class StandardMessage implements Message {
 
 	/**
@@ -138,10 +81,17 @@ public abstract class StandardMessage implements Message {
 		@JsonProperty
 		private final Origin origin = new Origin();
 
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param userAgent the user-agent to use, if any.
+		 * @param connectionType the {@link VirtualConnectionType} to use.
+		 */
 		@JsonCreator
 		public Connect(
 			@JsonProperty("userAgent") @Nullable String userAgent,
-			@JsonProperty("connType") @Nullable VirtualConnectionType connectionType) {
+			@JsonProperty("connType") @Nullable VirtualConnectionType connectionType
+		) {
 			this.userAgent = userAgent;
 			this.connType = connectionType;
 		}
@@ -155,21 +105,5 @@ public abstract class StandardMessage implements Message {
 		@JsonProperty
 		private final Integer reasonCode = Integer.valueOf(5); // Closed gracefully by sender
 
-	}
-
-	public static Ping ping() {
-		return new Ping();
-	}
-
-	public static Pong pong() {
-		return new Pong();
-	}
-
-	public static Connect connect(@Nullable String userAgent, @Nullable VirtualConnectionType connectionType) {
-		return new Connect(userAgent, connectionType);
-	}
-
-	public static CloseConnection closeConnection() {
-		return new CloseConnection();
 	}
 }
