@@ -180,12 +180,8 @@ public class Session {
 	 *
 	 */
 	@Nullable
-	public MediaStatus load(
-		@Nonnull Session session,
-		@Nonnull Load loadRequest,
-		boolean synchronous
-	) throws IOException {
-		return channel.load(session, loadRequest, synchronous, Channel.DEFAULT_RESPONSE_TIMEOUT);
+	public MediaStatus load(@Nonnull Load loadRequest, boolean synchronous) throws IOException {
+		return channel.load(this, loadRequest, synchronous, Channel.DEFAULT_RESPONSE_TIMEOUT);
 	}
 
 	/**
@@ -213,13 +209,8 @@ public class Session {
 	 *
 	 */
 	@Nullable
-	public MediaStatus load(
-		@Nonnull Session session,
-		@Nonnull Load loadRequest,
-		boolean synchronous,
-		long responseTimeout
-	) throws IOException {
-		return channel.load(session, loadRequest, synchronous, responseTimeout);
+	public MediaStatus load(@Nonnull Load loadRequest, boolean synchronous, long responseTimeout) throws IOException {
+		return channel.load(this, loadRequest, synchronous, responseTimeout);
 	}
 
 	/**
