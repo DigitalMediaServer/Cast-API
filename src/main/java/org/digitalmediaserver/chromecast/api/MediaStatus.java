@@ -607,11 +607,14 @@ public class MediaStatus {
 	 */
 	public enum IdleReason {
 
-		/** A sender requested to stop playback using the STOP command */
+		/**
+		 * A sender requested to stop playback using the {@code STOP} command
+		 */
 		CANCELLED,
 
 		/**
-		 * A sender requested playing a different media using the LOAD command
+		 * A sender requested playing a different media using the {@code LOAD}
+		 * command
 		 */
 		INTERRUPTED,
 
@@ -625,7 +628,8 @@ public class MediaStatus {
 		ERROR,
 
 		/**
-		 * Pandora is known to use 'COMPLETED' when the application times out
+		 * <b>Non-API</b>, not supported by Google devices. Pandora is known to
+		 * use 'COMPLETED' when the application times out.
 		 */
 		COMPLETED;
 
