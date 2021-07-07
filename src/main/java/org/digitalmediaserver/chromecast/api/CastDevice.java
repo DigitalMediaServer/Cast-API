@@ -29,7 +29,7 @@ import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Timer;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -60,9 +60,9 @@ public class CastDevice {
 	/** The application ID for the "Default Media Receiver" application */
 	public static final String DEFAULT_MEDIA_RECEIVER_APP_ID = "CC1AD845";
 
-	/** The {@link Executor} that is used for asynchronous operations */
+	/** The {@link ExecutorService} that is used for asynchronous operations */
 	@Nonnull
-	protected static final Executor EXECUTOR = createExecutor();
+	protected static final ExecutorService EXECUTOR = createExecutor();
 
 	/** The currently registered {@link CastEventListener}s */
 	@Nonnull
@@ -1054,9 +1054,9 @@ public class CastDevice {
 	}
 
 	/**
-	 * @return The new {@link Executor}.
+	 * @return The new {@link ExecutorService}.
 	 */
-	protected static Executor createExecutor() {
+	protected static ExecutorService createExecutor() {
 		ThreadPoolExecutor result = new ThreadPoolExecutor(
 			0,
 			Integer.MAX_VALUE,
@@ -1069,7 +1069,7 @@ public class CastDevice {
 
 				@Override
 				public Thread newThread(Runnable r) {
-					return new Thread(r, "ChromeCast API worker #" + threadNumber.getAndIncrement());
+					return new Thread(r, "Cast API worker #" + threadNumber.getAndIncrement());
 				}
 			}
 		);

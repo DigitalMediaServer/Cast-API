@@ -104,8 +104,11 @@ public class Channel implements Closeable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Channel.class);
 
-	/** The logging {@link Marker} to use for logging */
-	public static final Marker CHROMECAST_API_MARKER = MarkerFactory.getMarker("chromecast-api");
+	/** The logging {@link Marker} used for logging */
+	public static final Marker CAST_API_MARKER = MarkerFactory.getMarker("Cast API");
+
+	/** The logging {@link Marker} used for ping logging */
+	public static final Marker CAST_API_HEARTBEAT_MARKER = MarkerFactory.getMarker("Cast API Heartbeat");
 
 	/** The standard port used for cast devices */
 	public static final int STANDARD_DEVICE_PORT = 8009;
@@ -218,6 +221,10 @@ public class Channel implements Closeable {
 	@Nullable
 	@GuardedBy("gradualVolumeLock")
 	protected TimerTask gradualVolumeTask;
+
+	static {
+		CAST_API_HEARTBEAT_MARKER.add(CAST_API_MARKER);
+	}
 
 	/**
 	 * Creates a new channel using the specified parameters and the standard
@@ -1765,7 +1772,7 @@ public class Channel implements Closeable {
 	 * @throws IOException If an error occurs during the operation.
 	 */
 	protected void write(String namespace, String message, String sourceId, String destinationId) throws IOException {
-		LOGGER.debug(CHROMECAST_API_MARKER, "Sending message to {}; \"{}\"", remoteName, message);
+		LOGGER.debug(CAST_API_MARKER, "Sending message to {}; \"{}\"", remoteName, message);
 		CastMessage msg = CastMessage.newBuilder()
 			.setProtocolVersion(CastMessage.ProtocolVersion.CASTV2_1_0)
 			.setSourceId(sourceId)
@@ -1954,19 +1961,19 @@ public class Channel implements Closeable {
 
 		@Override
 		public void run() {
-			if (LOGGER.isTraceEnabled(CHROMECAST_API_MARKER)) {
-				LOGGER.trace(CHROMECAST_API_MARKER, "Pinging {}", remoteName);
+			if (LOGGER.isTraceEnabled(CAST_API_HEARTBEAT_MARKER)) {
+				LOGGER.trace(CAST_API_HEARTBEAT_MARKER, "Pinging {}", remoteName);
 			}
 			try {
 				write(message);
 			} catch (IOException e) {
 				LOGGER.warn(
-					CHROMECAST_API_MARKER,
+					CAST_API_MARKER,
 					"An error occurred while sending 'PING' to {}: {}",
 					remoteName,
 					e.getMessage()
 				);
-				LOGGER.trace(CHROMECAST_API_MARKER, "", e);
+				LOGGER.trace(CAST_API_MARKER, "", e);
 			}
 		}
 	}
@@ -2024,12 +2031,12 @@ public class Channel implements Closeable {
 					doSetVolume(newVolume, false, DEFAULT_RESPONSE_TIMEOUT);
 				} catch (IOException e) {
 					LOGGER.warn(
-						CHROMECAST_API_MARKER,
+						CAST_API_MARKER,
 						"An error occurred while gradually adjusting the volume " +
 						"level of {}, stopping gradual adjustment: {}", remoteName,
 						e.getMessage()
 					);
-					LOGGER.trace(CHROMECAST_API_MARKER, "", e);
+					LOGGER.trace(CAST_API_MARKER, "", e);
 					shutdownTask();
 				}
 			}
@@ -2104,7 +2111,7 @@ public class Channel implements Closeable {
 					} catch (SocketTimeoutException e) {
 						if (running) {
 							LOGGER.debug(
-								CHROMECAST_API_MARKER,
+								CAST_API_MARKER,
 								"{} InputHandler: Received an unexpected SocketTimeoutException - attempting to resume: {}",
 								remoteName,
 								e.getMessage()
@@ -2118,7 +2125,7 @@ public class Channel implements Closeable {
 						jsonMessage = ((ImmutableStringCastMessage) message).getPayload();
 						if (isBlank(jsonMessage)) {
 							LOGGER.trace(
-								CHROMECAST_API_MARKER,
+								CAST_API_MARKER,
 								"{} InputHandler: Received an empty string message - ignoring",
 								remoteName
 							);
@@ -2132,16 +2139,16 @@ public class Channel implements Closeable {
 							String responseType = tmpNode == null ? "" : tmpNode.asText("");
 							if ("PING".equals(responseType)) {
 								LOGGER.trace(
-									CHROMECAST_API_MARKER,
+									CAST_API_HEARTBEAT_MARKER,
 									"Received PING from {}, replying with PONG",
 									remoteName
 								);
 								write(pongMessage);
 							} else if ("PONG".equals(responseType)) {
-								LOGGER.trace(CHROMECAST_API_MARKER, "Received PONG from {}", remoteName);
+								LOGGER.trace(CAST_API_HEARTBEAT_MARKER, "Received PONG from {}", remoteName);
 							} else {
 								LOGGER.trace(
-									CHROMECAST_API_MARKER,
+									CAST_API_HEARTBEAT_MARKER,
 									"Received unexpected heartbeat message of type \"{}\" from {}",
 									responseType,
 									remoteName
@@ -2150,7 +2157,7 @@ public class Channel implements Closeable {
 							continue;
 						}
 						LOGGER.trace(
-							CHROMECAST_API_MARKER,
+							CAST_API_MARKER,
 							"{} InputHandler: Received string message \"{}\"",
 							remoteName,
 							jsonMessage
@@ -2158,7 +2165,7 @@ public class Channel implements Closeable {
 						processStringMessage((ImmutableStringCastMessage) message, jsonMessage);
 					} else if (message != null) {
 						LOGGER.trace(
-							CHROMECAST_API_MARKER,
+							CAST_API_MARKER,
 							"{} InputHandler: Received message with binary payload ({} bytes)",
 							remoteName,
 							((ImmutableBinaryCastMessage) message).getPayload() == null ?
@@ -2173,7 +2180,7 @@ public class Channel implements Closeable {
 						)));
 					} else {
 						LOGGER.warn(
-							CHROMECAST_API_MARKER,
+							CAST_API_MARKER,
 							"{} InputHandler: Received a null message",
 							remoteName
 						);
@@ -2181,8 +2188,8 @@ public class Channel implements Closeable {
 				}
 			} catch (IOException e) {
 				if (running) {
-					LOGGER.error(CHROMECAST_API_MARKER, "{} InputHandler exception, terminating handler: ", remoteName, e.getMessage());
-					if (message != null && LOGGER.isDebugEnabled(CHROMECAST_API_MARKER)) {
+					LOGGER.error(CAST_API_MARKER, "{} InputHandler exception, terminating handler: ", remoteName, e.getMessage());
+					if (message != null && LOGGER.isDebugEnabled(CAST_API_MARKER)) {
 						StringBuilder sb = new StringBuilder();
 						sb.append("namespace: ").append(message.getNamespace());
 						sb.append(", protocol version: ").append(message.getProtocolVersion().getNumber());
@@ -2191,13 +2198,13 @@ public class Channel implements Closeable {
 						} else {
 							sb.append(", binary payload: ").append(((ImmutableBinaryCastMessage) message).getPayload());
 						}
-						LOGGER.debug(CHROMECAST_API_MARKER, "Triggering (potentially partial) message: {}", sb.toString());
+						LOGGER.debug(CAST_API_MARKER, "Triggering (potentially partial) message: {}", sb.toString());
 					}
-					LOGGER.trace(CHROMECAST_API_MARKER, "", e);
+					LOGGER.trace(CAST_API_MARKER, "", e);
 					running = false;
 				} else {
 					LOGGER.trace(
-						CHROMECAST_API_MARKER,
+						CAST_API_MARKER,
 						"Exception while shutting down {} InputHandler: {}",
 						remoteName,
 						e.getMessage()
@@ -2207,7 +2214,7 @@ public class Channel implements Closeable {
 					close();
 				} catch (IOException ioe) {
 					LOGGER.debug(
-						CHROMECAST_API_MARKER,
+						CAST_API_MARKER,
 						"An error occurred while closing {} socket: {}",
 						remoteName,
 						e.getMessage()
@@ -2256,7 +2263,7 @@ public class Channel implements Closeable {
 							close();
 						} catch (IOException e) {
 							LOGGER.debug(
-								CHROMECAST_API_MARKER,
+								CAST_API_MARKER,
 								"An error occurred while closing {} socket: {}",
 								remoteName,
 								e.getMessage()
@@ -2323,7 +2330,7 @@ public class Channel implements Closeable {
 						listeners.fire(new DefaultCastEvent<>(response.getEventType(), response));
 					} else {
 						LOGGER.error(
-							CHROMECAST_API_MARKER,
+							CAST_API_MARKER,
 							"Received unhandled \"{}\" message from {}, this should not happen: {}",
 							responseType,
 							remoteName,
@@ -2334,12 +2341,12 @@ public class Channel implements Closeable {
 				}
 			} catch (JsonProcessingException e) {
 				LOGGER.warn(
-					CHROMECAST_API_MARKER,
+					CAST_API_MARKER,
 					"Error while processing JSON message from {}: {}",
 					remoteName,
 					e.getMessage()
 				);
-				LOGGER.trace(CHROMECAST_API_MARKER, "", e);
+				LOGGER.trace(CAST_API_MARKER, "", e);
 			}
 		}
 
