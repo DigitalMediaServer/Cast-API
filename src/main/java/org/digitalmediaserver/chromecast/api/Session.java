@@ -165,7 +165,6 @@ public class Session {
 	 * This can only succeed if the remote application supports the
 	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
-	 * @param session the {@link Session} to use.
 	 * @param loadRequest the {@link Load} request to send.
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
@@ -191,7 +190,6 @@ public class Session {
 	 * This can only succeed if the remote application supports the
 	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
 	 *
-	 * @param session the {@link Session} to use.
 	 * @param loadRequest the {@link Load} request to send.
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
@@ -387,6 +385,121 @@ public class Session {
 			autoplay,
 			currentTime,
 			media,
+			synchronous,
+			responseTimeout
+		);
+	}
+
+	/**
+	 * Asks the remote application to load the specified {@link Media} using the
+	 * specified parameters.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param media the {@link Media} to load.
+	 * @param activeTrackIds the {@link List} of track IDs that are active. If
+	 *            the list is not provided, the default tracks will be active.
+	 * @param autoplay {@code true} to ask the remote application to start
+	 *            playback as soon as the {@link Media} has been loaded,
+	 *            {@code false} to ask it to transition to a paused state after
+	 *            loading.
+	 * @param currentTime the position in seconds from the start for where
+	 *            playback is to start in the loaded {@link Media}. If the
+	 *            content is live content, and {@code currentTime} is not
+	 *            specified, the stream will start at the live position.
+	 * @param playbackRate the media playback rate.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IllegalArgumentException If {@code media} is {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public MediaStatus load(
+		@Nonnull Media media,
+		@Nullable List<Integer> activeTrackIds,
+		@Nullable Boolean autoplay,
+		@Nullable Double currentTime,
+		@Nullable Double playbackRate,
+		boolean synchronous
+	) throws IOException {
+		return channel.load(
+			this,
+			activeTrackIds,
+			autoplay,
+			null,
+			null,
+			currentTime,
+			null,
+			null,
+			media,
+			playbackRate,
+			null,
+			synchronous,
+			Channel.DEFAULT_RESPONSE_TIMEOUT
+		);
+	}
+
+	/**
+	 * Asks the remote application to load the specified {@link Media} using the
+	 * specified parameters and {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the
+	 * timeout value.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param media the {@link Media} to load.
+	 * @param activeTrackIds the {@link List} of track IDs that are active. If
+	 *            the list is not provided, the default tracks will be active.
+	 * @param autoplay {@code true} to ask the remote application to start
+	 *            playback as soon as the {@link Media} has been loaded,
+	 *            {@code false} to ask it to transition to a paused state after
+	 *            loading.
+	 * @param currentTime the position in seconds from the start for where
+	 *            playback is to start in the loaded {@link Media}. If the
+	 *            content is live content, and {@code currentTime} is not
+	 *            specified, the stream will start at the live position.
+	 * @param playbackRate the media playback rate.
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @param responseTimeout the response timeout in milliseconds if
+	 *            {@code synchronous} is {@code true}. If zero or negative,
+	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
+	 *         {@code true} and a reply is received in time, {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws IllegalArgumentException If {@code media} is {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 */
+	@Nullable
+	public MediaStatus load(
+		@Nonnull Media media,
+		@Nullable List<Integer> activeTrackIds,
+		@Nullable Boolean autoplay,
+		@Nullable Double currentTime,
+		@Nullable Double playbackRate,
+		boolean synchronous,
+		long responseTimeout
+	) throws IOException {
+		return channel.load(
+			this,
+			activeTrackIds,
+			autoplay,
+			null,
+			null,
+			currentTime,
+			null,
+			null,
+			media,
+			playbackRate,
+			null,
 			synchronous,
 			responseTimeout
 		);
