@@ -449,9 +449,9 @@ public interface CastEvent<T> {
 			}
 
 			if (listeners.isEmpty()) {
-				if (LOGGER.isDebugEnabled(Channel.CHROMECAST_API_MARKER)) {
+				if (LOGGER.isDebugEnabled(Channel.CAST_API_MARKER)) {
 					LOGGER.debug(
-						Channel.CHROMECAST_API_MARKER,
+						Channel.CAST_API_MARKER,
 						"No cast event listener, but would have notified them of the following event from {}: {}",
 						remoteName,
 						event
@@ -459,9 +459,9 @@ public interface CastEvent<T> {
 				}
 				return;
 			}
-			if (LOGGER.isDebugEnabled(Channel.CHROMECAST_API_MARKER)) {
+			if (LOGGER.isDebugEnabled(Channel.CAST_API_MARKER)) {
 				LOGGER.debug(
-					Channel.CHROMECAST_API_MARKER,
+					Channel.CAST_API_MARKER,
 					"Notifying cast event listeners of the following event from {}: {}",
 					remoteName,
 					event
@@ -534,9 +534,9 @@ public interface CastEvent<T> {
 			}
 
 			if (listeners.isEmpty()) {
-				if (LOGGER.isDebugEnabled(Channel.CHROMECAST_API_MARKER)) {
+				if (LOGGER.isDebugEnabled(Channel.CAST_API_MARKER)) {
 					LOGGER.debug(
-						Channel.CHROMECAST_API_MARKER,
+						Channel.CAST_API_MARKER,
 						"No cast event listener, but would have notified them of the following event from {}: {}",
 						remoteName,
 						event
@@ -544,9 +544,9 @@ public interface CastEvent<T> {
 				}
 				return;
 			}
-			if (LOGGER.isDebugEnabled(Channel.CHROMECAST_API_MARKER)) {
+			if (LOGGER.isDebugEnabled(Channel.CAST_API_MARKER)) {
 				LOGGER.debug(
-					Channel.CHROMECAST_API_MARKER,
+					Channel.CAST_API_MARKER,
 					"Notifying cast event listeners of the following event from {}: {}",
 					remoteName,
 					event
@@ -580,10 +580,10 @@ public interface CastEvent<T> {
 				}
 			} catch (RejectedExecutionException e) {
 				LOGGER.warn(
-					Channel.CHROMECAST_API_MARKER,
+					Channel.CAST_API_MARKER,
 					"Unable to notify listeners of change event: " + e.getMessage()
 				);
-				LOGGER.trace(Channel.CHROMECAST_API_MARKER, "", e);
+				LOGGER.trace(Channel.CAST_API_MARKER, "", e);
 			}
 		}
 
