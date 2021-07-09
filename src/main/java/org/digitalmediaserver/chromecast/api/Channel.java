@@ -96,9 +96,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 
 /**
- * Internal class for low-level communication with ChromeCast device. It's
- * normally desirable to use {@link CastDevice} or {@link Session} methods
- * instead of calling this class directly.
+ * Internal class for low-level communication with cast devices. It's normally
+ * desirable to use {@link CastDevice} or {@link Session} methods instead of
+ * calling this class directly.
  */
 public class Channel implements Closeable {
 
@@ -114,7 +114,7 @@ public class Channel implements Closeable {
 	public static final int STANDARD_DEVICE_PORT = 8009;
 
 	/** The delay between {@code PING} requests in milliseconds */
-	protected static final long PING_PERIOD = 10 * 1000; //TODO: (Nad) 5 sec suggested in doc, was 30
+	protected static final long PING_PERIOD = 10L * 1000L;
 
 	/** The default response timeout in milliseconds */
 	public static final long DEFAULT_RESPONSE_TIMEOUT = 30 * 1000;
@@ -352,13 +352,15 @@ public class Channel implements Closeable {
 				return false;
 			}
 
-			if (socket == null || socket.isClosed()) {
-				SSLContext sc = SSLContext.getInstance("SSL");
-				sc.init(null, new TrustManager[] {new X509TrustAllManager()}, new SecureRandom());
-				socket = sc.getSocketFactory().createSocket();
-				socket.setSoTimeout(0);
-				socket.connect(address);
+			if (socket != null) {
+				socket.close();
+				socket = null;
 			}
+			SSLContext sc = SSLContext.getInstance("SSL");
+			sc.init(null, new TrustManager[] {new X509TrustAllManager()}, new SecureRandom());
+			socket = sc.getSocketFactory().createSocket();
+			socket.setSoTimeout(0);
+			socket.connect(address);
 
 			// Authenticate
 			CastChannel.DeviceAuthMessage authMessage = CastChannel.DeviceAuthMessage.newBuilder()
@@ -399,6 +401,11 @@ public class Channel implements Closeable {
 			pingTimer.schedule(pingTask, 1000, PING_PERIOD);
 		}
 
+		// Reset the cached volume on every connect
+		synchronized (cachedVolumeLock) {
+			cachedVolume = null;
+		}
+
 		// Send connect event
 		listeners.fire(new DefaultCastEvent<>(CastEventType.CONNECTED, Boolean.TRUE));
 		return true;
@@ -436,6 +443,7 @@ public class Channel implements Closeable {
 				}
 
 				socket.close();
+				socket = null;
 			}
 		}
 
@@ -1466,8 +1474,23 @@ public class Channel implements Closeable {
 		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
 	}
 
+	/**
+	 * Sets the device {@link Volume} to the values of the specified instance. A
+	 * {@link Volume} instance contains both the volume level and the mute
+	 * state.
+	 * <p>
+	 * If the device has {@link VolumeControlType#MASTER} and the this call
+	 * changes the volume level more than the device specified "step", this
+	 * method will start a {@link Timer} based gradual change towards the
+	 * specified volume level.
+	 *
+	 * @param volume the {@link Volume} instance whose values to set.
+	 * @throws ChromeCastException If the cast device has
+	 *             {@link VolumeControlType#FIXED}.
+	 * @throws IOException If an error occurs during the operation.
+	 */
 	@Nullable
-	public void setVolume(Volume volume) throws IOException { //TODO: (Nad) JavaDocs
+	public void setVolume(Volume volume) throws IOException {
 		if (volume == null) {
 			return;
 		}
@@ -1723,8 +1746,84 @@ public class Channel implements Closeable {
 		if (volume == null) {
 			return;
 		}
+		boolean setVolume;
 		synchronized (cachedVolumeLock) {
+			setVolume = cachedVolume == null;
 			cachedVolume = volume;
+		}
+
+		if (
+			setVolume &&
+			volume.getControlType() != VolumeControlType.FIXED &&
+			volume.getLevel() != null &&
+			volume.getLevel().doubleValue() < 1.0
+		) {
+			// There's a long-standing bug in the ChromeCast software that resets
+			// the device volume to 100% when the device is restarted. It correctly
+			// reports the volume level it's supposed to have, but audio is played
+			// back with 100% volume regardless. This little trick is to mitigate
+			// the bug by setting the volume to what the device reports the first
+			// time we receive one. Hopefully this won't negatively impact devices
+			// without the bug.
+			final double targetLevel = volume.getLevel().doubleValue();
+			final double interrimLevel;
+			if (targetLevel > 0.1) {
+				interrimLevel = targetLevel - 0.05;
+			} else {
+				interrimLevel = targetLevel + 0.05;
+			}
+
+			CastDevice.EXECUTOR.execute(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						send(
+							null,
+							"urn:x-cast:com.google.cast.receiver",
+							new SetVolume(new Volume(null, Double.valueOf(interrimLevel), null, null)),
+							PLATFORM_SENDER_ID,
+							PLATFORM_RECEIVER_ID,
+							null,
+							0L
+						);
+					} catch (IOException e) {
+						LOGGER.warn(
+							CAST_API_MARKER,
+							"Failed to set the initial interrim volume on {}: {}",
+							remoteName,
+							e.getMessage()
+						);
+						LOGGER.trace(CAST_API_MARKER, "", e);
+					}
+				}
+			});
+			CastDevice.EXECUTOR.execute(new Runnable() {
+
+				@Override
+				public void run() {
+					try {
+						Thread.sleep(150L);
+						send(
+							null,
+							"urn:x-cast:com.google.cast.receiver",
+							new SetVolume(new Volume(null, Double.valueOf(targetLevel), null, null)),
+							PLATFORM_SENDER_ID,
+							PLATFORM_RECEIVER_ID,
+							null,
+							0L
+						);
+					} catch (IOException | InterruptedException e) {
+						LOGGER.warn(
+							CAST_API_MARKER,
+							"Failed to set the initial volume on {}: {}",
+							remoteName,
+							e.getMessage()
+						);
+						LOGGER.trace(CAST_API_MARKER, "", e);
+					}
+				}
+			});
 		}
 	}
 
@@ -1772,7 +1871,13 @@ public class Channel implements Closeable {
 	 * @throws IOException If an error occurs during the operation.
 	 */
 	protected void write(String namespace, String message, String sourceId, String destinationId) throws IOException {
-		LOGGER.debug(CAST_API_MARKER, "Sending message to {}; \"{}\"", remoteName, message);
+		LOGGER.debug(
+			CAST_API_MARKER,
+			"Sending message to {} with namespace '{}': \"{}\"",
+			remoteName,
+			namespace,
+			message
+		);
 		CastMessage msg = CastMessage.newBuilder()
 			.setProtocolVersion(CastMessage.ProtocolVersion.CASTV2_1_0)
 			.setSourceId(sourceId)
@@ -2358,6 +2463,11 @@ public class Channel implements Closeable {
 		}
 	}
 
+	/**
+	 * Internal class used to tie responses to requests based on request IDs.
+	 *
+	 * @param <T> the response type.
+	 */
 	protected class ResultProcessor<T extends Response> {
 
 		@Nullable
@@ -2367,6 +2477,13 @@ public class Channel implements Closeable {
 		private boolean closed;
 		private ResultProcessorResult<T> result;
 
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param session the {@link Session} if one applies to the request.
+		 * @param responseClass the expected response class.
+		 * @param requestTimeout the timeout value in milliseconds.
+		 */
 		public ResultProcessor(@Nullable Session session, @Nonnull Class<T> responseClass, long requestTimeout) {
 			requireNotNull(responseClass, "responseClass");
 			this.session = session;
@@ -2374,6 +2491,10 @@ public class Channel implements Closeable {
 			this.requestTimeout = requestTimeout < 1 ? DEFAULT_RESPONSE_TIMEOUT : requestTimeout;
 		}
 
+		/**
+		 * Called if the {@link Session} linked to this {@link ResultProcessor}
+		 * is closed.
+		 */
 		public void sessionClosed() {
 			synchronized (this) {
 				closed = true;
@@ -2381,6 +2502,14 @@ public class Channel implements Closeable {
 			}
 		}
 
+		/**
+		 * Processes the specified message that has been routed to this
+		 * {@link ResultProcessor} by its request ID.
+		 *
+		 * @param jsonMSG the message content formatted as JSON.
+		 * @throws JsonMappingException If the JSON mapping fails.
+		 * @throws JsonProcessingException If the JSON can't be processed.
+		 */
 		@SuppressWarnings("unchecked")
 		public void process(String jsonMSG) throws JsonMappingException, JsonProcessingException {
 			Class<?> deserializeTo;
@@ -2409,6 +2538,18 @@ public class Channel implements Closeable {
 			}
 		}
 
+		/**
+		 * Returns the {@link ResultProcessorResult} when it is due. If the
+		 * response hasn't been received yet, this method will block until it is
+		 * or the timeout expires.
+		 *
+		 * @return The response.
+		 * @throws InterruptedException If the thread is interrupted while
+		 *             waiting for the response.
+		 * @throws TimeoutException If waiting for the response times out.
+		 * @throws ChromeCastException If the {@link Session} is closed while
+		 *             waiting for the response.
+		 */
 		@Nonnull
 		public ResultProcessorResult<T> get() throws InterruptedException, TimeoutException, ChromeCastException {
 			synchronized (this) {
@@ -2426,24 +2567,47 @@ public class Channel implements Closeable {
 			}
 		}
 
+		/**
+		 * @return The {@link Session} tied to this {@link ResultProcessor}, if
+		 *         any.
+		 */
 		@Nullable
 		public Session getSession() {
 			return session;
 		}
 	}
 
+	/**
+	 * A holder for the resulting {@link Response}.
+	 *
+	 * @param <T> the response type.
+	 */
 	protected class ResultProcessorResult<T extends Response> {
 
+		/** The {@link Response} as the expected type */
 		@Nullable
 		protected final T typedResult;
 
+		/** The {@link Response} as an unexpected type */
 		@Nullable
 		protected final StandardResponse untypedResult;
 
+		/** The response as JSON */
 		@Nullable
 		protected final String unprocessedResult;
 
-		public ResultProcessorResult(T typedResult, StandardResponse untypedResult, String unprocessedResult) {
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param typedResult the {@link Response} as the expected type.
+		 * @param untypedResult the {@link Response} as an unexpected type.
+		 * @param unprocessedResult the response as a JSON.
+		 */
+		public ResultProcessorResult(
+			@Nullable T typedResult,
+			@Nullable StandardResponse untypedResult,
+			@Nullable String unprocessedResult
+		) {
 			this.typedResult = typedResult;
 			this.untypedResult = untypedResult;
 			this.unprocessedResult = unprocessedResult;
