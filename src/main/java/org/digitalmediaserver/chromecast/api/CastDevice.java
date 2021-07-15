@@ -568,8 +568,8 @@ public class CastDevice {
 	 *             that prevents connection.
 	 * @throws NoSuchAlgorithmException If the required cryptographic algorithm
 	 *             isn't available in the JVM.
-	 * @throws ChromeCastException If there was an authentication problem with
-	 *             the cast device.
+	 * @throws CastException If there was an authentication problem with the
+	 *             cast device.
 	 * @throws IOException If an error occurs during the operation.
 	 */
 	public boolean connect() throws IOException, KeyManagementException, NoSuchAlgorithmException {

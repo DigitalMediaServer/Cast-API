@@ -54,10 +54,10 @@ import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListener;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventListenerList;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 import org.digitalmediaserver.chromecast.api.CastEvent.DefaultCastEvent;
-import org.digitalmediaserver.chromecast.api.ChromeCastException.ErrorResponseChromeCastException;
-import org.digitalmediaserver.chromecast.api.ChromeCastException.LaunchErrorCastException;
-import org.digitalmediaserver.chromecast.api.ChromeCastException.UnprocessedChromeCastException;
-import org.digitalmediaserver.chromecast.api.ChromeCastException.UntypedChromeCastException;
+import org.digitalmediaserver.chromecast.api.CastException.ErrorResponseCastException;
+import org.digitalmediaserver.chromecast.api.CastException.LaunchErrorCastException;
+import org.digitalmediaserver.chromecast.api.CastException.UnprocessedCastException;
+import org.digitalmediaserver.chromecast.api.CastException.UntypedCastException;
 import org.digitalmediaserver.chromecast.api.ImmutableCastMessage.ImmutableBinaryCastMessage;
 import org.digitalmediaserver.chromecast.api.ImmutableCastMessage.ImmutableStringCastMessage;
 import org.digitalmediaserver.chromecast.api.Session.SessionClosedListener;
@@ -341,8 +341,8 @@ public class Channel implements Closeable {
 	 *             that prevents connection.
 	 * @throws NoSuchAlgorithmException If the required cryptographic algorithm
 	 *             isn't available in the JVM.
-	 * @throws ChromeCastException If there was an authentication problem with
-	 *             the cast device.
+	 * @throws CastException If there was an authentication problem with the
+	 *             cast device.
 	 * @throws IOException If an error occurs during the operation.
 	 */
 	public boolean connect() throws IOException, NoSuchAlgorithmException, KeyManagementException {
@@ -380,7 +380,7 @@ public class Channel implements Closeable {
 			ImmutableBinaryCastMessage response = (ImmutableBinaryCastMessage) readMessage(socket.getInputStream());
 			CastChannel.DeviceAuthMessage authResponse = CastChannel.DeviceAuthMessage.parseFrom(response.getPayload());
 			if (authResponse.hasError()) {
-				throw new ChromeCastException("Authentication failed: " + authResponse.getError().getErrorType().toString());
+				throw new CastException("Authentication failed: " + authResponse.getError().getErrorType().toString());
 			}
 
 			// Start input handler
@@ -535,7 +535,7 @@ public class Channel implements Closeable {
 				return response.typedResult;
 			}
 			if (response.untypedResult instanceof ErrorResponse) {
-				throw new ErrorResponseChromeCastException(
+				throw new ErrorResponseCastException(
 					"Cast device returned an error: " + response.untypedResult,
 					(ErrorResponse) response.untypedResult
 				);
@@ -546,20 +546,20 @@ public class Channel implements Closeable {
 				);
 			}
 			if (response.untypedResult != null) {
-				throw new UntypedChromeCastException(
+				throw new UntypedCastException(
 					"Cast device returned " + response.untypedResult.getClass().getSimpleName() +
 					" instead of the expected " + responseClass.getSimpleName(),
 					response.untypedResult
 				);
 			}
-			throw new UnprocessedChromeCastException(
+			throw new UnprocessedCastException(
 				"Failed to deserialize response to " + responseClass.getSimpleName(),
 				response.unprocessedResult
 			);
 		} catch (InterruptedException e) {
-			throw new ChromeCastException("Interrupted while waiting for response", e);
+			throw new CastException("Interrupted while waiting for response", e);
 		} catch (TimeoutException e) {
-			throw new ChromeCastException("Waiting for response timed out", e);
+			throw new CastException("Waiting for response timed out", e);
 		} finally {
 			synchronized (requests) {
 				requests.remove(requestId);
@@ -1485,7 +1485,7 @@ public class Channel implements Closeable {
 	 * specified volume level.
 	 *
 	 * @param volume the {@link Volume} instance whose values to set.
-	 * @throws ChromeCastException If the cast device has
+	 * @throws CastException If the cast device has
 	 *             {@link VolumeControlType#FIXED}.
 	 * @throws IOException If an error occurs during the operation.
 	 */
@@ -1500,7 +1500,7 @@ public class Channel implements Closeable {
 		}
 		if (lastVolume != null) {
 			if (lastVolume.getControlType() == VolumeControlType.FIXED) {
-				throw new ChromeCastException("Cannot set volume level or mute since the device has a fixed volume");
+				throw new CastException("Cannot set volume level or mute since the device has a fixed volume");
 			}
 			Double currentLevelObj, targetLevelObj, stepIntervalObj;
 			if (
@@ -1979,7 +1979,7 @@ public class Channel implements Closeable {
 		while (read < size) {
 			int readNow = inputStream.read(buf, read, buf.length - read);
 			if (readNow == -1) {
-				throw new ChromeCastException("Incomplete message, ended after reading " + read + " of " + size + " bytes");
+				throw new CastException("Incomplete message, ended after reading " + read + " of " + size + " bytes");
 			}
 			read += readNow;
 		}
@@ -2547,18 +2547,18 @@ public class Channel implements Closeable {
 		 * @throws InterruptedException If the thread is interrupted while
 		 *             waiting for the response.
 		 * @throws TimeoutException If waiting for the response times out.
-		 * @throws ChromeCastException If the {@link Session} is closed while
-		 *             waiting for the response.
+		 * @throws CastException If the {@link Session} is closed while waiting
+		 *             for the response.
 		 */
 		@Nonnull
-		public ResultProcessorResult<T> get() throws InterruptedException, TimeoutException, ChromeCastException {
+		public ResultProcessorResult<T> get() throws InterruptedException, TimeoutException, CastException {
 			synchronized (this) {
 				if (result != null) {
 					return result;
 				}
 				this.wait(requestTimeout);
 				if (closed) {
-					throw new ChromeCastException("The session was closed by the cast device");
+					throw new CastException("The session was closed by the cast device");
 				}
 				if (result == null) {
 					throw new TimeoutException();

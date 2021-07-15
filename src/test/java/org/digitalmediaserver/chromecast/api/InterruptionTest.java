@@ -130,7 +130,7 @@ public class InterruptionTest {
 		t.interrupt();
 		barrier.await();
 		assertNotNull(exception.get());
-		assertTrue(exception.get() instanceof ChromeCastException);
+		assertTrue(exception.get() instanceof CastException);
 		assertTrue(exception.get().getCause() instanceof InterruptedException);
 		assertEquals("Interrupted while waiting for response", exception.get().getMessage());
 	}
@@ -149,7 +149,7 @@ public class InterruptionTest {
 				return new Custom();
 			}
 		};
-		thrown.expect(ChromeCastException.class);
+		thrown.expect(CastException.class);
 		thrown.expectCause(CoreMatchers.isA(TimeoutException.class));
 		thrown.expectMessage("Waiting for response timed out");
 		cast.channel().send(null, "urn:x-cast:test", new Custom(), "sender-0", "receiver-0", Custom.class, 100L);

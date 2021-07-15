@@ -22,10 +22,10 @@ import org.digitalmediaserver.chromecast.api.StandardResponse.ErrorResponse;
 
 
 /**
- * Generic error, which may happen during interaction with ChromeCast device.
+ * Generic error, which may happen during interaction with a cast device.
  * Contains some descriptive message.
  */
-public class ChromeCastException extends IOException { //TODO: (Nad) Rename
+public class CastException extends IOException {
 
 	private static final long serialVersionUID = 1L;
 
@@ -34,7 +34,7 @@ public class ChromeCastException extends IOException { //TODO: (Nad) Rename
 	 *
 	 * @param message the message to use.
 	 */
-	public ChromeCastException(@Nullable String message) {
+	public CastException(@Nullable String message) {
 		super(message);
 	}
 
@@ -44,15 +44,15 @@ public class ChromeCastException extends IOException { //TODO: (Nad) Rename
 	 * @param message the message to use.
 	 * @param cause the cause to use.
 	 */
-	public ChromeCastException(@Nullable String message, @Nullable Throwable cause) {
+	public CastException(@Nullable String message, @Nullable Throwable cause) {
 		super(message, cause);
 	}
 
 	/**
-	 * A specialized {@link ChromeCastException} used to deliver an
+	 * A specialized {@link CastException} used to deliver an
 	 * {@link ErrorResponse} if one is returned from the cast device.
 	 */
-	public static class ErrorResponseChromeCastException extends ChromeCastException {
+	public static class ErrorResponseCastException extends CastException {
 
 		private static final long serialVersionUID = 1L;
 
@@ -66,7 +66,7 @@ public class ChromeCastException extends IOException { //TODO: (Nad) Rename
 		 * @param message the message to use.
 		 * @param errorResponse the {@link ErrorResponse} to deliver.
 		 */
-		public ErrorResponseChromeCastException(@Nullable String message, @Nonnull ErrorResponse errorResponse) {
+		public ErrorResponseCastException(@Nullable String message, @Nonnull ErrorResponse errorResponse) {
 			super(message);
 			Util.requireNotNull(errorResponse, "errorResponse");
 			this.errorResponse = errorResponse;
@@ -74,7 +74,7 @@ public class ChromeCastException extends IOException { //TODO: (Nad) Rename
 
 		/**
 		 * @return The {@link ErrorResponse} that caused this
-		 *         {@link ErrorResponseChromeCastException}.
+		 *         {@link ErrorResponseCastException}.
 		 */
 		@Nonnull
 		public ErrorResponse getErrorResponse() {
@@ -83,11 +83,11 @@ public class ChromeCastException extends IOException { //TODO: (Nad) Rename
 	}
 
 	/**
-	 * A specialized {@link ChromeCastException} used to deliver a
+	 * A specialized {@link CastException} used to deliver a
 	 * {@link StandardResponse} if another type than what was expected is
 	 * returned from the cast device.
 	 */
-	public static class UntypedChromeCastException extends ChromeCastException {
+	public static class UntypedCastException extends CastException {
 
 		private static final long serialVersionUID = 1L;
 
@@ -101,7 +101,7 @@ public class ChromeCastException extends IOException { //TODO: (Nad) Rename
 		 * @param message the message to use.
 		 * @param untypedResponse the {@link StandardResponse} to deliver.
 		 */
-		public UntypedChromeCastException(@Nullable String message, @Nonnull StandardResponse untypedResponse) {
+		public UntypedCastException(@Nullable String message, @Nonnull StandardResponse untypedResponse) {
 			super(message);
 			Util.requireNotNull(untypedResponse, "untypedResponse");
 			this.untypedResponse = untypedResponse;
@@ -109,7 +109,7 @@ public class ChromeCastException extends IOException { //TODO: (Nad) Rename
 
 		/**
 		 * @return The untyped {@link StandardResponse} that caused this
-		 *         {@link UnprocessedChromeCastException}.
+		 *         {@link UntypedCastException}.
 		 */
 		@Nonnull
 		public StandardResponse getUntypedResponse() {
@@ -118,10 +118,10 @@ public class ChromeCastException extends IOException { //TODO: (Nad) Rename
 	}
 
 	/**
-	 * A specialized {@link ChromeCastException} used to deliver a responses
+	 * A specialized {@link CastException} used to deliver a responses
 	 * that could not be deserialized.
 	 */
-	public static class UnprocessedChromeCastException extends ChromeCastException {
+	public static class UnprocessedCastException extends CastException {
 
 		private static final long serialVersionUID = 1L;
 
@@ -135,7 +135,7 @@ public class ChromeCastException extends IOException { //TODO: (Nad) Rename
 		 * @param message the message to use.
 		 * @param unprocessedResponse the unprocessed {@code JSON} to deliver.
 		 */
-		public UnprocessedChromeCastException(String message, @Nullable String unprocessedResponse) {
+		public UnprocessedCastException(String message, @Nullable String unprocessedResponse) {
 			super(message);
 			this.unprocessedResponse = unprocessedResponse;
 		}
@@ -150,10 +150,10 @@ public class ChromeCastException extends IOException { //TODO: (Nad) Rename
 	}
 
 	/**
-	 * A specialized {@link ChromeCastException} used what a
+	 * A specialized {@link CastException} used what a
 	 * {@code LAUNCH_ERROR} response is received.
 	 */
-	public static class LaunchErrorCastException extends ChromeCastException {
+	public static class LaunchErrorCastException extends CastException {
 
 		private static final long serialVersionUID = 1L;
 
