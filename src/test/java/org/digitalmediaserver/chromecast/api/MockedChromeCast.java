@@ -213,7 +213,7 @@ public class MockedChromeCast {
 			while (read < buf.length) {
 				int nextByte = is.read();
 				if (nextByte == -1) {
-					throw new ChromeCastException("Remote socket was closed");
+					throw new CastException("Remote socket was closed");
 				}
 				buf[read++] = (byte) nextByte;
 			}
@@ -224,7 +224,7 @@ public class MockedChromeCast {
 			while (read < size) {
 				int nowRead = is.read(buf, read, buf.length - read);
 				if (nowRead == -1) {
-					throw new ChromeCastException("Remote socket was closed");
+					throw new CastException("Remote socket was closed");
 				}
 				read += nowRead;
 			}

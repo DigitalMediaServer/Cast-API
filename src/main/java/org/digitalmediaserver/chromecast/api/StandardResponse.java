@@ -532,8 +532,8 @@ public abstract class StandardResponse implements Response {
 	}
 
 	/**
-	 * Multi-Zone status for the case when there are multiple ChromeCast devices
-	 * in different zones (rooms).
+	 * Multi-Zone status for the case when there are multiple cast devices in
+	 * different zones (rooms).
 	 */
 	@Immutable
 	public static class MultizoneStatusResponse extends StandardResponse {
@@ -581,7 +581,7 @@ public abstract class StandardResponse implements Response {
 	}
 
 	/**
-	 * Received when power is cycled on ChromeCast Audio device in a group.
+	 * Received when power is cycled on ChromeCast Audio devices in a group.
 	 */
 	@Immutable
 	public static class DeviceAddedResponse extends StandardResponse {
@@ -674,7 +674,7 @@ public abstract class StandardResponse implements Response {
 	}
 
 	/**
-	 * Received when power is cycled on ChromeCast Audio device in a group.
+	 * Received when power is cycled on ChromeCast Audio devices in a group.
 	 */
 	@Immutable
 	public static class DeviceRemovedResponse extends StandardResponse {
