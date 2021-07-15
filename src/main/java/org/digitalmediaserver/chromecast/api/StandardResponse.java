@@ -35,9 +35,10 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 
+
 /**
- * Parent class for transport object representing messages received FROM
- * ChromeCast device.
+ * Parent class for transport object representing messages received FROM cast
+ * devices.
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "responseType", visible = true)
 @JsonSubTypes({
@@ -59,10 +60,16 @@ import org.digitalmediaserver.chromecast.api.CastEvent.CastEventType;
 	@JsonSubTypes.Type(name = "DEVICE_REMOVED", value = StandardResponse.DeviceRemovedResponse.class)
 })
 @Immutable
-public abstract class StandardResponse implements Response { //TODO: (Nad) JavaDocs
+public abstract class StandardResponse implements Response {
 
+	/** The request ID */
 	protected final long requestId;
 
+	/**
+	 * Abstract constructor.
+	 *
+	 * @param requestId the request ID.
+	 */
 	protected StandardResponse(@JsonProperty("requestId") long requestId) {
 		this.requestId = requestId;
 	}
@@ -87,6 +94,11 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 	@Immutable
 	public static class PingResponse extends StandardResponse {
 
+		/**
+		 * Creates a new instance using the specified request ID.
+		 *
+		 * @param requestId the request ID.
+		 */
 		protected PingResponse(@JsonProperty("requestId") long requestId) {
 			super(requestId);
 		}
@@ -112,6 +124,9 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 	@Immutable
 	public static class PongResponse extends StandardResponse {
 
+		/**
+		 * Creates a new instance.
+		 */
 		protected PongResponse() {
 			super(0);
 		}
@@ -143,6 +158,11 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 	@Immutable
 	public static class CloseResponse extends StandardResponse {
 
+		/**
+		 * Creates a new instance using the specified request ID.
+		 *
+		 * @param requestId the request ID.
+		 */
 		protected CloseResponse(@JsonProperty("requestId") long requestId) {
 			super(requestId);
 		}
@@ -318,11 +338,20 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 		@JsonInclude(JsonInclude.Include.NON_NULL)
 		private final String reason;
 
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param requestId the request ID.
+		 * @param reason the error reason.
+		 */
 		public LaunchErrorResponse(@JsonProperty("requestId") long requestId, @JsonProperty("reason") String reason) {
 			super(requestId);
 			this.reason = reason;
 		}
 
+		/**
+		 * @return The error reason.
+		 */
 		public String getReason() {
 			return reason;
 		}
@@ -354,11 +383,23 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 		@JsonProperty
 		private final ReceiverStatus status;
 
-		public ReceiverStatusResponse(@JsonProperty("requestId") long requestId, @JsonProperty("status") ReceiverStatus status) {
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param requestId the request ID.
+		 * @param status the {@link ReceiverStatus}.
+		 */
+		public ReceiverStatusResponse(
+			@JsonProperty("requestId") long requestId,
+			@JsonProperty("status") ReceiverStatus status
+		) {
 			super(requestId);
 			this.status = status;
 		}
 
+		/**
+		 * @return The {@link ReceiverStatus}.
+		 */
 		public ReceiverStatus getStatus() {
 			return status;
 		}
@@ -391,6 +432,12 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 		@JsonProperty
 		private final List<MediaStatus> statuses;
 
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param requestId the request ID.
+		 * @param statuses the {@link MediaStatus}es.
+		 */
 		public MediaStatusResponse(
 			@JsonProperty("requestId") long requestId,
 			@JsonProperty("status") MediaStatus... statuses
@@ -403,6 +450,9 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 			}
 		}
 
+		/**
+		 * @return The {@link List} of {@link MediaStatus}es.
+		 */
 		@Nonnull
 		@JsonProperty("status")
 		public List<MediaStatus> getStatuses() {
@@ -437,6 +487,12 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 		@JsonProperty
 		private final Map<String, String> availability;
 
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param requestId the request ID.
+		 * @param availability the {@link Map} containing the availability information.
+		 */
 		public AppAvailabilityResponse(
 			@JsonProperty("requestId") long requestId,
 			@JsonProperty("availability") Map<String, String> availability
@@ -449,6 +505,9 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 			}
 		}
 
+		/**
+		 * @return The {@link Map} containing the availability information.
+		 */
 		@Nonnull
 		public Map<String, String> getAvailability() {
 			return availability;
@@ -482,6 +541,12 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 		@JsonProperty
 		private final MultizoneStatus status;
 
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param requestId the request ID.
+		 * @param status the {@link MultizoneStatus} status.
+		 */
 		public MultizoneStatusResponse(
 			@JsonProperty("requestId") long requestId,
 			@JsonProperty("status") MultizoneStatus status
@@ -490,6 +555,9 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 			this.status = status;
 		}
 
+		/**
+		 * @return The {@link MultizoneStatus}.
+		 */
 		public MultizoneStatus getStatus() {
 			return status;
 		}
@@ -521,11 +589,20 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 		@JsonProperty
 		private final Device device;
 
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param requestId the request ID.
+		 * @param device the {@link Device}.
+		 */
 		public DeviceAddedResponse(@JsonProperty("requestId") long requestId, @JsonProperty("device") Device device) {
 			super(requestId);
 			this.device = device;
 		}
 
+		/**
+		 * @return The {@link Device}.
+		 */
 		public Device getDevice() {
 			return device;
 		}
@@ -557,11 +634,23 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 		@JsonProperty
 		private final Device device;
 
-		public DeviceUpdatedResponse(@JsonProperty("requestId") long requestId, @JsonProperty("device") Device device) {
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param requestId the request ID.
+		 * @param device the {@link Device}.
+		 */
+		public DeviceUpdatedResponse(
+			@JsonProperty("requestId") long requestId,
+			@JsonProperty("device") Device device
+		) {
 			super(requestId);
 			this.device = device;
 		}
 
+		/**
+		 * @return The {@link Device}.
+		 */
 		public Device getDevice() {
 			return device;
 		}
@@ -593,6 +682,12 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 		@JsonProperty
 		private final String deviceId;
 
+		/**
+		 * Creates a new instance using the specified parameters.
+		 *
+		 * @param requestId the request ID.
+		 * @param deviceId the device ID.
+		 */
 		public DeviceRemovedResponse(
 			@JsonProperty("requestId") long requestId,
 			@JsonProperty("deviceId") String deviceId
@@ -601,6 +696,9 @@ public abstract class StandardResponse implements Response { //TODO: (Nad) JavaD
 			this.deviceId = deviceId;
 		}
 
+		/**
+		 * @return The device ID.
+		 */
 		public String getDeviceId() {
 			return deviceId;
 		}
