@@ -136,7 +136,7 @@ public class Metadata {
 	 *         wasn't.
 	 */
 	public static boolean setImages(@Nullable Map<String, Object> metadata, @Nullable Collection<Image> images) {
-		if (metadata == null) { //TODO: (Nad) Make test..
+		if (metadata == null) {
 			return false;
 		}
 		if (images == null || images.isEmpty()) {
