@@ -35,15 +35,15 @@ public class VideoInformation {
 	/** HDR type */
 	@Nonnull
 	@JsonProperty
-	private final HdrType hdrType;
+	protected final HdrType hdrType;
 
 	/** Video height */
 	@JsonProperty
-	private int height;
+	protected int height;
 
 	/** Video width */
 	@JsonProperty
-	private int width;
+	protected int width;
 
 	/**
 	 * Creates a new instance using the specified parameters.

@@ -39,25 +39,25 @@ public class QueueData {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final ContainerMetadata containerMetadata;
+	protected final ContainerMetadata containerMetadata;
 
 	/** Description of the queue */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final String description;
+	protected final String description;
 
 	/** Optional Queue entity ID, provide Google Assistant deep link */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final String entity;
+	protected final String entity;
 
 	/** ID of the queue */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final String id;
+	protected final String id;
 
 	/**
 	 * List of queue items. It is sorted (first element will be played first).
@@ -65,31 +65,31 @@ public class QueueData {
 	@Nonnull
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	private final List<QueueItem> items;
+	protected final List<QueueItem> items;
 
 	/** Name of the queue */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final String name;
+	protected final String name;
 
 	/** Queue type, e.g. album, playlist, radio station, tv series, etc. */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final QueueType queueType;
+	protected final QueueType queueType;
 
 	/** Continuous playback behavior of the queue */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final RepeatMode repeatMode;
+	protected final RepeatMode repeatMode;
 
 	/** Indicate if the queue is shuffled */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Boolean shuffle;
+	protected final Boolean shuffle;
 
 	/**
 	 * The index of the item in the queue that should be used to start playback
@@ -98,7 +98,7 @@ public class QueueData {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Integer startIndex;
+	protected final Integer startIndex;
 
 	/**
 	 * Seconds (since the beginning of content) to start playback of the first
@@ -107,7 +107,7 @@ public class QueueData {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Double startTime;
+	protected final Double startTime;
 
 	/**
 	 * Creates a new instance using the specified parameters.

@@ -42,7 +42,7 @@ public class ContainerMetadata {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Double containerDuration;
+	protected final Double containerDuration;
 
 	/**
 	 * Container images. For example a live TV channel logo, audiobook cover,
@@ -51,12 +51,12 @@ public class ContainerMetadata {
 	@Nonnull
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	private final List<Image> containerImages;
+	protected final List<Image> containerImages;
 
 	/** The type of container object */
 	@Nonnull
 	@JsonProperty
-	private final ContainerType containerType;
+	protected final ContainerType containerType;
 
 	/**
 	 * The title of the container, for example an audiobook title, a TV channel
@@ -65,7 +65,7 @@ public class ContainerMetadata {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final String title;
+	protected final String title;
 
 	/**
 	 * Creates a new instance using the specified parameters.

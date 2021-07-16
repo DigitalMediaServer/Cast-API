@@ -16,6 +16,7 @@
 package org.digitalmediaserver.chromecast.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.digitalmediaserver.chromecast.api.Media.MediaBuilder;
 import org.digitalmediaserver.chromecast.api.Media.MediaCategory;
 import org.digitalmediaserver.chromecast.api.Media.StreamType;
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+@SuppressFBWarnings("NP_NULL_PARAM_DEREF_NONVIRTUAL")
 public class MediaTest {
 
 	final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();

@@ -34,7 +34,7 @@ public class Volume {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final VolumeControlType controlType;
+	protected final VolumeControlType controlType;
 
 	/**
 	 * The current volume level as a value between {@code 0.0} and {@code 1.0}.
@@ -43,19 +43,19 @@ public class Volume {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Double level;
+	protected final Double level;
 
 	/** Whether the receiver is muted, independent of the volume level */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Boolean muted;
+	protected final Boolean muted;
 
 	/** The allowed steps for changing volume */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Double stepInterval;
+	protected final Double stepInterval;
 
 	/**
 	 * Creates a new instance using the specified parameters.
@@ -170,22 +170,22 @@ public class Volume {
 
 		/** The type of volume control that is available */
 		@Nullable
-		private VolumeControlType controlType;
+		protected VolumeControlType controlType;
 
 		/**
 		 * The current volume level as a value between {@code 0.0} and {@code 1.0}.
 		 * {@code 1.0} is the maximum volume possible on the receiver or stream.
 		 */
 		@Nullable
-		private Double level;
+		protected Double level;
 
 		/** Whether the receiver is muted, independent of the volume level */
 		@Nullable
-		private Boolean muted;
+		protected Boolean muted;
 
 		/** The allowed steps for changing volume */
 		@Nullable
-		private Double stepInterval;
+		protected Double stepInterval;
 
 		/**
 		 * Creates a new instance using the specified parameters.

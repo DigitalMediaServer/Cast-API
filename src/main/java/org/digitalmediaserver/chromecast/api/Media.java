@@ -206,12 +206,12 @@ public class Media {
 	/** Typically the URL of the media */
 	@Nonnull
 	@JsonProperty
-	private final String contentId;
+	protected final String contentId;
 
 	/** The content MIME-type */
 	@Nonnull
 	@JsonProperty
-	private final String contentType;
+	protected final String contentType;
 
 	/**
 	 * Optional media URL, to allow using {@code contentId} for real ID. If
@@ -221,44 +221,44 @@ public class Media {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final String contentUrl;
+	protected final String contentUrl;
 
 	/** Application-specific media information */
 	@Nonnull
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	private final Map<String, Object> customData;
+	protected final Map<String, Object> customData;
 
 	/** The media duration */
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Double duration;
+	protected final Double duration;
 
 	/** Optional Google Assistant deep link to a media entity */
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final String entity;
+	protected final String entity;
 
 	/** The format of the HLS audio segment */
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final HlsSegmentFormat hlsSegmentFormat;
+	protected final HlsSegmentFormat hlsSegmentFormat;
 
 	/** The format of the HLS video segment */
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final HlsVideoSegmentFormat hlsVideoSegmentFormat;
+	protected final HlsVideoSegmentFormat hlsVideoSegmentFormat;
 
 	/** The media cateory (audio, video, picture) */
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final MediaCategory mediaCategory;
+	protected final MediaCategory mediaCategory;
 
 	/** The media metadata */
 	@Nonnull
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	private final Map<String, Object> metadata;
+	protected final Map<String, Object> metadata;
 
 	/**
 	 * Provides absolute time (Epoch Unix time in seconds) for live streams. For
@@ -268,24 +268,24 @@ public class Media {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Long startAbsoluteTime;
+	protected final Long startAbsoluteTime;
 
 	/** The stream type (required) */
 	@Nonnull
 	@JsonProperty
-	private final StreamType streamType;
+	protected final StreamType streamType;
 
 	/** The style of text track */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final TextTrackStyle textTrackStyle;
+	protected final TextTrackStyle textTrackStyle;
 
 	/** The media tracks */
 	@Nonnull
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	private final List<Track> tracks;
+	protected final List<Track> tracks;
 
 	/**
 	 * Creates a new instance using the specified parameters.

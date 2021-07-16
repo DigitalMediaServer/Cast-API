@@ -24,8 +24,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Immutable
 public class Namespace {
 
+	/** The name of this namespace */
 	@JsonProperty
-	private final String name;
+	protected final String name;
 
 	/**
 	 * Creates a new instance using the specified name.

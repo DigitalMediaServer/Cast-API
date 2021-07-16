@@ -2039,8 +2039,8 @@ public class Channel implements Closeable {
 	 */
 	protected class PingTask extends TimerTask {
 
-		private final String messageString;
-		private final CastMessage message;
+		/** The {@link Ping} message */
+		protected final CastMessage message;
 
 		/**
 		 * Creates a new instance.
@@ -2049,6 +2049,7 @@ public class Channel implements Closeable {
 		 *             {@code PING} message.
 		 */
 		public PingTask() {
+			String messageString;
 			try {
 				messageString = jsonMapper.writeValueAsString(new Ping());
 			} catch (JsonProcessingException e) {
@@ -2091,9 +2092,11 @@ public class Channel implements Closeable {
 	 */
 	protected class GradualVolumeTask extends TimerTask {
 
-		private final double interval;
+		/** The interval */
+		protected final double interval;
 
-		private final double target;
+		/** The target level */
+		protected final double target;
 
 		/**
 		 * Creates a new instance using the specified parameters.
@@ -2147,7 +2150,10 @@ public class Channel implements Closeable {
 			}
 		}
 
-		private void shutdownTask() {
+		/**
+		 * Shuts down this task.
+		 */
+		protected void shutdownTask() {
 			cancel();
 			synchronized (gradualVolumeLock) {
 				if (gradualVolumeTask == this) {
@@ -2169,13 +2175,16 @@ public class Channel implements Closeable {
 	 */
 	protected class InputHandler extends Thread {
 
-		private volatile boolean running;
+		/** The "running" state */
+		protected volatile boolean running;
 
+		/** The {@link InputStream} to process */
 		@Nonnull
-		private final InputStream is;
+		protected final InputStream is;
 
+		/** The cached {@link Pong} message */
 		@Nonnull
-		private final CastMessage pongMessage;
+		protected final CastMessage pongMessage;
 
 		/**
 		 * Creates a new instance bound to the specified {@link InputStream}.
@@ -2470,12 +2479,23 @@ public class Channel implements Closeable {
 	 */
 	protected class ResultProcessor<T extends Response> {
 
+		/** The {@link Session} if one applies */
 		@Nullable
-		private final Session session;
-		private final Class<T> responseClass;
-		private final long requestTimeout;
-		private boolean closed;
-		private ResultProcessorResult<T> result;
+		protected final Session session;
+
+		/** The expected response {@link Class} */
+		protected final Class<T> responseClass;
+
+		/** The timeout in milliseconds */
+		protected final long requestTimeout;
+
+		/** Whether the associated {@link Session} has been closed */
+		@GuardedBy("this")
+		protected boolean closed;
+
+		/** The {@link ResultProcessorResult} */
+		@GuardedBy("this")
+		protected ResultProcessorResult<T> result;
 
 		/**
 		 * Creates a new instance using the specified parameters.

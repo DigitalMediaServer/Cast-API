@@ -46,7 +46,7 @@ public class QueueItem {
 	@Nonnull
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	private final List<Integer> activeTrackIds;
+	protected final List<Integer> activeTrackIds;
 
 	/**
 	 * If the autoplay parameter is not specified or is {@code true}, the media
@@ -56,13 +56,13 @@ public class QueueItem {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Boolean autoplay;
+	protected final Boolean autoplay;
 
 	/** The application can define any extra queue item information needed */
 	@Nonnull
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	private final Map<String, Object> customData;
+	protected final Map<String, Object> customData;
 
 	/**
 	 * Unique identifier of the item in the queue. The attribute is optional
@@ -72,19 +72,19 @@ public class QueueItem {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Integer itemId;
+	protected final Integer itemId;
 
 	/** Metadata (including contentId) of the playlist element */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Media media;
+	protected final Media media;
 
 	/** Used to track original order of an item in the queue to undo shuffle */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Integer orderId;
+	protected final Integer orderId;
 
 	/**
 	 * This parameter is a hint for the receiver to preload this media item
@@ -105,7 +105,7 @@ public class QueueItem {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Double preloadTime;
+	protected final Double preloadTime;
 
 	/**
 	 * Seconds since beginning of content. If the content is live content, and
@@ -114,7 +114,7 @@ public class QueueItem {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Double startTime;
+	protected final Double startTime;
 
 	/**
 	 * Creates a new instance using the specified parameters.

@@ -199,7 +199,7 @@ public abstract class StandardResponse implements Response {
 
 		/** The item ID */
 		@Nullable
-		private final Integer itemId;
+		protected final Integer itemId;
 
 		/** The {@link ErrorReason} */
 		@Nullable
@@ -334,9 +334,10 @@ public abstract class StandardResponse implements Response {
 	@Immutable
 	public static class LaunchErrorResponse extends StandardResponse {
 
+		/** The error reason */
 		@JsonProperty
 		@JsonInclude(JsonInclude.Include.NON_NULL)
-		private final String reason;
+		protected final String reason;
 
 		/**
 		 * Creates a new instance using the specified parameters.
@@ -380,8 +381,9 @@ public abstract class StandardResponse implements Response {
 	@Immutable
 	public static class ReceiverStatusResponse extends StandardResponse {
 
+		/** The {@link ReceiverStatus} */
 		@JsonProperty
-		private final ReceiverStatus status;
+		protected final ReceiverStatus status;
 
 		/**
 		 * Creates a new instance using the specified parameters.
@@ -429,8 +431,9 @@ public abstract class StandardResponse implements Response {
 	@JsonDeserialize(using = MediaStatusResponseDeserializer.class)
 	public static class MediaStatusResponse extends StandardResponse {
 
+		/** The {@link List} of {@link MediaStatus}es */
 		@JsonProperty
-		private final List<MediaStatus> statuses;
+		protected final List<MediaStatus> statuses;
 
 		/**
 		 * Creates a new instance using the specified parameters.
@@ -483,9 +486,10 @@ public abstract class StandardResponse implements Response {
 	@Immutable
 	public static class AppAvailabilityResponse extends StandardResponse {
 
+		/** The {@link Map} of application ID and availability information */
 		@Nonnull
 		@JsonProperty
-		private final Map<String, String> availability;
+		protected final Map<String, String> availability;
 
 		/**
 		 * Creates a new instance using the specified parameters.
@@ -538,8 +542,9 @@ public abstract class StandardResponse implements Response {
 	@Immutable
 	public static class MultizoneStatusResponse extends StandardResponse {
 
+		/** The {@link MultizoneStatus} */
 		@JsonProperty
-		private final MultizoneStatus status;
+		protected final MultizoneStatus status;
 
 		/**
 		 * Creates a new instance using the specified parameters.
@@ -586,8 +591,9 @@ public abstract class StandardResponse implements Response {
 	@Immutable
 	public static class DeviceAddedResponse extends StandardResponse {
 
+		/** The {@link Device} */
 		@JsonProperty
-		private final Device device;
+		protected final Device device;
 
 		/**
 		 * Creates a new instance using the specified parameters.
@@ -631,8 +637,9 @@ public abstract class StandardResponse implements Response {
 	@Immutable
 	public static class DeviceUpdatedResponse extends StandardResponse {
 
+		/** The {@link Device} */
 		@JsonProperty
-		private final Device device;
+		protected final Device device;
 
 		/**
 		 * Creates a new instance using the specified parameters.
@@ -679,8 +686,9 @@ public abstract class StandardResponse implements Response {
 	@Immutable
 	public static class DeviceRemovedResponse extends StandardResponse {
 
+		/** The {@link Device} */
 		@JsonProperty
-		private final String deviceId;
+		protected final String deviceId;
 
 		/**
 		 * Creates a new instance using the specified parameters.

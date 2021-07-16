@@ -53,8 +53,9 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	 */
 	public static class GetAppAvailability extends StandardRequest {
 
+		/** The array of application IDs */
 		@JsonProperty
-		private final String[] appId;
+		protected final String[] appId;
 
 		/**
 		 * Creates a new instance using the specified application ID(s).
@@ -78,8 +79,9 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	 */
 	public static class Launch extends StandardRequest {
 
+		/** The application ID */
 		@JsonProperty
-		private final String appId;
+		protected final String appId;
 
 		/**
 		 * Creates a new instance using the specified application ID.
@@ -103,8 +105,9 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	 */
 	public static class Stop extends StandardRequest {
 
+		/** The session ID */
 		@JsonProperty
-		private final String sessionId;
+		protected final String sessionId;
 
 		/**
 		 * Creates a new instance using the specified session ID.
@@ -135,7 +138,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		@Nullable
 		@JsonProperty
 		@JsonInclude(JsonInclude.Include.NON_EMPTY)
-		private final List<Integer> activeTrackIds;
+		protected final List<Integer> activeTrackIds;
 
 		/**
 		 * If the autoplay parameter is specified and {@code true}, the media
@@ -146,13 +149,13 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		@Nullable
 		@JsonProperty
 		@JsonInclude(JsonInclude.Include.NON_NULL)
-		private final Boolean autoplay;
+		protected final Boolean autoplay;
 
 		/** Optional user credentials */
 		@Nullable
 		@JsonProperty
 		@JsonInclude(JsonInclude.Include.NON_NULL)
-		private final String credentials;
+		protected final String credentials;
 
 		/**
 		 * Optional credentials type. The type '{@code cloud}' is a reserved
@@ -162,7 +165,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		@Nullable
 		@JsonProperty
 		@JsonInclude(JsonInclude.Include.NON_NULL)
-		private final String credentialsType;
+		protected final String credentialsType;
 
 		/**
 		 * Seconds since beginning of content. If the content is live content,
@@ -172,7 +175,7 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		@Nullable
 		@JsonProperty
 		@JsonInclude(JsonInclude.Include.NON_NULL)
-		private final Double currentTime;
+		protected final Double currentTime;
 
 		/**
 		 * The custom application data to send to the remote application with
@@ -181,31 +184,31 @@ public abstract class StandardRequest extends StandardMessage implements Request
 		@Nullable
 		@JsonProperty
 		@JsonInclude(JsonInclude.Include.NON_EMPTY)
-		private final Map<String, Object> customData;
+		protected final Map<String, Object> customData;
 
 		/** Additional load options */
 		@Nullable
 		@JsonProperty
 		@JsonInclude(JsonInclude.Include.NON_NULL)
-		private final LoadOptions loadOptions;
+		protected final LoadOptions loadOptions;
 
 		/** The {@link Media} to load */
 		@Nullable
 		@JsonProperty
 		@JsonInclude(JsonInclude.Include.NON_NULL)
-		private final Media media;
+		protected final Media media;
 
 		/** The media playback rate */
 		@Nullable
 		@JsonProperty
 		@JsonInclude(JsonInclude.Include.NON_NULL)
-		private final Double playbackRate;
+		protected final Double playbackRate;
 
 		/** The queue to load */
 		@Nullable
 		@JsonProperty
 		@JsonInclude(JsonInclude.Include.NON_NULL)
-		private final QueueData queueData;
+		protected final QueueData queueData;
 
 		/**
 		 * Creates a new request to load the specified {@link Media}.
@@ -359,11 +362,11 @@ public abstract class StandardRequest extends StandardMessage implements Request
 
 		/** The media session ID */
 		@JsonProperty
-		private final int mediaSessionId;
+		protected final int mediaSessionId;
 
 		/** The session ID */
 		@JsonProperty
-		private final String sessionId;
+		protected final String sessionId;
 
 		/**
 		 * Abstract constructor.
@@ -536,8 +539,9 @@ public abstract class StandardRequest extends StandardMessage implements Request
 	 */
 	public static class SetVolume extends StandardRequest {
 
+		/** The {@link Volume} instance */
 		@JsonProperty
-		private final Volume volume;
+		protected final Volume volume;
 
 		/**
 		 * Creates a new request using the specified parameters.
@@ -575,18 +579,19 @@ public abstract class StandardRequest extends StandardMessage implements Request
 
 		/** The media session ID */
 		@JsonProperty
-		private final int mediaSessionId;
+		protected final int mediaSessionId;
 
 		/** The session ID */
 		@JsonProperty
-		private final String sessionId;
+		protected final String sessionId;
 
 		/** the request ID */
 		@JsonProperty
-		private long requestId;
+		protected long requestId;
 
+		/** The request type */
 		@JsonProperty
-		private final String type = "SET_VOLUME";
+		protected final String type = "SET_VOLUME";
 
 		/**
 		 * The new volume of the stream. At least one of level or muted must be
@@ -687,14 +692,15 @@ public abstract class StandardRequest extends StandardMessage implements Request
 
 		/** The media session ID */
 		@JsonProperty
-		private final int mediaSessionId;
+		protected final int mediaSessionId;
 
 		/** the request ID */
 		@JsonProperty
-		private long requestId;
+		protected long requestId;
 
+		/** The request type */
 		@JsonProperty
-		private final String type = "STOP";
+		protected final String type = "STOP";
 
 		/** Custom data for the receiver application */
 		@Nullable

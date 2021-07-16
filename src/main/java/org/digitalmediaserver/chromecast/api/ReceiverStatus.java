@@ -31,13 +31,24 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 public class ReceiverStatus {
 
+	/** The receiver {@link Volume} instance */
 	@Nullable
-	private final Volume volume;
+	protected final Volume volume;
 
+	/** The {@link List} of {@link Application}s */
 	@Nonnull
-	private final List<Application> applications;
-	private final boolean activeInput;
-	private final boolean standBy;
+	protected final List<Application> applications;
+
+	/**
+	 * {@code true} if the cast device is the active input, {@code false}
+	 * otherwise
+	 */
+	protected final boolean activeInput;
+
+	/**
+	 * {@code true} if the cast device is in standby, {@code false} otherwise
+	 */
+	protected final boolean standBy;
 
 	/**
 	 * Creates a new instance using the specified parameters.

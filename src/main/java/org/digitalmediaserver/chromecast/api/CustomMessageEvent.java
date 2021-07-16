@@ -28,23 +28,29 @@ import com.google.protobuf.ByteString;
 @Immutable
 public class CustomMessageEvent {
 
+	/** The source ID from the message */
 	@Nullable
-	private final String sourceId;
+	protected final String sourceId;
 
+	/** The destination ID from the message */
 	@Nullable
-	private final String destinationId;
+	protected final String destinationId;
 
+	/** The namespace from the message */
 	@Nullable
-	private final String namespace;
+	protected final String namespace;
 
+	/** The string payload from the message */
 	@Nullable
-	private final String stringPayload;
+	protected final String stringPayload;
 
+	/** The binary payload from the message */
 	@Nullable
-	private final ByteString binaryPayload;
+	protected final ByteString binaryPayload;
 
+	/** The {@link PayloadType} */
 	@Nonnull
-	private final PayloadType payloadType;
+	protected final PayloadType payloadType;
 
 	/**
 	 * Creates a new {@code STRING} instance.

@@ -35,19 +35,19 @@ public class ExtendedMediaStatus {
 	/** The extended player state */
 	@Nonnull
 	@JsonProperty
-	private final ExtendedPlayerState playerState;
+	protected final ExtendedPlayerState playerState;
 
 	/** The {@link Media} instance */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Media media;
+	protected final Media media;
 
 	/** The media session ID */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Integer mediaSessionId;
+	protected final Integer mediaSessionId;
 
 	/**
 	 * Creates a new instance using the specified parameters.

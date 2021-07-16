@@ -70,14 +70,17 @@ public abstract class StandardMessage implements Message {
 	 */
 	public static class Connect extends StandardMessage {
 
+		/** The user-agent, if any */
 		@JsonProperty
 		@JsonInclude(JsonInclude.Include.NON_NULL)
-		private final String userAgent;
+		protected final String userAgent;
 
+		/** The {@link VirtualConnectionType} */
 		@JsonProperty
 		@JsonInclude(JsonInclude.Include.NON_NULL)
-		private final VirtualConnectionType connType;
+		protected final VirtualConnectionType connType;
 
+		/** The origin */
 		@JsonProperty
 		protected final Origin origin = new Origin();
 
@@ -102,8 +105,9 @@ public abstract class StandardMessage implements Message {
 	 */
 	public static class CloseConnection extends StandardMessage {
 
+		/** The reason code */
 		@JsonProperty
-		private final Integer reasonCode = Integer.valueOf(5); // Closed gracefully by sender
+		protected final Integer reasonCode = Integer.valueOf(5); // Closed gracefully by sender
 
 	}
 }

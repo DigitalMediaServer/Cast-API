@@ -39,13 +39,13 @@ public class TextTrackStyle {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final String backgroundColor;
+	protected final String backgroundColor;
 
 	/** Custom data set by the receiver application */
 	@Nonnull
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	private final Map<String, Object> customData;
+	protected final Map<String, Object> customData;
 
 	/**
 	 * RGBA color for the edge, this value will be ignored if {@code edgeType}
@@ -54,13 +54,13 @@ public class TextTrackStyle {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final String edgeColor;
+	protected final String edgeColor;
 
 	/** The type of edge */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final TextTrackEdgeType edgeType;
+	protected final TextTrackEdgeType edgeType;
 
 	/**
 	 * The font family. If the font is not available in the receiver the
@@ -69,31 +69,31 @@ public class TextTrackStyle {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final String fontFamily;
+	protected final String fontFamily;
 
 	/** The text track generic font family */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final TextTrackFontGenericFamily fontGenericFamily;
+	protected final TextTrackFontGenericFamily fontGenericFamily;
 
 	/** The font scaling factor for the text track (the default is 1.0) */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Double fontScale;
+	protected final Double fontScale;
 
 	/** The text track font style */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final TextTrackFontStyle fontStyle;
+	protected final TextTrackFontStyle fontStyle;
 
 	/** The foreground 32 bit RGBA color */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final String foregroundColor;
+	protected final String foregroundColor;
 
 	/**
 	 * 32 bit RGBA color for the window. This value will be ignored if
@@ -102,7 +102,7 @@ public class TextTrackStyle {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final String windowColor;
+	protected final String windowColor;
 
 	/**
 	 * Rounded corner radius absolute value in pixels (px). This value will be
@@ -112,7 +112,7 @@ public class TextTrackStyle {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Integer windowRoundedCornerRadius;
+	protected final Integer windowRoundedCornerRadius;
 
 	/**
 	 * The window concept is defined in CEA-608 and CEA-708. In WebVTT it is
@@ -121,7 +121,7 @@ public class TextTrackStyle {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final TextTrackWindowType windowType;
+	protected final TextTrackWindowType windowType;
 
 	/**
 	 * Creates a new instance using the specific parameters.

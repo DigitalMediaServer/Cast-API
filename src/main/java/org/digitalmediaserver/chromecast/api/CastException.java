@@ -56,8 +56,9 @@ public class CastException extends IOException {
 
 		private static final long serialVersionUID = 1L;
 
+		/** The {@link ErrorResponse} to deliver */
 		@Nonnull
-		private final ErrorResponse errorResponse;
+		protected final ErrorResponse errorResponse;
 
 		/**
 		 * Creates a new instance with the specified message and
@@ -91,8 +92,9 @@ public class CastException extends IOException {
 
 		private static final long serialVersionUID = 1L;
 
+		/** The {@link StandardResponse} to deliver */
 		@Nonnull
-		private final StandardResponse untypedResponse;
+		protected final StandardResponse untypedResponse;
 
 		/**
 		 * Creates a new instance with the specified message and untyped
@@ -125,8 +127,9 @@ public class CastException extends IOException {
 
 		private static final long serialVersionUID = 1L;
 
+		/** The unprocessed {@code JSON} to deliver */
 		@Nullable
-		private final String unprocessedResponse;
+		protected final String unprocessedResponse;
 
 		/**
 		 * Creates a new instance with the specified message and unprocessed

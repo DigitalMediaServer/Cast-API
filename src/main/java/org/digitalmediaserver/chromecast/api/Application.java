@@ -53,7 +53,7 @@ public class Application {
 
 	/** The {@link List} of {@link Namespace}s */
 	@Nonnull
-	private final List<Namespace> namespaces;
+	protected final List<Namespace> namespaces;
 
 	/** The session ID */
 	@Nullable

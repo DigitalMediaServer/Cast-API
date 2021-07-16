@@ -592,11 +592,13 @@ public interface CastEvent<T> {
 		 */
 		protected static class Invoker implements Runnable {
 
+			/** The {@link CastEventListener} to invoke */
 			@Nonnull
-			private final CastEventListener listener;
+			protected final CastEventListener listener;
 
+			/** The {@link CastEvent} to deliver */
 			@Nonnull
-			private final CastEvent<?> event;
+			protected final CastEvent<?> event;
 
 			/**
 			 * Creates a new instance using the specified parameters.

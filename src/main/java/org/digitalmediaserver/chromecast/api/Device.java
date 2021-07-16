@@ -24,10 +24,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Immutable
 public class Device {
 
-	private final String name;
-	private final int capabilities;
-	private final String deviceId;
-	private final Volume volume;
+	/** The device name */
+	protected final String name;
+
+	/** The encoded device capabilities */
+	protected final int capabilities;
+
+	/** The device ID */
+	protected final String deviceId;
+
+	/** The {@link Volume} instance */
+	protected final Volume volume;
 
 	/**
 	 * Creates a new instance using the specified parameters.

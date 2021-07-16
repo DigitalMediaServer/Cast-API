@@ -34,13 +34,13 @@ public class MediaVolume {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Double level;
+	protected final Double level;
 
 	/** Whether the stream is muted */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Boolean muted;
+	protected final Boolean muted;
 
 	/**
 	 * Creates a new instance using the specified parameters.

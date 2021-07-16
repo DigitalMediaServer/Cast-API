@@ -44,29 +44,29 @@ public class MediaStatus {
 	@Nonnull
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	private final List<Integer> activeTrackIds;
+	protected final List<Integer> activeTrackIds;
 
 	/** The ID of the media item that originated the status change */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Integer currentItemId;
+	protected final Integer currentItemId;
 
 	/** The current playback position */
 	@JsonProperty
-	private final double currentTime;
+	protected final double currentTime;
 
 	/** Application-specific media status data */
 	@Nonnull
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	private final Map<String, Object> customData;
+	protected final Map<String, Object> customData;
 
 	/** Extended media status information */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final ExtendedMediaStatus extendedStatus;
+	protected final ExtendedMediaStatus extendedStatus;
 
 	/**
 	 * If the state is {@link PlayerState#IDLE}, the reason the player went to
@@ -75,13 +75,13 @@ public class MediaStatus {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final IdleReason idleReason;
+	protected final IdleReason idleReason;
 
 	/** The {@link List} of media queue items */
 	@Nonnull
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	private final List<QueueItem> items;
+	protected final List<QueueItem> items;
 
 	/**
 	 * The seekable range of a live or event stream. It uses relative media time
@@ -90,7 +90,7 @@ public class MediaStatus {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final LiveSeekableRange liveSeekableRange;
+	protected final LiveSeekableRange liveSeekableRange;
 
 	/**
 	 * The ID of the media Item currently loading. If there is no item being
@@ -99,26 +99,26 @@ public class MediaStatus {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Integer loadingItemId;
+	protected final Integer loadingItemId;
 
 	/** The media information */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Media media;
+	protected final Media media;
 
 	/** Unique id for the session */
 	@JsonProperty
-	private final int mediaSessionId;
+	protected final int mediaSessionId;
 
 	/** The playback rate */
 	@JsonProperty
-	private final float playbackRate;
+	protected final float playbackRate;
 
 	/** The playback state */
 	@Nonnull
 	@JsonProperty
-	private final PlayerState playerState;
+	protected final PlayerState playerState;
 
 	/**
 	 * ID of the next Item, only available if it has been preloaded. Media items
@@ -129,34 +129,34 @@ public class MediaStatus {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Integer preloadedItemId;
+	protected final Integer preloadedItemId;
 
 	/** The queue data */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final QueueData queueData;
+	protected final QueueData queueData;
 
 	/** The behavior of the queue when all items have been played */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final RepeatMode repeatMode;
+	protected final RepeatMode repeatMode;
 
 	/** The commands supported by this player */
 	@JsonProperty
-	private final int supportedMediaCommands;
+	protected final int supportedMediaCommands;
 
 	/** The video information */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final VideoInformation videoInfo;
+	protected final VideoInformation videoInfo;
 
 	/** The current stream volume */
 	@Nonnull
 	@JsonProperty
-	private final MediaVolume volume;
+	protected final MediaVolume volume;
 
 	/**
 	 * Creates a new instance using the specified parameters.

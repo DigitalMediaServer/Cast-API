@@ -36,7 +36,7 @@ public class LoadOptions {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final ContentFilteringMode contentFilteringMode;
+	protected final ContentFilteringMode contentFilteringMode;
 
 	/**
 	 * Creates a new instance using the specified parameters.

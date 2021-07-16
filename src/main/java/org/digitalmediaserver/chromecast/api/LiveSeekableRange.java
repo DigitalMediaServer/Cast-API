@@ -34,13 +34,13 @@ public class LiveSeekableRange {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Double start;
+	protected final Double start;
 
 	/** The end time in seconds */
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Double end;
+	protected final Double end;
 
 	/**
 	 * A boolean value indicates whether a live stream is ended. If it is done,
@@ -49,7 +49,7 @@ public class LiveSeekableRange {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Boolean isLiveDone;
+	protected final Boolean isLiveDone;
 
 	/**
 	 * A boolean value indicates whether the live seekable range is a moving
@@ -59,7 +59,7 @@ public class LiveSeekableRange {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Boolean isMovingWindow;
+	protected final Boolean isMovingWindow;
 
 	/**
 	 * Creates a new instance using the specified parameters.

@@ -31,17 +31,17 @@ public class Image {
 
 	/** The URL for the image */
 	@JsonProperty
-	private final String url;
+	protected final String url;
 
 	/** The height of the image (optional) */
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Integer height;
+	protected final Integer height;
 
 	/** The width of the image (optional) */
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	private final Integer width;
+	protected final Integer width;
 
 	/**
 	 * Creates a new instance using the specified parameters.

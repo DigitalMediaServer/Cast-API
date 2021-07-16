@@ -30,9 +30,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @Immutable
 public class MultizoneStatus {
 
+	/** The {@link List} of {@link Device}s */
 	@Nonnull
-	private final List<Device> devices;
-	private final boolean isMultichannel;
+	protected final List<Device> devices;
+
+	/** {@code true} if the zone is multi-channel, {@code false} if it isn't */
+	protected final boolean isMultichannel;
 
 	/**
 	 * Creates a new instance using the specified parameters.

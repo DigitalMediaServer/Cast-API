@@ -26,14 +26,17 @@ import javax.annotation.concurrent.Immutable;
 @Immutable
 public class CloseMessageEvent {
 
+	/** The source ID from the message */
 	@Nullable
-	private final String sourceId;
+	protected final String sourceId;
 
+	/** The destination ID from the message */
 	@Nullable
-	private final String destinationId;
+	protected final String destinationId;
 
+	/** The namespace from the message */
 	@Nullable
-	private final String namespace;
+	protected final String namespace;
 
 	/**
 	 * Creates a new instance.
