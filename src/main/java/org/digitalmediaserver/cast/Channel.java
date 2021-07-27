@@ -515,7 +515,7 @@ public class Channel implements Closeable {
 		long responseTimeout
 	) throws IOException {
 		validateNamespace(namespace);
-		Long requestId = requestCounter.getAndIncrement();
+		long requestId = requestCounter.getAndIncrement();
 		message.setRequestId(requestId);
 
 		if (responseClass == null) {
@@ -525,7 +525,7 @@ public class Channel implements Closeable {
 
 		ResultProcessor<T> rp = new ResultProcessor<>(session, responseClass, responseTimeout);
 		synchronized (requests) {
-			requests.put(requestId, rp);
+			requests.put(Long.valueOf(requestId), rp);
 		}
 
 		write(namespace, message, sourceId, destinationId);
@@ -2303,7 +2303,12 @@ public class Channel implements Closeable {
 				}
 			} catch (IOException e) {
 				if (running) {
-					LOGGER.error(CAST_API_MARKER, "{} InputHandler exception, terminating handler: ", remoteName, e.getMessage());
+					LOGGER.error(
+						CAST_API_MARKER,
+						"{} InputHandler exception, terminating handler: {}",
+						remoteName,
+						e.getMessage()
+					);
 					if (message != null && LOGGER.isDebugEnabled(CAST_API_MARKER)) {
 						StringBuilder sb = new StringBuilder();
 						sb.append("namespace: ").append(message.getNamespace());
