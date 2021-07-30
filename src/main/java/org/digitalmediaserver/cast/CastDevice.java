@@ -597,7 +597,7 @@ public class CastDevice {
 	/**
 	 * Returns whether or not an attempt will be made to connect to the cast
 	 * device on demand. "Demand" is defined as that a method that requires an
-	 * active connection is invoked and no connected currently exist.
+	 * active connection is invoked and no connection currently exist.
 	 *
 	 * @return {@code true} if automatic connect is active, {@code false}
 	 *         otherwise if this must be handled manually.

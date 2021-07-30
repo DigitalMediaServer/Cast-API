@@ -42,6 +42,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nonnull;
@@ -1774,57 +1775,66 @@ public class Channel implements Closeable {
 				interrimLevel = targetLevel + 0.05;
 			}
 
-			CastDevice.EXECUTOR.execute(new Runnable() {
+			try {
+				CastDevice.EXECUTOR.execute(new Runnable() {
 
-				@Override
-				public void run() {
-					try {
-						send(
-							null,
-							"urn:x-cast:com.google.cast.receiver",
-							new SetVolume(new Volume(null, Double.valueOf(interrimLevel), null, null)),
-							PLATFORM_SENDER_ID,
-							PLATFORM_RECEIVER_ID,
-							null,
-							0L
-						);
-					} catch (IOException e) {
-						LOGGER.warn(
-							CAST_API_MARKER,
-							"Failed to set the initial interrim volume on {}: {}",
-							remoteName,
-							e.getMessage()
-						);
-						LOGGER.trace(CAST_API_MARKER, "", e);
+					@Override
+					public void run() {
+						try {
+							send(
+								null,
+								"urn:x-cast:com.google.cast.receiver",
+								new SetVolume(new Volume(null, Double.valueOf(interrimLevel), null, null)),
+								PLATFORM_SENDER_ID,
+								PLATFORM_RECEIVER_ID,
+								null,
+								0L
+							);
+						} catch (IOException e) {
+							LOGGER.warn(
+								CAST_API_MARKER,
+								"Failed to set the initial interrim volume on {}: {}",
+								remoteName,
+								e.getMessage()
+							);
+							LOGGER.trace(CAST_API_MARKER, "", e);
+						}
 					}
-				}
-			});
-			CastDevice.EXECUTOR.execute(new Runnable() {
+				});
+				CastDevice.EXECUTOR.execute(new Runnable() {
 
-				@Override
-				public void run() {
-					try {
-						Thread.sleep(150L);
-						send(
-							null,
-							"urn:x-cast:com.google.cast.receiver",
-							new SetVolume(new Volume(null, Double.valueOf(targetLevel), null, null)),
-							PLATFORM_SENDER_ID,
-							PLATFORM_RECEIVER_ID,
-							null,
-							0L
-						);
-					} catch (IOException | InterruptedException e) {
-						LOGGER.warn(
-							CAST_API_MARKER,
-							"Failed to set the initial volume on {}: {}",
-							remoteName,
-							e.getMessage()
-						);
-						LOGGER.trace(CAST_API_MARKER, "", e);
+					@Override
+					public void run() {
+						try {
+							Thread.sleep(150L);
+							send(
+								null,
+								"urn:x-cast:com.google.cast.receiver",
+								new SetVolume(new Volume(null, Double.valueOf(targetLevel), null, null)),
+								PLATFORM_SENDER_ID,
+								PLATFORM_RECEIVER_ID,
+								null,
+								0L
+							);
+						} catch (IOException | InterruptedException e) {
+							LOGGER.warn(
+								CAST_API_MARKER,
+								"Failed to set the initial volume on {}: {}",
+								remoteName,
+								e.getMessage()
+							);
+							LOGGER.trace(CAST_API_MARKER, "", e);
+						}
 					}
-				}
-			});
+				});
+			} catch (RejectedExecutionException e) {
+				LOGGER.warn(
+					CAST_API_MARKER,
+					"Failed to refresh the initial volume on {} because the executor rejected executing the task: {}",
+					remoteName,
+					e.getMessage()
+				);
+			}
 		}
 	}
 
@@ -2323,6 +2333,13 @@ public class Channel implements Closeable {
 					LOGGER.trace(CAST_API_MARKER, "", e);
 					running = false;
 				} else {
+					synchronized (socketLock) {
+						if (socket == null) {
+							// The socket has already been closed, and a "socket closed"
+							// exception has terminated the loop while waiting for new input
+							return;
+						}
+					}
 					LOGGER.trace(
 						CAST_API_MARKER,
 						"Exception while shutting down {} InputHandler: {}",

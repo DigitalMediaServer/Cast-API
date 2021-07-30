@@ -22,7 +22,8 @@ import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceInfo;
 import javax.jmdns.ServiceListener;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.LinkedHashSet;
@@ -39,6 +40,8 @@ import java.util.Set;
  * {@link #startDiscovery(InetAddress, String)}.
  */
 public final class CastDeviceMonitor {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(CastDeviceMonitor.class);
 
 	/** The {@link ServiceListener} that listens to mDNS changes */
 	@Nonnull
@@ -280,9 +283,22 @@ public final class CastDeviceMonitor {
 					}
 				}
 			}
-			if (removed != null && tmpListeners != null) {
-				for (DeviceDiscoveryListener discoveryListener : tmpListeners) {
-					discoveryListener.deviceRemoved(removed);
+			if (removed != null) {
+				if (tmpListeners != null) {
+					for (DeviceDiscoveryListener discoveryListener : tmpListeners) {
+						discoveryListener.deviceRemoved(removed);
+					}
+				}
+				try {
+					removed.disconnect();
+				} catch (IOException e) {
+					LOGGER.warn(
+						Channel.CAST_API_MARKER,
+						"An error occurred while disconnecting from cast device {}: {}",
+						removed.getDisplayName(),
+						e.getMessage()
+					);
+					LOGGER.trace(Channel.CAST_API_MARKER, "", e);
 				}
 			}
 		}
