@@ -15,8 +15,10 @@
  */
 package org.digitalmediaserver.cast;
 
-import javax.net.ssl.X509TrustManager;
-
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.X509ExtendedTrustManager;
+import java.net.Socket;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 
@@ -24,7 +26,7 @@ import java.security.cert.X509Certificate;
  * Google Cast certificates cannot be validated against a standard keystore, so
  * use a dummy trust-all manager.
  */
-class X509TrustAllManager implements X509TrustManager {
+public class X509TrustAllManager extends X509ExtendedTrustManager {
 
 	@Override
 	public X509Certificate[] getAcceptedIssuers() {
@@ -37,5 +39,21 @@ class X509TrustAllManager implements X509TrustManager {
 
 	@Override
 	public void checkServerTrusted(X509Certificate[] certs, String authType) {
+	}
+
+	@Override
+	public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket) throws CertificateException {
+	}
+
+	@Override
+	public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine) throws CertificateException {
+	}
+
+	@Override
+	public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket) throws CertificateException {
+	}
+
+	@Override
+	public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine) throws CertificateException {
 	}
 }
