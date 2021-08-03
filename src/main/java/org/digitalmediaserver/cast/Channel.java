@@ -2323,6 +2323,13 @@ public class Channel implements Closeable {
 					LOGGER.trace(CAST_API_MARKER, "", e);
 					running = false;
 				} else {
+					synchronized (socketLock) {
+						if (socket == null) {
+							// The socket has already been closed, and a "socket closed"
+							// exception has terminated the loop while waiting for new input
+							return;
+						}
+					}
 					LOGGER.trace(
 						CAST_API_MARKER,
 						"Exception while shutting down {} InputHandler: {}",
