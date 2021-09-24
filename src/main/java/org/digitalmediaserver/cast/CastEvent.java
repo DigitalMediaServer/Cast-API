@@ -575,7 +575,7 @@ public interface CastEvent<T> {
 						} else {
 							invoker = new Invoker(listener, event);
 						}
-						notifier.execute(invoker);
+						notifier.execute(invoker); //TODO: (Nad) RejectedExecution...
 					}
 				}
 			} catch (RejectedExecutionException e) {
