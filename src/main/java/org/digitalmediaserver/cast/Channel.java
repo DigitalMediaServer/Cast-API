@@ -1790,7 +1790,7 @@ public class Channel implements Closeable {
 								null,
 								0L
 							);
-						} catch (IOException e) {
+						} catch (Exception e) {
 							LOGGER.warn(
 								CAST_API_MARKER,
 								"Failed to set the initial interrim volume on {}: {}",
@@ -1816,7 +1816,7 @@ public class Channel implements Closeable {
 								null,
 								0L
 							);
-						} catch (IOException | InterruptedException e) {
+						} catch (Exception e) {
 							LOGGER.warn(
 								CAST_API_MARKER,
 								"Failed to set the initial volume on {}: {}",
@@ -2241,7 +2241,7 @@ public class Channel implements Closeable {
 								remoteName,
 								e.getMessage()
 							);
-						continue;
+							continue;
 						} else {
 							break;
 						}
@@ -2311,7 +2311,7 @@ public class Channel implements Closeable {
 						);
 					}
 				}
-			} catch (IOException e) {
+			} catch (Exception e) {
 				if (running) {
 					LOGGER.error(
 						CAST_API_MARKER,

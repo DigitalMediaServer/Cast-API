@@ -613,7 +613,16 @@ public interface CastEvent<T> {
 
 			@Override
 			public void run() {
-				listener.onEvent(event);
+				try {
+					listener.onEvent(event);
+				} catch (Exception e) {
+					LOGGER.error(
+						Channel.CAST_API_MARKER,
+						"An unexpected exception occurred while processing event: {}",
+						e.getMessage()
+					);
+					LOGGER.trace(Channel.CAST_API_MARKER, "", e);
+				}
 			}
 		}
 	}
