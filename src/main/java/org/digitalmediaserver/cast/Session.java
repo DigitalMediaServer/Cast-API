@@ -119,6 +119,8 @@ public class Session {
 	/**
 	 * @return {@code true} if this {@link Session} is closed, {@code false}
 	 *         otherwise.
+	 *
+	 * @apiNote This operation is non-blocking.
 	 */
 	public boolean isClosed() {
 		return channel.isSessionClosed(this);
@@ -130,6 +132,8 @@ public class Session {
 	 * @return {@code true} if this {@link Session} was closed, {@code false} if
 	 *         it already was.
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is non-blocking.
 	 */
 	public boolean close() throws IOException {
 		return channel.closeSession(this);
@@ -177,6 +181,9 @@ public class Session {
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus load(@Nonnull Load loadRequest, boolean synchronous) throws IOException {
@@ -205,6 +212,9 @@ public class Session {
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus load(@Nonnull Load loadRequest, boolean synchronous, long responseTimeout) throws IOException {
@@ -236,6 +246,9 @@ public class Session {
 	 * @throws IllegalArgumentException If {@code mediaBuilder} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus load(
@@ -282,6 +295,9 @@ public class Session {
 	 * @throws IllegalArgumentException If {@code mediaBuilder} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus load(
@@ -326,6 +342,9 @@ public class Session {
 	 * @throws IllegalArgumentException If {@code media} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus load(
@@ -371,6 +390,9 @@ public class Session {
 	 *             {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus load(
@@ -418,6 +440,9 @@ public class Session {
 	 * @throws IllegalArgumentException If {@code media} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus load(
@@ -477,6 +502,9 @@ public class Session {
 	 * @throws IllegalArgumentException If {@code media} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus load(
@@ -542,6 +570,9 @@ public class Session {
 	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus load(
@@ -613,6 +644,9 @@ public class Session {
 	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus load(
@@ -664,6 +698,9 @@ public class Session {
 	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus play(int mediaSessionId, boolean synchronous) throws IOException {
@@ -690,6 +727,9 @@ public class Session {
 	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus play(int mediaSessionId, boolean synchronous, long responseTimeout) throws IOException {
@@ -714,6 +754,9 @@ public class Session {
 	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus pause(int mediaSessionId, boolean synchronous) throws IOException {
@@ -740,6 +783,9 @@ public class Session {
 	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus pause(int mediaSessionId, boolean synchronous, long responseTimeout) throws IOException {
@@ -768,6 +814,9 @@ public class Session {
 	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus seek(
@@ -803,6 +852,9 @@ public class Session {
 	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus seek(
@@ -840,6 +892,9 @@ public class Session {
 	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus stop(int mediaSessionId, boolean synchronous) throws IOException {
@@ -866,6 +921,9 @@ public class Session {
 	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus stop(int mediaSessionId, boolean synchronous, long responseTimeout) throws IOException {
@@ -893,6 +951,9 @@ public class Session {
 	 * @throws IllegalArgumentException If {@code volume} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus setVolume(
@@ -913,6 +974,8 @@ public class Session {
 	 * @return The resulting {@link MediaStatus} if a reply is received in time,
 	 *         or {@code null} if a timeout occurs.
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is blocking.
 	 */
 	@Nullable
 	public MediaStatus getMediaStatus() throws IOException {
@@ -932,6 +995,8 @@ public class Session {
 	 * @return The resulting {@link MediaStatus} if a reply is received in time,
 	 *         or {@code null} if a timeout occurs.
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is blocking.
 	 */
 	@Nullable
 	public MediaStatus getMediaStatus(long responseTimeout) throws IOException {
@@ -951,6 +1016,10 @@ public class Session {
 	 *         {@code null} if the {@code responseClass} is {@code null} or a
 	 *         timeout occurs.
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code responseClass} is
+	 *          specified, and non-blocking if {@code responseClass} is
+	 *          {@code null}.
 	 */
 	public <T extends Response> T sendGenericRequest(
 		String namespace,

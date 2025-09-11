@@ -293,13 +293,13 @@ public class Volume {
 	 */
 	public enum VolumeControlType {
 
-		/** Cast device volume can be changed */
+		/** Cast device volume, can be changed */
 		ATTENUATION,
 
-		/** Cast device volume can be changed */
+		/** Cast device volume is fixed and cannot be changed */
 		FIXED,
 
-		/** Master system volume control, i.e. TV or Audio device volume is changed */
+		/** Master system volume control, i.e. TV or Audio device, can be changed */
 		MASTER;
 
 		/**
