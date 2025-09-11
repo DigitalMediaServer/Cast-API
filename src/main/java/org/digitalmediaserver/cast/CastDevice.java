@@ -570,6 +570,8 @@ public class CastDevice {
 	 * @throws CastException If there was an authentication problem with the
 	 *             cast device.
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is blocking.
 	 */
 	public boolean connect() throws IOException, KeyManagementException, NoSuchAlgorithmException {
 		return channel.connect();
@@ -581,6 +583,8 @@ public class CastDevice {
 	 * no-op.
 	 *
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is non-blocking.
 	 */
 	public void disconnect() throws IOException {
 		channel.close();
@@ -616,6 +620,8 @@ public class CastDevice {
 	 * @return The resulting {@link ReceiverStatus}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking.
 	 */
 	@Nullable
 	public ReceiverStatus getReceiverStatus() throws IOException {
@@ -634,6 +640,8 @@ public class CastDevice {
 	 * @return The resulting {@link ReceiverStatus}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking.
 	 */
 	@Nullable
 	public ReceiverStatus getReceiverStatus(long responseTimeout) throws IOException {
@@ -650,6 +658,8 @@ public class CastDevice {
 	 *         application, if any, or {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking.
 	 */
 	@Nullable
 	public Application getRunningApplication() throws IOException {
@@ -667,6 +677,8 @@ public class CastDevice {
 	 *         it's not.
 	 * @throws IOException If the response times out or if an error occurs
 	 *             during the operation.
+	 *
+	 * @apiNote This operation is blocking.
 	 */
 	public boolean isApplicationAvailable(String applicationId) throws IOException {
 		return channel().isApplicationAvailable(applicationId);
@@ -685,6 +697,8 @@ public class CastDevice {
 	 *         "currently running", {@code false} otherwise.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking.
 	 */
 	public boolean isApplicationRunning(String applicationId) throws IOException {
 		ReceiverStatus status = getReceiverStatus();
@@ -707,6 +721,9 @@ public class CastDevice {
 	 *             {@code autoReconnect} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public ReceiverStatus launchApplication(String applicationId, boolean synchronous) throws IOException {
@@ -730,6 +747,9 @@ public class CastDevice {
 	 *             {@code autoReconnect} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public ReceiverStatus launch(String applicationId, boolean synchronous, long responseTimeout) throws IOException {
@@ -749,6 +769,9 @@ public class CastDevice {
 	 * @throws SocketException If the {@link Channel} is closed and
 	 *             {@code autoReconnect} is {@code false}.
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public ReceiverStatus stopApplication(@Nullable Application application, boolean synchronous) throws IOException {
@@ -774,6 +797,9 @@ public class CastDevice {
 	 *             {@code autoReconnect} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public ReceiverStatus stopApplication(
@@ -795,6 +821,8 @@ public class CastDevice {
 	 * @throws SocketException If the {@link Channel} is closed and
 	 *             {@code autoReconnect} is {@code false}.
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is non-blocking.
 	 */
 	public Session startSession(
 		@Nonnull String sourceId,
@@ -820,6 +848,8 @@ public class CastDevice {
 	 * @throws SocketException If the {@link Channel} is closed and
 	 *             {@code autoReconnect} is {@code false}.
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is non-blocking.
 	 */
 	public Session startSession(
 		@Nonnull String sourceId,
@@ -847,6 +877,8 @@ public class CastDevice {
 	 * @throws IOException If the cast device has
 	 *             {@link VolumeControlType#FIXED} or an error occurs during the
 	 *             operation.
+	 *
+	 * @apiNote This operation is non-blocking.
 	 */
 	public void setVolumeLevel(double level) throws IOException {
 		if (level < 0.0) {
@@ -869,6 +901,8 @@ public class CastDevice {
 	 * @throws IOException If the cast device has
 	 *             {@link VolumeControlType#FIXED} or an error occurs during the
 	 *             operation.
+	 *
+	 * @apiNote This operation is non-blocking.
 	 */
 	public void setMuteState(boolean muteState) throws IOException {
 		channel().setVolume(new Volume(null, null, Boolean.valueOf(muteState), null));
@@ -893,6 +927,8 @@ public class CastDevice {
 	 * @throws IOException If the cast device has
 	 *             {@link VolumeControlType#FIXED} or an error occurs during the
 	 *             operation.
+	 *
+	 * @apiNote This operation is non-blocking.
 	 */
 	@Nullable
 	public void setVolume(@Nullable Volume volume) throws IOException {
@@ -922,6 +958,9 @@ public class CastDevice {
 	 *             invalid (see {@link Channel#validateNamespace(String)} for
 	 *             constraints).
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code responseClass} is
+	 *          non-{@code null}, otherwise non-blocking.
 	 */
 	public <T extends Response> T sendGenericRequest(
 		@Nonnull String sourceId,
@@ -956,6 +995,9 @@ public class CastDevice {
 	 *             invalid (see {@link Channel#validateNamespace(String)} for
 	 *             constraints).
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code responseClass} is
+	 *          non-{@code null}, otherwise non-blocking.
 	 */
 	public <T extends Response> T sendGenericRequest(
 		@Nonnull String sourceId,

@@ -32,9 +32,9 @@ import java.util.Set;
 
 
 /**
- * A class that can be used to keep discover cast devices and create
- * corresponding {@link CastDevice}s while notifying registered listeners of
- * discovered or disappearing devices.
+ * A class that can be used to discover cast devices and create corresponding
+ * {@link CastDevice}s while notifying registered listeners of discovered or
+ * disappearing devices.
  * <p>
  * After creating a {@link CastDeviceMonitor}, it must be started using
  * {@link #startDiscovery(InetAddress, String)}.

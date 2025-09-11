@@ -345,6 +345,8 @@ public class Channel implements Closeable {
 	 * @throws CastException If there was an authentication problem with the
 	 *             cast device.
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is blocking.
 	 */
 	public boolean connect() throws IOException, NoSuchAlgorithmException, KeyManagementException {
 		synchronized (socketLock) {
@@ -417,6 +419,8 @@ public class Channel implements Closeable {
 	 * this {@link Channel} is already closed, this is a no-op.
 	 *
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is non-blocking.
 	 */
 	@Override
 	public void close() throws IOException {
@@ -466,6 +470,8 @@ public class Channel implements Closeable {
 	/**
 	 * @return {@code true} if this {@link Channel} is closed, {@code false}
 	 *         if it's open.
+	 *
+	 * @apiNote This operation is non-blocking.
 	 */
 	public boolean isClosed() {
 		synchronized (socketLock) {
@@ -505,6 +511,9 @@ public class Channel implements Closeable {
 	 * @throws IOException If {@code responseClass} is non-{@code null} and the
 	 *             response from the cast device is a different type than what
 	 *             was expected, or if an error occurs during the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code responseClass} is
+	 *          non-{@code null}, otherwise non-blocking.
 	 */
 	public <T extends Response> T send(
 		@Nullable Session session,
@@ -575,6 +584,8 @@ public class Channel implements Closeable {
 	 * @return The resulting {@link ReceiverStatus}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking.
 	 */
 	@Nullable
 	public ReceiverStatus getReceiverStatus() throws IOException {
@@ -589,6 +600,8 @@ public class Channel implements Closeable {
 	 * @return The resulting {@link ReceiverStatus}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking.
 	 */
 	@Nullable
 	public ReceiverStatus getReceiverStatus(long responseTimeout) throws IOException {
@@ -619,6 +632,8 @@ public class Channel implements Closeable {
 	 *         it's not.
 	 * @throws IOException If the response times out or if an error occurs
 	 *             during the operation.
+	 *
+	 * @apiNote This operation is blocking.
 	 */
 	public boolean isApplicationAvailable(String applicationId) throws IOException {
 		return isApplicationAvailable(applicationId, DEFAULT_RESPONSE_TIMEOUT);
@@ -635,6 +650,8 @@ public class Channel implements Closeable {
 	 *         it's not.
 	 * @throws IOException If the response times out or if an error occurs
 	 *             during the operation.
+	 *
+	 * @apiNote This operation is blocking.
 	 */
 	public boolean isApplicationAvailable(String applicationId, long responseTimeout) throws IOException {
 		AppAvailabilityResponse availability = send(
@@ -662,6 +679,9 @@ public class Channel implements Closeable {
 	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public ReceiverStatus launch(String applicationId, boolean synchronous) throws IOException {
@@ -683,6 +703,9 @@ public class Channel implements Closeable {
 	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public ReceiverStatus launch(String applicationId, boolean synchronous, long responseTimeout) throws IOException {
@@ -715,6 +738,9 @@ public class Channel implements Closeable {
 	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	public ReceiverStatus stopApplication(@Nonnull Application application, boolean synchronous) throws IOException {
 		return stopApplication(application, synchronous, DEFAULT_RESPONSE_TIMEOUT);
@@ -735,6 +761,9 @@ public class Channel implements Closeable {
 	 * @throws NullPointerException If {@code application} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	public ReceiverStatus stopApplication(
 		@Nonnull Application application,
@@ -773,6 +802,8 @@ public class Channel implements Closeable {
 	 *            {@link VirtualConnectionType#INVISIBLE} are allowed.
 	 * @return The existing or new {@link Session}.
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is non-blocking.
 	 */
 	@Nonnull
 	public Session startSession(
@@ -818,6 +849,8 @@ public class Channel implements Closeable {
 	 * @return {@code true} if the {@link Session} was closed, {@code false} if
 	 *         it was closed already.
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is non-blocking.
 	 */
 	public boolean closeSession(@Nullable Session session) throws IOException {
 		if (session == null) {
@@ -848,6 +881,8 @@ public class Channel implements Closeable {
 	 * @param session the Session to check.
 	 * @return {@code true} if the specified {@link Session} is closed,
 	 *         {@code false} if it's connected.
+	 *
+	 * @apiNote This operation is non-blocking.
 	 */
 	public boolean isSessionClosed(@Nullable Session session) {
 		if (session == null) {
@@ -867,6 +902,8 @@ public class Channel implements Closeable {
 	 * @return The resulting {@link MediaStatus}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking.
 	 */
 	@Nullable
 	public MediaStatus getMediaStatus(@Nonnull Session session) throws IOException {
@@ -884,6 +921,8 @@ public class Channel implements Closeable {
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking.
 	 */
 	@Nullable
 	public MediaStatus getMediaStatus(@Nonnull Session session, long responseTimeout) throws IOException {
@@ -922,6 +961,9 @@ public class Channel implements Closeable {
 	 *             {@code loadRequest} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus load(
@@ -972,6 +1014,9 @@ public class Channel implements Closeable {
 	 *             {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus load(
@@ -1037,6 +1082,9 @@ public class Channel implements Closeable {
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus load(
@@ -1098,6 +1146,9 @@ public class Channel implements Closeable {
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus play(
@@ -1130,6 +1181,9 @@ public class Channel implements Closeable {
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus play(
@@ -1171,6 +1225,9 @@ public class Channel implements Closeable {
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus pause(
@@ -1203,6 +1260,9 @@ public class Channel implements Closeable {
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus pause(
@@ -1248,6 +1308,9 @@ public class Channel implements Closeable {
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus seek(
@@ -1293,6 +1356,9 @@ public class Channel implements Closeable {
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus seek(
@@ -1336,6 +1402,9 @@ public class Channel implements Closeable {
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus stopMedia(@Nonnull Session session, int mediaSessionId, boolean synchronous) throws IOException {
@@ -1364,6 +1433,9 @@ public class Channel implements Closeable {
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus stopMedia(
@@ -1409,6 +1481,9 @@ public class Channel implements Closeable {
 	 *             {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus setMediaVolume(
@@ -1453,6 +1528,9 @@ public class Channel implements Closeable {
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	public MediaStatus setMediaVolume(
@@ -1489,6 +1567,8 @@ public class Channel implements Closeable {
 	 * @throws CastException If the cast device has
 	 *             {@link VolumeControlType#FIXED}.
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is non-blocking.
 	 */
 	@Nullable
 	public void setVolume(Volume volume) throws IOException {
@@ -1600,6 +1680,10 @@ public class Channel implements Closeable {
 	 *             {@code namespace} is {@code null} or invalid (see
 	 *             {@link #validateNamespace(String)} for constraints).
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code responseClass} is
+	 *          specified, and non-blocking if {@code responseClass} is
+	 *          {@code null}.
 	 */
 	public <T extends Response> T sendGenericRequest(
 		@Nonnull Session session,
@@ -1639,6 +1723,10 @@ public class Channel implements Closeable {
 	 *             {@code namespace} is {@code null} or invalid (see
 	 *             {@link #validateNamespace(String)} for constraints).
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code responseClass} is
+	 *          specified, and non-blocking if {@code responseClass} is
+	 *          {@code null}.
 	 */
 	public <T extends Response> T sendGenericRequest(
 		@Nonnull Session session,
@@ -1679,6 +1767,10 @@ public class Channel implements Closeable {
 	 *             invalid (see {@link #validateNamespace(String)} for
 	 *             constraints).
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code responseClass} is
+	 *          specified, and non-blocking if {@code responseClass} is
+	 *          {@code null}.
 	 */
 	public <T extends Response> T sendGenericRequest(
 		@Nonnull String sourceId,
@@ -1712,6 +1804,10 @@ public class Channel implements Closeable {
 	 *             invalid (see {@link #validateNamespace(String)} for
 	 *             constraints).
 	 * @throws IOException If an error occurs during the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code responseClass} is
+	 *          specified, and non-blocking if {@code responseClass} is
+	 *          {@code null}.
 	 */
 	public <T extends Response> T sendGenericRequest(
 		@Nonnull String sourceId,
