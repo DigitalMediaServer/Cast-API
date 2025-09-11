@@ -1,6 +1,6 @@
 # Cast API
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.digitalmediaserver/cast-api/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.digitalmediaserver/cast-api)
+[![Maven Central](https://maven-badges.sml.io/maven-central/org.digitalmediaserver/cast-api/badge.svg?style=plastic)](https://maven-badges.sml.io/maven-central/org.digitalmediaserver/cast-api)
 
 This is a Java library that lets you connect to and communicate with "cast applications" running on Google cast devices like ChromeCast dongles. It does so without using any of the Google frameworks, which are limited to Android, iOS and the Chrome browser. Since the Google frameworks are mostly closed-source and no documentation exists for the protocol, this library may not always do what the cast device expects. This implementation is the result of discoveries made by other open-source projects, the Chromium source code and trial and error.
 
