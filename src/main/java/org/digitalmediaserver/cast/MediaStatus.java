@@ -154,7 +154,7 @@ public class MediaStatus {
 	protected final VideoInformation videoInfo;
 
 	/** The current stream volume */
-	@Nonnull
+	@Nullable
 	@JsonProperty
 	protected final MediaVolume volume;
 
@@ -192,8 +192,7 @@ public class MediaStatus {
 	 * @param supportedMediaCommands the commands supported by this player.
 	 * @param videoInfo the video information.
 	 * @param volume the current stream volume.
-	 * @throws IllegalArgumentException If {@code playerState} or {@code volume}
-	 *             is {@code null}.
+	 * @throws IllegalArgumentException If {@code playerState} is {@code null}.
 	 */
 	public MediaStatus(
 		@JsonProperty("activeTrackIds") @Nullable List<Integer> activeTrackIds,
@@ -214,10 +213,9 @@ public class MediaStatus {
 		@JsonProperty("repeatMode") @Nullable RepeatMode repeatMode,
 		@JsonProperty("supportedMediaCommands") int supportedMediaCommands,
 		@JsonProperty("videoInfo") @Nullable VideoInformation videoInfo,
-		@JsonProperty("volume") @Nonnull MediaVolume volume
+		@JsonProperty("volume") @Nullable MediaVolume volume
 	) {
 		Util.requireNotNull(playerState, "playerState");
-		Util.requireNotNull(volume, "volume");
 		if (activeTrackIds == null || activeTrackIds.isEmpty()) {
 			this.activeTrackIds = Collections.emptyList();
 		} else {
@@ -401,7 +399,7 @@ public class MediaStatus {
 	/**
 	 * @return The current stream volume.
 	 */
-	@Nonnull
+	@Nullable
 	public MediaVolume getVolume() {
 		return volume;
 	}
@@ -494,10 +492,12 @@ public class MediaStatus {
 		}
 		builder.append("supportedMediaCommands=").append(supportedMediaCommands).append(", ");
 		if (videoInfo != null) {
-			builder.append("videoInfo=").append(videoInfo).append(", ");
+			builder.append(", ").append("videoInfo=").append(videoInfo);
 		}
-		builder.append("volume=").append(volume).append("]");
-		return builder.toString();
+		if (volume != null) {
+			builder.append(", ").append("volume=").append(volume);
+		}
+		return builder.append("]").toString();
 	}
 
 	/**
