@@ -1602,13 +1602,13 @@ public class Channel implements Closeable {
 							stepInterval = -stepInterval;
 						}
 						task = new GradualVolumeTask(stepInterval, targetLevel);
-						volume = volume.modify().level(Double.valueOf(currentLevel + stepInterval)).build();
 					}
 				}
 
 				synchronized (gradualVolumeLock) {
 					if (gradualVolumeTask != null) {
 						gradualVolumeTask.cancel();
+						gradualVolumeTask = null;
 					}
 					if (task != null) {
 						if (gradualVolumeTimer == null) {
@@ -1616,6 +1616,7 @@ public class Channel implements Closeable {
 						}
 						gradualVolumeTask = task;
 						gradualVolumeTimer.schedule(task, 150, 150);
+						return;
 					} else if (gradualVolumeTimer != null) {
 						gradualVolumeTimer.cancel();
 						gradualVolumeTimer = null;
@@ -2221,39 +2222,48 @@ public class Channel implements Closeable {
 
 		@Override
 		public void run() {
-			Volume currentVolume;
-			synchronized (cachedVolumeLock) {
-				currentVolume = cachedVolume;
-			}
-			if (currentVolume == null || currentVolume.getLevel() == null) {
-				shutdownTask();
-			} else {
-				double currentLevel = currentVolume.getLevel().doubleValue();
-				double newLevel = currentLevel + interval;
-				if (interval > 0d) {
-					if (newLevel > target) {
-						newLevel = target;
-						shutdownTask();
-					}
-				} else {
-					if (newLevel < target) {
-						newLevel = target;
-						shutdownTask();
-					}
+			try {
+				Volume currentVolume;
+				synchronized (cachedVolumeLock) {
+					currentVolume = cachedVolume;
 				}
-				Volume newVolume = new Volume(null, Double.valueOf(newLevel), null, null);
-				try {
-					doSetVolume(newVolume, false, DEFAULT_RESPONSE_TIMEOUT);
-				} catch (IOException e) {
-					LOGGER.warn(
-						CAST_API_MARKER,
-						"An error occurred while gradually adjusting the volume " +
-						"level of {}, stopping gradual adjustment: {}", remoteName,
-						e.getMessage()
-					);
-					LOGGER.trace(CAST_API_MARKER, "", e);
+				if (currentVolume == null || currentVolume.getLevel() == null) {
 					shutdownTask();
+				} else {
+					double currentLevel = currentVolume.getLevel().doubleValue();
+					double newLevel = currentLevel + interval;
+					if (interval > 0d) {
+						if (newLevel > target) {
+							newLevel = target;
+							shutdownTask();
+						}
+					} else {
+						if (newLevel < target) {
+							newLevel = target;
+							shutdownTask();
+						}
+					}
+					Volume newVolume = new Volume(null, Double.valueOf(newLevel), null, null);
+					try {
+						doSetVolume(newVolume, false, DEFAULT_RESPONSE_TIMEOUT);
+					} catch (IOException e) {
+						LOGGER.warn(
+							CAST_API_MARKER,
+							"An error occurred while gradually adjusting the volume " +
+							"level of {}, stopping gradual adjustment: {}", remoteName,
+							e.getMessage()
+						);
+						LOGGER.trace(CAST_API_MARKER, "", e);
+						shutdownTask();
+					}
 				}
+			} catch (Exception e) {
+				LOGGER.error(
+					CAST_API_MARKER,
+					"An unexpected exception occurred in GradualVolumeTask: {}",
+					e.getMessage()
+				);
+				LOGGER.trace(CAST_API_MARKER, "", e);
 			}
 		}
 
