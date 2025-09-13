@@ -174,8 +174,8 @@ public class Session {
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code session} or
 	 *             {@code loadRequest} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
@@ -205,8 +205,8 @@ public class Session {
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code session} or
 	 *             {@code loadRequest} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
@@ -241,8 +241,8 @@ public class Session {
 	 *            response is received or times out, {@code false} to make it
 	 *            return immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code mediaBuilder} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -290,8 +290,8 @@ public class Session {
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code mediaBuilder} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -337,8 +337,8 @@ public class Session {
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code media} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -364,8 +364,8 @@ public class Session {
 	}
 
 	/**
-	 * Asks the remote application to load the specified {@link Media}
-	 * using the specified parameters.
+	 * Asks the remote application to load the specified {@link Media} using the
+	 * specified parameters.
 	 * <p>
 	 * This can only succeed if the remote application supports the
 	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
@@ -384,8 +384,8 @@ public class Session {
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code session} or {@code media} is
 	 *             {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
@@ -435,8 +435,8 @@ public class Session {
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code media} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -497,8 +497,8 @@ public class Session {
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code media} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -566,8 +566,8 @@ public class Session {
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
@@ -640,8 +640,8 @@ public class Session {
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
@@ -694,8 +694,8 @@ public class Session {
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
@@ -716,24 +716,18 @@ public class Session {
 	 *
 	 * @param mediaSessionId the media session ID for which the play request
 	 *            applies.
-	 * @param synchronous {@code true} to make this call block until a response
-	 *            is received or times out, {@code false} to make it return
-	 *            immediately always returning {@code null}.
-	 * @param responseTimeout the response timeout in milliseconds if
-	 *            {@code synchronous} is {@code true}. If zero or negative,
-	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be
+	 *            used.
+	 * @return The resulting {@link MediaStatus}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
-	 * @apiNote This operation is blocking if {@code synchronous} is
-	 *          {@code true}, otherwise non-blocking.
+	 * @apiNote This operation is blocking.
 	 */
-	@Nullable
-	public MediaStatus play(int mediaSessionId, boolean synchronous, long responseTimeout) throws IOException {
-		return channel.play(this, mediaSessionId, synchronous, responseTimeout);
+	@Nonnull
+	public MediaStatus play(int mediaSessionId, long responseTimeout) throws IOException {
+		return channel.play(this, mediaSessionId, responseTimeout);
 	}
 
 	/**
@@ -750,8 +744,8 @@ public class Session {
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
@@ -772,24 +766,18 @@ public class Session {
 	 *
 	 * @param mediaSessionId the media session ID for which the pause request
 	 *            applies.
-	 * @param synchronous {@code true} to make this call block until a response
-	 *            is received or times out, {@code false} to make it return
-	 *            immediately always returning {@code null}.
-	 * @param responseTimeout the response timeout in milliseconds if
-	 *            {@code synchronous} is {@code true}. If zero or negative,
-	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be
+	 *            used.
+	 * @return The resulting {@link MediaStatus}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
-	 * @apiNote This operation is blocking if {@code synchronous} is
-	 *          {@code true}, otherwise non-blocking.
+	 * @apiNote This operation is blocking.
 	 */
-	@Nullable
-	public MediaStatus pause(int mediaSessionId, boolean synchronous, long responseTimeout) throws IOException {
-		return channel.pause(this, mediaSessionId, synchronous, responseTimeout);
+	@Nonnull
+	public MediaStatus pause(int mediaSessionId, long responseTimeout) throws IOException {
+		return channel.pause(this, mediaSessionId, responseTimeout);
 	}
 
 	/**
@@ -810,8 +798,8 @@ public class Session {
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
@@ -841,37 +829,23 @@ public class Session {
 	 * @param resumeState the desired media player state after the seek is
 	 *            complete. If {@code null}, it will retain the state it had
 	 *            before seeking.
-	 * @param synchronous {@code true} to make this call block until a response
-	 *            is received or times out, {@code false} to make it return
-	 *            immediately always returning {@code null}.
-	 * @param responseTimeout the response timeout in milliseconds if
-	 *            {@code synchronous} is {@code true}. If zero or negative,
-	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be
+	 *            used.
+	 * @return The resulting {@link MediaStatus}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
-	 * @apiNote This operation is blocking if {@code synchronous} is
-	 *          {@code true}, otherwise non-blocking.
+	 * @apiNote This operation is blocking.
 	 */
-	@Nullable
+	@Nonnull
 	public MediaStatus seek(
 		int mediaSessionId,
 		double currentTime,
 		@Nullable ResumeState resumeState,
-		boolean synchronous,
 		long responseTimeout
 	) throws IOException {
-		return channel.seek(
-			this,
-			mediaSessionId,
-			currentTime,
-			resumeState,
-			synchronous,
-			responseTimeout
-		);
+		return channel.seek(this, mediaSessionId, currentTime, resumeState, responseTimeout);
 	}
 
 	/**
@@ -888,8 +862,8 @@ public class Session {
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
@@ -910,24 +884,18 @@ public class Session {
 	 *
 	 * @param mediaSessionId the media session ID for which the
 	 *            {@link MediaVolume} request applies.
-	 * @param synchronous {@code true} to make this call block until a response
-	 *            is received or times out, {@code false} to make it return
-	 *            immediately always returning {@code null}.
-	 * @param responseTimeout the response timeout in milliseconds if
-	 *            {@code synchronous} is {@code true}. If zero or negative,
-	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be
+	 *            used.
+	 * @return The resulting {@link MediaStatus}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
-	 * @apiNote This operation is blocking if {@code synchronous} is
-	 *          {@code true}, otherwise non-blocking.
+	 * @apiNote This operation is blocking.
 	 */
-	@Nullable
-	public MediaStatus stop(int mediaSessionId, boolean synchronous, long responseTimeout) throws IOException {
-		return channel.stopMedia(this, mediaSessionId, synchronous, responseTimeout);
+	@Nonnull
+	public MediaStatus stop(int mediaSessionId, long responseTimeout) throws IOException {
+		return channel.stopMedia(this, mediaSessionId, responseTimeout);
 	}
 
 	/**
@@ -946,8 +914,8 @@ public class Session {
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code volume} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.

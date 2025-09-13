@@ -693,6 +693,24 @@ public class Channel implements Closeable {
 	 * specified application ID.
 	 *
 	 * @param applicationId the application ID for the application to launch.
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link ReceiverStatus}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking.
+	 */
+	@Nonnull
+	public ReceiverStatus launch(String applicationId, long responseTimeout) throws IOException {
+		return launch(applicationId, true, responseTimeout);
+	}
+
+	/**
+	 * Asks the cast device to launch the application represented by the
+	 * specified application ID.
+	 *
+	 * @param applicationId the application ID for the application to launch.
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
@@ -708,7 +726,11 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public ReceiverStatus launch(String applicationId, boolean synchronous, long responseTimeout) throws IOException {
+	protected ReceiverStatus launch(
+		String applicationId,
+		boolean synchronous,
+		long responseTimeout
+	) throws IOException {
 		ReceiverStatusResponse status = send(
 			null,
 			"urn:x-cast:com.google.cast.receiver",
@@ -742,8 +764,30 @@ public class Channel implements Closeable {
 	 * @apiNote This operation is blocking if {@code synchronous} is
 	 *          {@code true}, otherwise non-blocking.
 	 */
+	@Nullable
 	public ReceiverStatus stopApplication(@Nonnull Application application, boolean synchronous) throws IOException {
 		return stopApplication(application, synchronous, DEFAULT_RESPONSE_TIMEOUT);
+	}
+
+	/**
+	 * Asks the cast device to stop the specified {@link Application}.
+	 *
+	 * @param application the {@link Application} to stop.
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link ReceiverStatus}.
+	 * @throws NullPointerException If {@code application} is {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking.
+	 */
+	@Nonnull
+	public ReceiverStatus stopApplication(
+		@Nonnull Application application,
+		long responseTimeout
+	) throws IOException {
+		return stopApplication(application, true, responseTimeout);
 	}
 
 	/**
@@ -765,7 +809,8 @@ public class Channel implements Closeable {
 	 * @apiNote This operation is blocking if {@code synchronous} is
 	 *          {@code true}, otherwise non-blocking.
 	 */
-	public ReceiverStatus stopApplication(
+	@Nullable
+	protected ReceiverStatus stopApplication(
 		@Nonnull Application application,
 		boolean synchronous,
 		long responseTimeout
@@ -955,8 +1000,8 @@ public class Channel implements Closeable {
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code session} or
 	 *             {@code loadRequest} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
@@ -1008,8 +1053,8 @@ public class Channel implements Closeable {
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code session} or {@code media} is
 	 *             {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
@@ -1077,8 +1122,8 @@ public class Channel implements Closeable {
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1141,8 +1186,8 @@ public class Channel implements Closeable {
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1169,6 +1214,34 @@ public class Channel implements Closeable {
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the play request
 	 *            applies.
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link MediaStatus}.
+	 * @throws IllegalArgumentException If {@code session} is {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking.
+	 */
+	@Nonnull
+	public MediaStatus play(
+		@Nonnull Session session,
+		int mediaSessionId,
+		long responseTimeout
+	) throws IOException {
+		return play(session, mediaSessionId, true, responseTimeout);
+	}
+
+	/**
+	 * Asks the remote application to start playing the media referenced by the
+	 * specified media session ID.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param session the {@link Session} to use.
+	 * @param mediaSessionId the media session ID for which the play request
+	 *            applies.
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
@@ -1176,8 +1249,8 @@ public class Channel implements Closeable {
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1186,7 +1259,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus play(
+	protected MediaStatus play(
 		@Nonnull Session session,
 		int mediaSessionId,
 		boolean synchronous,
@@ -1220,8 +1293,8 @@ public class Channel implements Closeable {
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1248,6 +1321,34 @@ public class Channel implements Closeable {
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the pause request
 	 *            applies.
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link MediaStatus}.
+	 * @throws IllegalArgumentException If {@code session} is {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking.
+	 */
+	@Nonnull
+	public MediaStatus pause(
+		@Nonnull Session session,
+		int mediaSessionId,
+		long responseTimeout
+	) throws IOException {
+		return pause(session, mediaSessionId, true, responseTimeout);
+	}
+
+	/**
+	 * Asks the remote application to pause playback of the media referenced by
+	 * the specified media session ID.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param session the {@link Session} to use.
+	 * @param mediaSessionId the media session ID for which the pause request
+	 *            applies.
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
@@ -1255,8 +1356,8 @@ public class Channel implements Closeable {
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1265,7 +1366,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus pause(
+	protected MediaStatus pause(
 		@Nonnull Session session,
 		int mediaSessionId,
 		boolean synchronous,
@@ -1303,8 +1404,8 @@ public class Channel implements Closeable {
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1344,6 +1445,40 @@ public class Channel implements Closeable {
 	 * @param resumeState the desired media player state after the seek is
 	 *            complete. If {@code null}, it will retain the state it had
 	 *            before seeking.
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link MediaStatus}.
+	 * @throws IllegalArgumentException If {@code session} is {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking.
+	 */
+	@Nonnull
+	public MediaStatus seek(
+		@Nonnull Session session,
+		int mediaSessionId,
+		double currentTime,
+		@Nullable ResumeState resumeState,
+		long responseTimeout
+	) throws IOException {
+		return seek(session, mediaSessionId, currentTime, resumeState, true, responseTimeout);
+	}
+
+	/**
+	 * Asks the remote application to move the playback position of the media
+	 * referenced by the specified media session ID to the specified position.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param session the {@link Session} to use.
+	 * @param mediaSessionId the media session ID for which the pause request
+	 *            applies.
+	 * @param currentTime the new playback position in seconds.
+	 * @param resumeState the desired media player state after the seek is
+	 *            complete. If {@code null}, it will retain the state it had
+	 *            before seeking.
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
@@ -1351,8 +1486,8 @@ public class Channel implements Closeable {
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1361,7 +1496,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus seek(
+	protected MediaStatus seek(
 		@Nonnull Session session,
 		int mediaSessionId,
 		double currentTime,
@@ -1397,8 +1532,8 @@ public class Channel implements Closeable {
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1421,6 +1556,34 @@ public class Channel implements Closeable {
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the
 	 *            {@link MediaVolume} request applies.
+	 * @param responseTimeout the response timeout in milliseconds. If zero or negative,
+	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link MediaStatus}.
+	 * @throws IllegalArgumentException If {@code session} is {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking.
+	 */
+	@Nonnull
+	public MediaStatus stopMedia(
+		@Nonnull Session session,
+		int mediaSessionId,
+		long responseTimeout
+	) throws IOException {
+		return stopMedia(session, mediaSessionId, true, responseTimeout);
+	}
+
+	/**
+	 * Asks the remote application to stop playback and unload the media
+	 * referenced by the specified media session ID.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param session the {@link Session} to use.
+	 * @param mediaSessionId the media session ID for which the
+	 *            {@link MediaVolume} request applies.
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
@@ -1428,8 +1591,8 @@ public class Channel implements Closeable {
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1438,7 +1601,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus stopMedia(
+	protected MediaStatus stopMedia(
 		@Nonnull Session session,
 		int mediaSessionId,
 		boolean synchronous,
@@ -1475,8 +1638,8 @@ public class Channel implements Closeable {
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code session} or {@code volume} is
 	 *             {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
@@ -1514,6 +1677,40 @@ public class Channel implements Closeable {
 	 * @param mediaSessionId the media session ID for which the
 	 *            {@link MediaVolume} request applies.
 	 * @param volume the {@link MediaVolume} to set.
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 * @return The resulting {@link MediaStatus}.
+	 * @throws IllegalArgumentException If {@code sessionId} or {@code volume}
+	 *             is {@code null}.
+	 * @throws IllegalArgumentException If {@code session} is {@code null}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking.
+	 */
+	@Nullable
+	public MediaStatus setMediaVolume(
+		@Nonnull Session session,
+		int mediaSessionId,
+		@Nonnull MediaVolume volume,
+		long responseTimeout
+	) throws IOException {
+		return setMediaVolume(session, mediaSessionId, volume, true, responseTimeout);
+	}
+
+	/**
+	 * Asks the remote application to change the volume level or mute state of
+	 * the stream of the specified media session. Please note that this is
+	 * different from the device volume level or mute state, and that this will
+	 * give the user no visual indication.
+	 * <p>
+	 * This can only succeed if the remote application supports the
+	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 *
+	 * @param session the {@link Session} to use.
+	 * @param mediaSessionId the media session ID for which the
+	 *            {@link MediaVolume} request applies.
+	 * @param volume the {@link MediaVolume} to set.
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
@@ -1521,8 +1718,8 @@ public class Channel implements Closeable {
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IllegalArgumentException If {@code sessionId} or {@code volume}
 	 *             is {@code null}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
@@ -1533,7 +1730,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus setMediaVolume(
+	protected MediaStatus setMediaVolume(
 		@Nonnull Session session,
 		int mediaSessionId,
 		@Nonnull MediaVolume volume,
@@ -1639,10 +1836,13 @@ public class Channel implements Closeable {
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link ReceiverStatus} if {@code synchronous} is
-	 *         {@code true} and a reply is received in time, {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 *         {@code true}, {@code null} if {@code synchronous} is
+	 *         {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
 	protected ReceiverStatus doSetVolume(Volume volume, boolean synchronous, long responseTimeout) throws IOException {
