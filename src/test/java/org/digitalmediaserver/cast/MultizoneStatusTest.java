@@ -16,6 +16,9 @@
 package org.digitalmediaserver.cast;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.digitalmediaserver.cast.message.response.MultizoneStatusResponse;
+import org.digitalmediaserver.cast.message.response.StandardResponse;
+import org.digitalmediaserver.cast.util.JacksonHelper;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -31,7 +34,7 @@ public class MultizoneStatusTest {
 	@Test
 	public void testStandard() throws IOException {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/multizoneStatus.json").replaceFirst("\"type\"", "\"responseType\"");
-		final StandardResponse.MultizoneStatusResponse response = (StandardResponse.MultizoneStatusResponse) jsonMapper.readValue(
+		final MultizoneStatusResponse response = (MultizoneStatusResponse) jsonMapper.readValue(
 			jsonMSG,
 			StandardResponse.class
 		);

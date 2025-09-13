@@ -23,7 +23,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import org.digitalmediaserver.cast.Volume.VolumeControlType;
+import org.digitalmediaserver.cast.message.entity.Application;
+import org.digitalmediaserver.cast.message.entity.ReceiverStatus;
+import org.digitalmediaserver.cast.message.entity.Volume;
+import org.digitalmediaserver.cast.message.enumeration.VolumeControlType;
+import org.digitalmediaserver.cast.message.response.ReceiverStatusResponse;
+import org.digitalmediaserver.cast.util.JacksonHelper;
 
 public class StatusTest {
 
@@ -33,7 +38,7 @@ public class StatusTest {
 	public void testDeserializationBackdrop118() throws Exception {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/status-backdrop-1.18.json")
 			.replaceFirst("\"type\"", "\"responseType\"");
-		final StandardResponse.ReceiverStatusResponse response = jsonMapper.readValue(jsonMSG, StandardResponse.ReceiverStatusResponse.class);
+		final ReceiverStatusResponse response = jsonMapper.readValue(jsonMSG, ReceiverStatusResponse.class);
 
 		ReceiverStatus status = response.getStatus();
 		assertNotNull(status);
@@ -56,7 +61,7 @@ public class StatusTest {
 	public void testDeserializationBackdrop119() throws Exception {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/status-backdrop-1.19.json")
 			.replaceFirst("\"type\"", "\"responseType\"");
-		final StandardResponse.ReceiverStatusResponse response = jsonMapper.readValue(jsonMSG, StandardResponse.ReceiverStatusResponse.class);
+		final ReceiverStatusResponse response = jsonMapper.readValue(jsonMSG, ReceiverStatusResponse.class);
 
 		ReceiverStatus status = response.getStatus();
 		assertNotNull(status);
@@ -79,7 +84,7 @@ public class StatusTest {
 	public void testDeserializationBackdrop128() throws Exception {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/status-backdrop-1.28.json")
 			.replaceFirst("\"type\"", "\"responseType\"");
-		final StandardResponse.ReceiverStatusResponse response = jsonMapper.readValue(jsonMSG, StandardResponse.ReceiverStatusResponse.class);
+		final ReceiverStatusResponse response = jsonMapper.readValue(jsonMSG, ReceiverStatusResponse.class);
 
 		ReceiverStatus status = response.getStatus();
 		assertNotNull(status);
@@ -103,7 +108,7 @@ public class StatusTest {
 	public void testDeserializationChromeMirroring() throws Exception {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/status-chrome-mirroring-1.28.json")
 			.replaceFirst("\"type\"", "\"responseType\"");
-		final StandardResponse.ReceiverStatusResponse response = jsonMapper.readValue(jsonMSG, StandardResponse.ReceiverStatusResponse.class);
+		final ReceiverStatusResponse response = jsonMapper.readValue(jsonMSG, ReceiverStatusResponse.class);
 
 		ReceiverStatus status = response.getStatus();
 		assertNotNull(status);
@@ -127,7 +132,7 @@ public class StatusTest {
 	public void testDeserializationSpotify() throws Exception {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/status-spotify.json")
 			.replaceFirst("\"type\"", "\"responseType\"");
-		final StandardResponse.ReceiverStatusResponse response = jsonMapper.readValue(jsonMSG, StandardResponse.ReceiverStatusResponse.class);
+		final ReceiverStatusResponse response = jsonMapper.readValue(jsonMSG, ReceiverStatusResponse.class);
 
 		ReceiverStatus status = response.getStatus();
 		assertNotNull(status);

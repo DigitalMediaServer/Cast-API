@@ -15,8 +15,8 @@
  */
 package org.digitalmediaserver.cast;
 
-import static org.digitalmediaserver.cast.Util.requireNotBlank;
-import static org.digitalmediaserver.cast.Util.requireNotNull;
+import static org.digitalmediaserver.cast.util.Util.requireNotBlank;
+import static org.digitalmediaserver.cast.util.Util.requireNotNull;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -41,11 +41,18 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.jmdns.JmDNS;
 import javax.jmdns.ServiceInfo;
-import org.digitalmediaserver.cast.CastEvent.CastEventListener;
-import org.digitalmediaserver.cast.CastEvent.CastEventListenerList;
-import org.digitalmediaserver.cast.CastEvent.CastEventType;
-import org.digitalmediaserver.cast.CastEvent.ThreadedCastEventListenerList;
-import org.digitalmediaserver.cast.Volume.VolumeControlType;
+import org.digitalmediaserver.cast.event.CastEvent.CastEventListener;
+import org.digitalmediaserver.cast.event.CastEvent.CastEventListenerList;
+import org.digitalmediaserver.cast.event.CastEvent.CastEventType;
+import org.digitalmediaserver.cast.event.CastEvent.ThreadedCastEventListenerList;
+import org.digitalmediaserver.cast.message.entity.Application;
+import org.digitalmediaserver.cast.message.entity.ReceiverStatus;
+import org.digitalmediaserver.cast.message.entity.Volume;
+import org.digitalmediaserver.cast.message.enumeration.VirtualConnectionType;
+import org.digitalmediaserver.cast.message.enumeration.VolumeControlType;
+import org.digitalmediaserver.cast.message.request.Request;
+import org.digitalmediaserver.cast.message.response.Response;
+import org.digitalmediaserver.cast.util.Util;
 
 
 /**
