@@ -16,6 +16,12 @@
 package org.digitalmediaserver.cast;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.digitalmediaserver.cast.message.entity.Device;
+import org.digitalmediaserver.cast.message.entity.Volume;
+import org.digitalmediaserver.cast.message.response.DeviceAddedResponse;
+import org.digitalmediaserver.cast.message.response.DeviceRemovedResponse;
+import org.digitalmediaserver.cast.message.response.DeviceUpdatedResponse;
+import org.digitalmediaserver.cast.util.JacksonHelper;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -32,7 +38,7 @@ public class DeviceTest {
 	@Test
 	public void testDeviceAdded() throws IOException {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/device-added.json").replaceFirst("\"type\"", "\"responseType\"");
-		final StandardResponse.DeviceAddedResponse response = jsonMapper.readValue(jsonMSG, StandardResponse.DeviceAddedResponse.class);
+		final DeviceAddedResponse response = jsonMapper.readValue(jsonMSG, DeviceAddedResponse.class);
 
 		assertNotNull(response.getDevice());
 		Device device = response.getDevice();
@@ -50,7 +56,7 @@ public class DeviceTest {
 	@Test
 	public void testDeviceRemoved() throws IOException {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/device-removed.json").replaceFirst("\"type\"", "\"responseType\"");
-		final StandardResponse.DeviceRemovedResponse response = jsonMapper.readValue(jsonMSG, StandardResponse.DeviceRemovedResponse.class);
+		final DeviceRemovedResponse response = jsonMapper.readValue(jsonMSG, DeviceRemovedResponse.class);
 
 		assertNotNull(response.getDeviceId());
 		assertEquals("111111", response.getDeviceId());
@@ -59,7 +65,7 @@ public class DeviceTest {
 	@Test
 	public void testDeviceUpdated() throws IOException {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/device-updated.json").replaceFirst("\"type\"", "\"responseType\"");
-		final StandardResponse.DeviceUpdatedResponse response = jsonMapper.readValue(jsonMSG, StandardResponse.DeviceUpdatedResponse.class);
+		final DeviceUpdatedResponse response = jsonMapper.readValue(jsonMSG, DeviceUpdatedResponse.class);
 
 		assertNotNull(response.getDevice());
 		Device device = response.getDevice();

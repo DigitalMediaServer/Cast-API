@@ -16,10 +16,18 @@
 package org.digitalmediaserver.cast;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.digitalmediaserver.cast.Media.StreamType;
-import org.digitalmediaserver.cast.MediaStatus.PlayerState;
-import org.digitalmediaserver.cast.MediaStatus.RepeatMode;
-import org.digitalmediaserver.cast.Metadata.MetadataType;
+import org.digitalmediaserver.cast.message.entity.Media;
+import org.digitalmediaserver.cast.message.entity.MediaStatus;
+import org.digitalmediaserver.cast.message.entity.MediaVolume;
+import org.digitalmediaserver.cast.message.entity.QueueItem;
+import org.digitalmediaserver.cast.message.enumeration.IdleReason;
+import org.digitalmediaserver.cast.message.enumeration.PlayerState;
+import org.digitalmediaserver.cast.message.enumeration.RepeatMode;
+import org.digitalmediaserver.cast.message.enumeration.StreamType;
+import org.digitalmediaserver.cast.message.response.MediaStatusResponse;
+import org.digitalmediaserver.cast.message.response.StandardResponse;
+import org.digitalmediaserver.cast.util.JacksonHelper;
+import org.digitalmediaserver.cast.util.MetadataUtil.MetadataType;
 import org.junit.Test;
 import java.io.IOException;
 import java.util.Collections;
@@ -37,16 +45,16 @@ public class MediaStatusTest {
 
 	@Test
 	public void testDeserializationWithIdleReason() throws Exception {
-		final StandardResponse.MediaStatusResponse response = (StandardResponse.MediaStatusResponse) jsonMapper
+		final MediaStatusResponse response = (MediaStatusResponse) jsonMapper
 			.readValue(getClass().getResourceAsStream("/mediaStatus-with-idleReason.json"), StandardResponse.class);
 		assertEquals(1, response.getStatuses().size());
 		MediaStatus mediaStatus = response.getStatuses().get(0);
-		assertEquals(MediaStatus.IdleReason.ERROR, mediaStatus.getIdleReason());
+		assertEquals(IdleReason.ERROR, mediaStatus.getIdleReason());
 	}
 
 	@Test
 	public void testDeserializationWithoutIdleReason() throws Exception {
-		final StandardResponse.MediaStatusResponse response = (StandardResponse.MediaStatusResponse) jsonMapper
+		final MediaStatusResponse response = (MediaStatusResponse) jsonMapper
 			.readValue(getClass().getResourceAsStream("/mediaStatus-without-idleReason.json"), StandardResponse.class);
 		assertEquals(1, response.getStatuses().size());
 		MediaStatus mediaStatus = response.getStatuses().get(0);
@@ -57,7 +65,7 @@ public class MediaStatusTest {
 	public void testDeserializationWithChromeCastAudioFixture() throws Exception {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/mediaStatus-chromecast-audio.json").replaceFirst("\"type\"",
 			"\"responseType\"");
-		final StandardResponse.MediaStatusResponse response = (StandardResponse.MediaStatusResponse) jsonMapper.readValue(jsonMSG, StandardResponse.class);
+		final MediaStatusResponse response = (MediaStatusResponse) jsonMapper.readValue(jsonMSG, StandardResponse.class);
 		assertEquals(1, response.getStatuses().size());
 		final MediaStatus mediaStatus = response.getStatuses().get(0);
 		assertEquals((Integer) 1, mediaStatus.getCurrentItemId());
@@ -97,7 +105,7 @@ public class MediaStatusTest {
 
 	@Test
 	public void testDeserializationPandora() throws IOException {
-		final StandardResponse.MediaStatusResponse response = (StandardResponse.MediaStatusResponse) jsonMapper
+		final MediaStatusResponse response = (MediaStatusResponse) jsonMapper
 			.readValue(getClass().getResourceAsStream("/mediaStatus-pandora.json"), StandardResponse.class);
 
 		assertEquals(1, response.getStatuses().size());
@@ -119,7 +127,7 @@ public class MediaStatusTest {
 		assertEquals(MetadataType.MUSIC_TRACK, media.getMetadataType());
 		assertEquals("http://audioURL", media.getUrl());
 		assertEquals(246d, media.getDuration(), 0.1);
-		assertEquals(Media.StreamType.BUFFERED, media.getStreamType());
+		assertEquals(StreamType.BUFFERED, media.getStreamType());
 		assertEquals("BUFFERED", media.getContentType());
 		assertNull(media.getTextTrackStyle());
 		assertTrue(media.getTracks().isEmpty());
@@ -133,7 +141,7 @@ public class MediaStatusTest {
 
 	@Test
 	public void testDeserializationNoMetadataType() throws IOException {
-		final StandardResponse.MediaStatusResponse response = (StandardResponse.MediaStatusResponse) jsonMapper
+		final MediaStatusResponse response = (MediaStatusResponse) jsonMapper
 			.readValue(getClass().getResourceAsStream("/mediaStatus-no-metadataType.json"), StandardResponse.class);
 
 		final MediaStatus mediaStatus = response.getStatuses().get(0);
@@ -143,7 +151,7 @@ public class MediaStatusTest {
 
 	@Test
 	public void testDeserializationUnknownMetadataType() throws IOException {
-		final StandardResponse.MediaStatusResponse response = (StandardResponse.MediaStatusResponse) jsonMapper
+		final MediaStatusResponse response = (MediaStatusResponse) jsonMapper
 			.readValue(getClass().getResourceAsStream("/mediaStatus-unknown-metadataType.json"), StandardResponse.class);
 
 		final MediaStatus mediaStatus = response.getStatuses().get(0);
@@ -155,7 +163,7 @@ public class MediaStatusTest {
 	public void testDeserializationWithVideoInfo() throws IOException {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/mediaStatus-with-videoinfo.json").replaceFirst("\"type\"",
 			"\"responseType\"");
-		final StandardResponse.MediaStatusResponse response = (StandardResponse.MediaStatusResponse) jsonMapper.readValue(jsonMSG, StandardResponse.class);
+		final MediaStatusResponse response = (MediaStatusResponse) jsonMapper.readValue(jsonMSG, StandardResponse.class);
 		assertEquals(1, response.getStatuses().size());
 	}
 
@@ -163,7 +171,7 @@ public class MediaStatusTest {
 	public void testDeserializationAudioWithExtraStatus() throws IOException {
 		final String jsonMSG = FixtureHelper.fixtureAsString("/mediaStatus-audio-with-extraStatus.json").replaceFirst("\"type\"",
 			"\"responseType\"");
-		final StandardResponse.MediaStatusResponse response = (StandardResponse.MediaStatusResponse) jsonMapper.readValue(jsonMSG, StandardResponse.class);
+		final MediaStatusResponse response = (MediaStatusResponse) jsonMapper.readValue(jsonMSG, StandardResponse.class);
 		assertEquals(1, response.getStatuses().size());
 	}
 }

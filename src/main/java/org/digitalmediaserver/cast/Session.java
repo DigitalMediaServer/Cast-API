@@ -22,9 +22,17 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
-import org.digitalmediaserver.cast.Media.MediaBuilder;
-import org.digitalmediaserver.cast.StandardRequest.Load;
-import org.digitalmediaserver.cast.StandardRequest.ResumeState;
+import org.digitalmediaserver.cast.message.request.Request;
+import org.digitalmediaserver.cast.message.entity.LoadOptions;
+import org.digitalmediaserver.cast.message.entity.Media;
+import org.digitalmediaserver.cast.message.entity.MediaStatus;
+import org.digitalmediaserver.cast.message.entity.MediaVolume;
+import org.digitalmediaserver.cast.message.entity.QueueData;
+import org.digitalmediaserver.cast.message.entity.Media.MediaBuilder;
+import org.digitalmediaserver.cast.message.enumeration.ResumeState;
+import org.digitalmediaserver.cast.message.request.Load;
+import org.digitalmediaserver.cast.message.response.Response;
+import org.digitalmediaserver.cast.util.Util;
 
 
 /**

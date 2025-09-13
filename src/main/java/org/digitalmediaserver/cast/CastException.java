@@ -18,7 +18,9 @@ package org.digitalmediaserver.cast;
 import java.io.IOException;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.digitalmediaserver.cast.StandardResponse.ErrorResponse;
+import org.digitalmediaserver.cast.message.response.ErrorResponse;
+import org.digitalmediaserver.cast.message.response.StandardResponse;
+import org.digitalmediaserver.cast.util.Util;
 
 
 /**

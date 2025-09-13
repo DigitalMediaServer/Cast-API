@@ -17,10 +17,14 @@ package org.digitalmediaserver.cast;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.digitalmediaserver.cast.Media.MediaBuilder;
-import org.digitalmediaserver.cast.Media.MediaCategory;
-import org.digitalmediaserver.cast.Media.StreamType;
-import org.digitalmediaserver.cast.Metadata.MetadataType;
+import org.digitalmediaserver.cast.message.entity.Image;
+import org.digitalmediaserver.cast.message.entity.Media;
+import org.digitalmediaserver.cast.message.entity.Media.MediaBuilder;
+import org.digitalmediaserver.cast.message.enumeration.MediaCategory;
+import org.digitalmediaserver.cast.message.enumeration.StreamType;
+import org.digitalmediaserver.cast.util.JacksonHelper;
+import org.digitalmediaserver.cast.util.MetadataUtil;
+import org.digitalmediaserver.cast.util.MetadataUtil.MetadataType;
 import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -111,12 +115,12 @@ public class MediaTest {
 		MediaBuilder builder = Media.builder("http://somevideo.mpg", "video/mpeg", StreamType.BUFFERED)
 			.duration(Double.valueOf(120d)).mediaCategory(MediaCategory.VIDEO);
 		Map<String, Object> metadata = new LinkedHashMap<>();
-		metadata.put(Metadata.Generic.TITLE, "Title");
-		metadata.put(Metadata.Generic.SUBTITLE, "Subtitle");
+		metadata.put(MetadataUtil.Generic.TITLE, "Title");
+		metadata.put(MetadataUtil.Generic.SUBTITLE, "Subtitle");
 		List<Image> images = new ArrayList<>();
 		images.add(new Image("http://somevideo.png", 1024, 768));
 		images.add(new Image("http://someVideo_thumb.jpg"));
-		Metadata.setImages(metadata, images);
+		MetadataUtil.setImages(metadata, images);
 		builder.metadata(metadata);
 
 		Media source = builder.build();
@@ -138,32 +142,32 @@ public class MediaTest {
 		result = jsonMapper.readValue(json, Media.class);
 		assertTrue(result.getImages().isEmpty());
 
-		Metadata.setImages(metadata, new Image("http://somevideo.png", 1024, 768), new Image("http://someVideo_thumb.jpg"));
-		assertTrue(metadata.get(Metadata.IMAGES) instanceof List);
-		assertEquals(2, ((List<?>) metadata.get(Metadata.IMAGES)).size());
+		MetadataUtil.setImages(metadata, new Image("http://somevideo.png", 1024, 768), new Image("http://someVideo_thumb.jpg"));
+		assertTrue(metadata.get(MetadataUtil.IMAGES) instanceof List);
+		assertEquals(2, ((List<?>) metadata.get(MetadataUtil.IMAGES)).size());
 
-		assertFalse(Metadata.setImages(null));
-		assertFalse(Metadata.setImages(null, (Collection<Image>) null));
-		assertTrue(Metadata.setImages(metadata));
-		assertFalse(Metadata.setImages(metadata, (Collection<Image>) null));
+		assertFalse(MetadataUtil.setImages(null));
+		assertFalse(MetadataUtil.setImages(null, (Collection<Image>) null));
+		assertTrue(MetadataUtil.setImages(metadata));
+		assertFalse(MetadataUtil.setImages(metadata, (Collection<Image>) null));
 
 		MetadataType type = MetadataType.GENERIC;
 		assertEquals(0, type.getCode());
 		assertEquals(MetadataType.MUSIC_TRACK, MetadataType.typeOf(3));
 		assertNull(MetadataType.typeOf(11));
 
-		assertNull(Metadata.dateToString(null));
+		assertNull(MetadataUtil.dateToString(null));
 		Calendar calendar = new GregorianCalendar(TimeZone.getTimeZone("Europe/Oslo"), Locale.ROOT);
 		calendar.set(2015, 10, 11, 14, 00, 00);
-		assertEquals("20151111T140000+0100", Metadata.dateToString(calendar));
+		assertEquals("20151111T140000+0100", MetadataUtil.dateToString(calendar));
 		calendar = new GregorianCalendar(TimeZone.getTimeZone("GMT+06:00"), Locale.ROOT);
 		calendar.set(1949, 3, 9, 00, 00, 00);
-		assertEquals("19490409", Metadata.dateToString(calendar));
+		assertEquals("19490409", MetadataUtil.dateToString(calendar));
 
-		calendar = Metadata.parseDate("20151111T140000+0100");
+		calendar = MetadataUtil.parseDate("20151111T140000+0100");
 		assertEquals(1447246800000L, calendar.getTimeInMillis());
 
-		calendar = Metadata.parseDate("20210106T125300-0500");
+		calendar = MetadataUtil.parseDate("20210106T125300-0500");
 		assertEquals(1609955580000L, calendar.getTimeInMillis());
 	}
 }

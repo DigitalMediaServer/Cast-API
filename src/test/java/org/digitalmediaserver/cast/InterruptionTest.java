@@ -16,6 +16,8 @@
 package org.digitalmediaserver.cast;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.digitalmediaserver.cast.message.request.Request;
+import org.digitalmediaserver.cast.message.response.Response;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;

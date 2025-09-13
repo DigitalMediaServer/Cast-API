@@ -18,17 +18,31 @@ package org.digitalmediaserver.cast;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.protobuf.MessageLite;
-import org.digitalmediaserver.cast.CastChannel.CastMessage;
-import org.digitalmediaserver.cast.CastChannel.DeviceAuthMessage;
-import org.digitalmediaserver.cast.CastChannel.CastMessage.PayloadType;
-import org.digitalmediaserver.cast.Volume.VolumeControlType;
+import org.digitalmediaserver.cast.message.Message;
+import org.digitalmediaserver.cast.message.StandardMessage;
+import org.digitalmediaserver.cast.message.entity.Application;
+import org.digitalmediaserver.cast.message.entity.Namespace;
+import org.digitalmediaserver.cast.message.entity.ReceiverStatus;
+import org.digitalmediaserver.cast.message.entity.Volume;
+import org.digitalmediaserver.cast.message.enumeration.VolumeControlType;
+import org.digitalmediaserver.cast.message.request.Launch;
+import org.digitalmediaserver.cast.message.request.StandardRequest;
+import org.digitalmediaserver.cast.message.response.PongResponse;
+import org.digitalmediaserver.cast.message.response.ReceiverStatusResponse;
+import org.digitalmediaserver.cast.message.response.Response;
+import org.digitalmediaserver.cast.message.response.StandardResponse;
+import org.digitalmediaserver.cast.protobuf.CastChannel.CastMessage;
+import org.digitalmediaserver.cast.protobuf.CastChannel.DeviceAuthMessage;
+import org.digitalmediaserver.cast.protobuf.CastChannel.CastMessage.PayloadType;
+import org.digitalmediaserver.cast.util.JacksonHelper;
+import org.digitalmediaserver.cast.util.X509TrustAllManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
-import static org.digitalmediaserver.cast.Util.intFromB32Bytes;
-import static org.digitalmediaserver.cast.Util.intToB32Bytes;
+import static org.digitalmediaserver.cast.util.Util.intFromB32Bytes;
+import static org.digitalmediaserver.cast.util.Util.intToB32Bytes;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
@@ -158,11 +172,11 @@ public class MockedChromeCast {
 
 		public Response handleJSON(Message message) {
 			if (message instanceof StandardMessage.Ping) {
-				return new StandardResponse.PongResponse();
+				return new PongResponse();
 			} else if (message instanceof StandardRequest.GetStatus) {
-				return new StandardResponse.ReceiverStatusResponse(((StandardRequest.GetStatus) message).getRequestId(), status());
-			} else if (message instanceof StandardRequest.Launch) {
-				StandardRequest.Launch launch = (StandardRequest.Launch) message;
+				return new ReceiverStatusResponse(((StandardRequest.GetStatus) message).getRequestId(), status());
+			} else if (message instanceof Launch) {
+				Launch launch = (Launch) message;
 				String transportId = UUID.randomUUID().toString();
 				runningApplications.add(new Application(
 					launch.getAppId(),
@@ -176,7 +190,7 @@ public class MockedChromeCast {
 					transportId,
 					launch.getAppId()
 				));
-				StandardResponse response = new StandardResponse.ReceiverStatusResponse(launch.getRequestId(), status());
+				StandardResponse response = new ReceiverStatusResponse(launch.getRequestId(), status());
 				return response;
 			}
 			return null;

@@ -17,6 +17,8 @@ package org.digitalmediaserver.cast;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.digitalmediaserver.cast.message.request.Request;
+import org.digitalmediaserver.cast.message.response.Response;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

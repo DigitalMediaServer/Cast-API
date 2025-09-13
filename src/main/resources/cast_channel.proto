@@ -6,7 +6,7 @@ syntax = "proto2";
 
 option optimize_for = LITE_RUNTIME;
 
-package org.digitalmediaserver.chromecast.api;
+package org.digitalmediaserver.cast.protobuf;
 
 message CastMessage {
     // Always pass a version of the protocol for future compatibility

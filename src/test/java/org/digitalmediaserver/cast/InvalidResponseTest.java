@@ -2,12 +2,14 @@ package org.digitalmediaserver.cast;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.digitalmediaserver.cast.StandardResponse.ErrorReason;
-import org.digitalmediaserver.cast.StandardResponse.ErrorResponse;
-import org.digitalmediaserver.cast.StandardResponse.ErrorType;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import org.digitalmediaserver.cast.message.enumeration.ErrorReason;
+import org.digitalmediaserver.cast.message.enumeration.ErrorType;
+import org.digitalmediaserver.cast.message.response.ErrorResponse;
+import org.digitalmediaserver.cast.message.response.StandardResponse;
+import org.digitalmediaserver.cast.util.JacksonHelper;
 
 public class InvalidResponseTest {
 
