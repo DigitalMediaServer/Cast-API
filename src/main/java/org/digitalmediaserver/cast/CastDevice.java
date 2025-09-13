@@ -735,25 +735,20 @@ public class CastDevice {
 	 * specified application ID.
 	 *
 	 * @param applicationId the application ID for the application to launch.
-	 * @param synchronous {@code true} to make this call block until a response
-	 *            is received or times out, {@code false} to make it return
-	 *            immediately always returning {@code null}.
-	 * @param responseTimeout the response timeout in milliseconds if
-	 *            {@code synchronous} is {@code true}. If zero or negative,
-	 *            {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link ReceiverStatus} or {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be
+	 *            used.
+	 * @return The resulting {@link ReceiverStatus}.
 	 * @throws SocketException If the {@link Channel} is closed and
 	 *             {@code autoReconnect} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
-	 * @apiNote This operation is blocking if {@code synchronous} is
-	 *          {@code true}, otherwise non-blocking.
+	 * @apiNote This operation is blocking.
 	 */
-	@Nullable
-	public ReceiverStatus launch(String applicationId, boolean synchronous, long responseTimeout) throws IOException {
-		return channel().launch(applicationId, synchronous, responseTimeout);
+	@Nonnull
+	public ReceiverStatus launch(String applicationId, long responseTimeout) throws IOException {
+		return channel().launch(applicationId, responseTimeout);
 	}
 
 	/**
@@ -785,29 +780,20 @@ public class CastDevice {
 	 * Asks the cast device to stop the specified {@link Application}.
 	 *
 	 * @param application the {@link Application} to stop.
-	 * @param synchronous {@code true} to make this call block until a response
-	 *            is received or times out, {@code false} to make it return
-	 *            immediately always returning {@code null}.
-	 * @param responseTimeout the response timeout in milliseconds if
-	 *            {@code synchronous} is {@code true}. If zero or negative,
-	 *            {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link ReceiverStatus} or {@code null} if
-	 *         {@code synchronous} is {@code false}.
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be
+	 *            used.
+	 * @return The resulting {@link ReceiverStatus}.
 	 * @throws SocketException If the {@link Channel} is closed and
 	 *             {@code autoReconnect} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
-	 * @apiNote This operation is blocking if {@code synchronous} is
-	 *          {@code true}, otherwise non-blocking.
+	 * @apiNote This operation is blocking.
 	 */
-	@Nullable
-	public ReceiverStatus stopApplication(
-		@Nonnull Application application,
-		boolean synchronous,
-		long responseTimeout
-	) throws IOException {
-		return channel().stopApplication(application, synchronous, responseTimeout);
+	@Nonnull
+	public ReceiverStatus stopApplication(@Nonnull Application application, long responseTimeout) throws IOException {
+		return channel().stopApplication(application, responseTimeout);
 	}
 
 	/**
