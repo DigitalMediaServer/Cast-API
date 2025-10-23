@@ -598,8 +598,8 @@ public class CastDevice {
 	}
 
 	/**
-	 * @return {@code true} if the associated {@link Channel} is closed,
-	 *         {@code false} if it's open.
+	 * @return {@code true} if the associated {@link Channel} is open,
+	 *         {@code false} if it's closed.
 	 */
 	public boolean isConnected() {
 		return !channel.isClosed();
@@ -1095,7 +1095,7 @@ public class CastDevice {
 		ThreadPoolExecutor result = new ThreadPoolExecutor(
 			0,
 			Integer.MAX_VALUE,
-			300L,
+			60L,
 			TimeUnit.SECONDS,
 			new SynchronousQueue<Runnable>(true),
 			new ThreadFactory() {

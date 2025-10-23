@@ -45,8 +45,26 @@ public enum CastDeviceCapability {
 	/** The cast device supports or is in (?) development mode */
 	DEV_MODE(1 << 4),
 
-	/** The cast device supports multizone groups */
-	MULTIZONE_GROUP(1 << 5);
+	/** The device is a multizone group */
+	MULTIZONE_GROUP(1 << 5),
+
+	/** The device is a dynamic group */
+	DYNAMIC_GROUP(1 << 6),
+
+	/** The device is a multichannel group */
+	MULTI_CHANNEL_GROUP(1 << 7),
+
+	/** The device is a multichannel member */
+	MULTI_CHANNEL_MEMBER(1 << 8),
+
+	/** The device has master or fixed volume mode capability */
+	MASTER_OR_FIXED_VOLUME(1 << 11),
+
+	/** The device has attenuation or fixed volume mode capability */
+	ATTENUATION_OR_FIXED_VOLUME(1 << 12),
+
+	/** The device can be part of a dynamic group */
+	DYNAMIC_GROUPING_SUPPORTED(1 << 16);
 
 	private final int mask;
 
