@@ -400,6 +400,10 @@ public class Channel implements Closeable {
 				throw new CastException("Authentication failed: " + authResponse.getError().getErrorType().toString());
 			}
 
+			// Make extra sure we're not losing the reference to a live thread
+			if (inputHandler != null) {
+				inputHandler.stopProcessing();
+			}
 			// Start input handler
 			inputHandler = new InputHandler(socket.getInputStream());
 			inputHandler.start();
@@ -412,6 +416,10 @@ public class Channel implements Closeable {
 				PLATFORM_RECEIVER_ID
 			);
 
+			// Make extra sure that we're not losing the reference to a live timer
+			if (pingTimer != null) {
+				pingTimer.cancel();
+			}
 			// Start regular pinging
 			PingTask pingTask = new PingTask();
 			pingTimer = new Timer(remoteName + " PING timer");
@@ -441,7 +449,7 @@ public class Channel implements Closeable {
 		Set<Session> closedSessions = null;
 		synchronized (sessionsLock) {
 			synchronized (socketLock) {
-				if (socket == null || socket.isClosed() || !socket.isConnected()) {
+				if (socket == null) {
 					// Already closed
 					return;
 				}
@@ -2563,7 +2571,7 @@ public class Channel implements Closeable {
 						} else {
 							sb.append(", binary payload: ").append(((ImmutableBinaryCastMessage) message).getPayload());
 						}
-						LOGGER.debug(CAST_API_MARKER, "Triggering (potentially partial) message: {}", sb.toString());
+						LOGGER.debug(CAST_API_MARKER, "Discarding (potentially partial) message: {}", sb.toString());
 					}
 					LOGGER.trace(CAST_API_MARKER, "", e);
 					running = false;
@@ -2575,12 +2583,13 @@ public class Channel implements Closeable {
 							return;
 						}
 					}
-					LOGGER.trace(
+					LOGGER.debug(
 						CAST_API_MARKER,
 						"Exception while shutting down {} InputHandler: {}",
 						remoteName,
 						e.getMessage()
 					);
+					LOGGER.trace(CAST_API_MARKER, "", e);
 				}
 				try {
 					close();
@@ -2680,18 +2689,24 @@ public class Channel implements Closeable {
 						}
 					}
 				} else {
-					StandardResponse response;
+					StandardResponse response = null;
 					if (!isBlank(responseType)) {
 						try {
 							response = jsonMapper.treeToValue(parsedMessage, StandardResponse.class);
 						} catch (JsonMappingException e) {
-							response = null;
+							LOGGER.warn(
+								CAST_API_MARKER,
+								"Failed to parse \"{}\" message from {} with content: {}: {}",
+								responseType,
+								remoteName,
+								parsedMessage,
+								e.getMessage()
+							);
+							LOGGER.trace("", e);
 						}
-					} else {
-						response = null;
 					}
 
-					if (response instanceof StandardResponse && response.getEventType() != null) {
+					if (response != null && response.getEventType() != null) {
 						ReceiverStatus receiverStatus;
 						if (
 							response instanceof ReceiverStatusResponse &&
