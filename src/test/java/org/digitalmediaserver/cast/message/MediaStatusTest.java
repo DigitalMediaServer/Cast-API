@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.digitalmediaserver.cast;
+package org.digitalmediaserver.cast.message;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.digitalmediaserver.cast.FixtureHelper;
 import org.digitalmediaserver.cast.message.entity.Media;
 import org.digitalmediaserver.cast.message.entity.MediaStatus;
 import org.digitalmediaserver.cast.message.entity.MediaVolume;

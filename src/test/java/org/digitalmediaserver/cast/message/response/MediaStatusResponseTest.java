@@ -1,4 +1,4 @@
-package org.digitalmediaserver.cast;
+package org.digitalmediaserver.cast.message.response;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,8 +19,6 @@ import org.digitalmediaserver.cast.message.enumeration.PlayerState;
 import org.digitalmediaserver.cast.message.enumeration.QueueType;
 import org.digitalmediaserver.cast.message.enumeration.RepeatMode;
 import org.digitalmediaserver.cast.message.enumeration.StreamType;
-import org.digitalmediaserver.cast.message.response.MediaStatusResponse;
-import org.digitalmediaserver.cast.message.response.StandardResponse;
 import org.digitalmediaserver.cast.util.JacksonHelper;
 import org.junit.Test;
 import static org.junit.Assert.*;

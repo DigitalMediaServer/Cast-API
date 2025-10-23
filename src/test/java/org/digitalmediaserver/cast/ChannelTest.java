@@ -698,11 +698,98 @@ public class ChannelTest {
 		assertFalse(volume.getMuted().booleanValue());
 
 		message = message.toBuilder().setPayloadUtf8(
-			FixtureHelper.fixtureAsString("/timetick.json").replaceFirst("\"type\"", "\"responseType\"")
+			FixtureHelper.fixtureAsString("/mediaStatuses2.json").replaceFirst("\"type\"", "\"responseType\"")
 		).build();
 		handler.processStringMessage((ImmutableStringCastMessage) ImmutableCastMessage.create(message), message.getPayloadUtf8());
 		assertEquals(11, events.size());
 		event = events.get(10);
+		assertEquals(CastEventType.MEDIA_STATUS, event.getEventType());
+		response = (MediaStatusResponse) event.getData();
+		assertEquals(CastEventType.MEDIA_STATUS, response.getEventType());
+		assertEquals(4L, response.getRequestId());
+		assertEquals(1, response.getStatuses().size());
+		mediaStatus = response.getStatuses().get(0);
+		assertNotNull(mediaStatus);
+		assertTrue(mediaStatus.getActiveTrackIds().isEmpty());
+		assertEquals(1, mediaStatus.getCurrentItemId().intValue());
+		assertEquals(207.909, mediaStatus.getCurrentTime(), 0.0);
+		assertTrue(mediaStatus.getCustomData().isEmpty());
+		assertNull(mediaStatus.getExtendedStatus());
+		assertNull(mediaStatus.getIdleReason());
+		items = mediaStatus.getItems();
+		assertEquals(1, items.size());
+		QueueItem item = items.get(0);
+		assertTrue(item.getActiveTrackIds().isEmpty());
+		assertNull(item.getAutoplay());
+		assertTrue(item.getCustomData().isEmpty());
+		assertEquals(Integer.valueOf(1), item.getItemId());
+		media = item.getMedia();
+		assertNotNull(media);
+		assertEquals("", media.getContentId());
+		assertNull(media.getContentType());
+		assertNull(media.getContentUrl());
+		assertTrue(media.getCustomData().isEmpty());
+		assertEquals(0.0, media.getDuration(), 0.0);
+		assertNull(media.getEntity());
+		assertNull(media.getHlsSegmentFormat());
+		assertNull(media.getHlsVideoSegmentFormat());
+		assertTrue(media.getImages().isEmpty());
+		assertNull(media.getMediaCategory());
+		metadata = media.getMetadata();
+		assertNotNull(metadata);
+		assertEquals(2, metadata.size());
+		assertEquals(0, metadata.get("metadataType"));
+		assertEquals("De nieuwe generaties van Suriname", metadata.get("title"));
+		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertNull(media.getStartAbsoluteTime());
+		assertEquals(StreamType.BUFFERED, media.getStreamType());
+		assertNull(media.getTextTrackStyle());
+		assertTrue(media.getTracks().isEmpty());
+		assertEquals("", media.getUrl());
+		assertNull(item.getOrderId());
+		assertNull(item.getPreloadTime());
+		assertNull(item.getStartTime());
+		assertNull(mediaStatus.getLiveSeekableRange());
+		assertNull(mediaStatus.getLoadingItemId());
+		media = mediaStatus.getMedia();
+		assertNotNull(media);
+		assertEquals("", media.getContentId());
+		assertNull(media.getContentType());
+		assertNull(media.getContentUrl());
+		assertTrue(media.getCustomData().isEmpty());
+		assertEquals(0.0, media.getDuration(), 0.0);
+		assertNull(media.getEntity());
+		assertNull(media.getHlsSegmentFormat());
+		assertNull(media.getHlsVideoSegmentFormat());
+		assertTrue(media.getImages().isEmpty());
+		assertNull(media.getMediaCategory());
+		metadata = media.getMetadata();
+		assertNotNull(metadata);
+		assertEquals(2, metadata.size());
+		assertEquals(0, metadata.get("metadataType"));
+		assertEquals("De nieuwe generaties van Suriname", metadata.get("title"));
+		assertEquals(MetadataType.GENERIC, media.getMetadataType());
+		assertNull(media.getStartAbsoluteTime());
+		assertEquals(StreamType.BUFFERED, media.getStreamType());
+		assertNull(media.getTextTrackStyle());
+		assertTrue(media.getTracks().isEmpty());
+		assertEquals("", media.getUrl());
+		assertEquals(4, mediaStatus.getMediaSessionId());
+		assertEquals(1.0, mediaStatus.getPlaybackRate(), 0.0);
+		assertEquals(PlayerState.PLAYING, mediaStatus.getPlayerState());
+		assertNull(mediaStatus.getPreloadedItemId());
+		assertNull(mediaStatus.getQueueData());
+		assertEquals(RepeatMode.REPEAT_OFF, mediaStatus.getRepeatMode());
+		assertEquals(205, mediaStatus.getSupportedMediaCommands());
+		assertNull(mediaStatus.getVideoInfo());
+		assertNull(mediaStatus.getVolume());
+
+		message = message.toBuilder().setPayloadUtf8(
+			FixtureHelper.fixtureAsString("/timetick.json").replaceFirst("\"type\"", "\"responseType\"")
+		).build();
+		handler.processStringMessage((ImmutableStringCastMessage) ImmutableCastMessage.create(message), message.getPayloadUtf8());
+		assertEquals(12, events.size());
+		event = events.get(11);
 		assertEquals(CastEventType.CUSTOM_MESSAGE, event.getEventType());
 		CustomMessageEvent custom = event.getData(CustomMessageEvent.class);
 		assertEquals("namespace", custom.getNamespace());
@@ -719,8 +806,8 @@ public class ChannelTest {
 			.setPayloadUtf8(jsonMapper.writeValueAsString(customMessage))
 			.build();
 		handler.processStringMessage((ImmutableStringCastMessage) ImmutableCastMessage.create(message), message.getPayloadUtf8());
-		assertEquals(12, events.size());
-		event = events.get(11);
+		assertEquals(13, events.size());
+		event = events.get(12);
 		assertEquals(CastEventType.CUSTOM_MESSAGE, event.getEventType());
 		custom = event.getData(CustomMessageEvent.class);
 		assertEquals("urn:x-cast:com.example.app", custom.getNamespace());
@@ -732,8 +819,8 @@ public class ChannelTest {
 		ReceiverStatusResponse receiverStatus = new ReceiverStatusResponse(0L, new ReceiverStatus(deviceVolume, null, false, false));
 		message = message.toBuilder().setPayloadUtf8(jsonMapper.writeValueAsString(receiverStatus)).build();
 		handler.processStringMessage((ImmutableStringCastMessage) ImmutableCastMessage.create(message), message.getPayloadUtf8());
-		assertEquals(13, events.size());
-		event = events.get(12);
+		assertEquals(14, events.size());
+		event = events.get(13);
 		assertEquals(CastEventType.RECEIVER_STATUS, event.getEventType());
 		assertEquals(deviceVolume, event.getData(ReceiverStatusResponse.class).getStatus().getVolume());
 

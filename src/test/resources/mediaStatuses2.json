@@ -1,0 +1,38 @@
+{
+	"requestId": 4,
+	"responseType": "MEDIA_STATUS",
+	"status": [
+		{
+			"currentItemId": 1,
+			"currentTime": 207.909,
+			"items": [
+				{
+					"itemId": 1,
+					"media": {
+						"contentId": "",
+						"duration": 0,
+						"metadata": {
+							"metadataType": 0,
+							"title": "De nieuwe generaties van Suriname"
+						},
+						"streamType": "BUFFERED"
+					}
+				}
+			],
+			"media": {
+				"contentId": "",
+				"duration": 0,
+				"metadata": {
+					"metadataType": 0,
+					"title": "De nieuwe generaties van Suriname"
+				},
+				"streamType": "BUFFERED"
+			},
+			"mediaSessionId": 4,
+			"playbackRate": 1,
+			"playerState": "PLAYING",
+			"repeatMode": "REPEAT_OFF",
+			"supportedMediaCommands": 205
+		}
+	]
+}

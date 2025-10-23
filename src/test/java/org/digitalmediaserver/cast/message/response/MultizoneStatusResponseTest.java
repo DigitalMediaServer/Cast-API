@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.digitalmediaserver.cast;
+package org.digitalmediaserver.cast.message.response;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.digitalmediaserver.cast.message.response.MultizoneStatusResponse;
-import org.digitalmediaserver.cast.message.response.StandardResponse;
+import org.digitalmediaserver.cast.FixtureHelper;
 import org.digitalmediaserver.cast.util.JacksonHelper;
 import org.junit.Test;
 
@@ -27,7 +26,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
-public class MultizoneStatusTest {
+public class MultizoneStatusResponseTest {
 
 	final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 

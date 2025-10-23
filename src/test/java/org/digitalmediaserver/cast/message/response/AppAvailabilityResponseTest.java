@@ -1,9 +1,7 @@
-package org.digitalmediaserver.cast;
+package org.digitalmediaserver.cast.message.response;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.digitalmediaserver.cast.message.response.AppAvailabilityResponse;
-import org.digitalmediaserver.cast.message.response.StandardResponse;
 import org.digitalmediaserver.cast.util.JacksonHelper;
 import org.junit.Test;
 

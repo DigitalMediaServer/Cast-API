@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.digitalmediaserver.cast;
+package org.digitalmediaserver.cast.message.response;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
@@ -23,14 +23,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import org.digitalmediaserver.cast.FixtureHelper;
 import org.digitalmediaserver.cast.message.entity.Application;
 import org.digitalmediaserver.cast.message.entity.ReceiverStatus;
 import org.digitalmediaserver.cast.message.entity.Volume;
 import org.digitalmediaserver.cast.message.enumeration.VolumeControlType;
-import org.digitalmediaserver.cast.message.response.ReceiverStatusResponse;
 import org.digitalmediaserver.cast.util.JacksonHelper;
 
-public class StatusTest {
+public class ReceiverStatusResponseTest {
 
 	final ObjectMapper jsonMapper = JacksonHelper.createJSONMapper();
 

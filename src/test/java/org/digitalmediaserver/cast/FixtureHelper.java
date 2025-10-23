@@ -20,12 +20,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-final class FixtureHelper {
+public final class FixtureHelper {
 
 	private FixtureHelper() {
 	}
 
-	static String fixtureAsString(final String res) throws IOException {
+	public static String fixtureAsString(final String res) throws IOException {
 		final InputStream is = FixtureHelper.class.getResourceAsStream(res);
 		try {
 			final BufferedReader reader = new BufferedReader(new InputStreamReader(is));
