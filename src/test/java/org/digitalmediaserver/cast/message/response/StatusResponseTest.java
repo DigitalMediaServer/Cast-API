@@ -1,4 +1,4 @@
-package org.digitalmediaserver.cast;
+package org.digitalmediaserver.cast.message.response;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,8 +7,6 @@ import org.digitalmediaserver.cast.message.entity.Namespace;
 import org.digitalmediaserver.cast.message.entity.ReceiverStatus;
 import org.digitalmediaserver.cast.message.entity.Volume;
 import org.digitalmediaserver.cast.message.enumeration.VolumeControlType;
-import org.digitalmediaserver.cast.message.response.ReceiverStatusResponse;
-import org.digitalmediaserver.cast.message.response.StandardResponse;
 import org.digitalmediaserver.cast.util.JacksonHelper;
 import org.junit.Test;
 import java.util.ArrayList;
