@@ -181,9 +181,9 @@ public class Session {
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code session} or
 	 *             {@code loadRequest} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
@@ -194,7 +194,7 @@ public class Session {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus load(@Nonnull Load loadRequest, boolean synchronous) throws IOException {
+	public List<MediaStatus> load(@Nonnull Load loadRequest, boolean synchronous) throws IOException {
 		return channel.load(this, loadRequest, synchronous, Channel.DEFAULT_RESPONSE_TIMEOUT);
 	}
 
@@ -212,9 +212,9 @@ public class Session {
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code session} or
 	 *             {@code loadRequest} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
@@ -225,7 +225,7 @@ public class Session {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus load(@Nonnull Load loadRequest, boolean synchronous, long responseTimeout) throws IOException {
+	public List<MediaStatus> load(@Nonnull Load loadRequest, boolean synchronous, long responseTimeout) throws IOException {
 		return channel.load(this, loadRequest, synchronous, responseTimeout);
 	}
 
@@ -248,9 +248,9 @@ public class Session {
 	 * @param synchronous {@code true} to make this call blocking until a
 	 *            response is received or times out, {@code false} to make it
 	 *            return immediately always returning {@code null}.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code mediaBuilder} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -259,7 +259,7 @@ public class Session {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus load(
+	public List<MediaStatus> load(
 		@Nonnull MediaBuilder mediaBuilder,
 		@Nullable Boolean autoplay,
 		@Nullable Double currentTime,
@@ -297,9 +297,9 @@ public class Session {
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code mediaBuilder} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -308,7 +308,7 @@ public class Session {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus load(
+	public List<MediaStatus> load(
 		@Nonnull MediaBuilder mediaBuilder,
 		@Nullable Boolean autoplay,
 		@Nullable Double currentTime,
@@ -344,9 +344,9 @@ public class Session {
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code media} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -355,7 +355,7 @@ public class Session {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus load(
+	public List<MediaStatus> load(
 		@Nonnull Media media,
 		@Nullable Boolean autoplay,
 		@Nullable Double currentTime,
@@ -391,9 +391,9 @@ public class Session {
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code session} or {@code media} is
 	 *             {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
@@ -403,7 +403,7 @@ public class Session {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus load(
+	public List<MediaStatus> load(
 		@Nonnull Media media,
 		@Nullable Boolean autoplay,
 		@Nullable Double currentTime,
@@ -442,9 +442,9 @@ public class Session {
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code media} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -453,7 +453,7 @@ public class Session {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus load(
+	public List<MediaStatus> load(
 		@Nonnull Media media,
 		@Nullable List<Integer> activeTrackIds,
 		@Nullable Boolean autoplay,
@@ -504,9 +504,9 @@ public class Session {
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code media} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -515,7 +515,7 @@ public class Session {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus load(
+	public List<MediaStatus> load(
 		@Nonnull Media media,
 		@Nullable List<Integer> activeTrackIds,
 		@Nullable Boolean autoplay,
@@ -573,9 +573,9 @@ public class Session {
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
@@ -583,7 +583,7 @@ public class Session {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus load(
+	public List<MediaStatus> load(
 		@Nonnull Media media,
 		@Nullable List<Integer> activeTrackIds,
 		@Nullable Boolean autoplay,
@@ -647,9 +647,9 @@ public class Session {
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
@@ -657,7 +657,7 @@ public class Session {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus load(
+	public List<MediaStatus> load(
 		@Nonnull Media media,
 		@Nullable List<Integer> activeTrackIds,
 		@Nullable Boolean autoplay,
@@ -701,9 +701,9 @@ public class Session {
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
@@ -711,7 +711,7 @@ public class Session {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus play(int mediaSessionId, boolean synchronous) throws IOException {
+	public List<MediaStatus> play(int mediaSessionId, boolean synchronous) throws IOException {
 		return channel.play(this, mediaSessionId, synchronous);
 	}
 
@@ -727,14 +727,14 @@ public class Session {
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
 	 *            negative, {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be
 	 *            used.
-	 * @return The resulting {@link MediaStatus}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
 	 * @apiNote This operation is blocking.
 	 */
 	@Nonnull
-	public MediaStatus play(int mediaSessionId, long responseTimeout) throws IOException {
+	public List<MediaStatus> play(int mediaSessionId, long responseTimeout) throws IOException {
 		return channel.play(this, mediaSessionId, responseTimeout);
 	}
 
@@ -751,9 +751,9 @@ public class Session {
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
@@ -761,7 +761,7 @@ public class Session {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus pause(int mediaSessionId, boolean synchronous) throws IOException {
+	public List<MediaStatus> pause(int mediaSessionId, boolean synchronous) throws IOException {
 		return channel.pause(this, mediaSessionId, synchronous);
 	}
 
@@ -777,14 +777,14 @@ public class Session {
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
 	 *            negative, {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be
 	 *            used.
-	 * @return The resulting {@link MediaStatus}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
 	 * @apiNote This operation is blocking.
 	 */
 	@Nonnull
-	public MediaStatus pause(int mediaSessionId, long responseTimeout) throws IOException {
+	public List<MediaStatus> pause(int mediaSessionId, long responseTimeout) throws IOException {
 		return channel.pause(this, mediaSessionId, responseTimeout);
 	}
 
@@ -805,9 +805,9 @@ public class Session {
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
@@ -815,7 +815,7 @@ public class Session {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus seek(
+	public List<MediaStatus> seek(
 		int mediaSessionId,
 		double currentTime,
 		@Nullable ResumeState resumeState,
@@ -840,14 +840,14 @@ public class Session {
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
 	 *            negative, {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be
 	 *            used.
-	 * @return The resulting {@link MediaStatus}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
 	 * @apiNote This operation is blocking.
 	 */
 	@Nonnull
-	public MediaStatus seek(
+	public List<MediaStatus> seek(
 		int mediaSessionId,
 		double currentTime,
 		@Nullable ResumeState resumeState,
@@ -879,7 +879,7 @@ public class Session {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus stop(int mediaSessionId, boolean synchronous) throws IOException {
+	public List<MediaStatus> stop(int mediaSessionId, boolean synchronous) throws IOException {
 		return channel.stopMedia(this, mediaSessionId, synchronous);
 	}
 
@@ -895,14 +895,14 @@ public class Session {
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
 	 *            negative, {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be
 	 *            used.
-	 * @return The resulting {@link MediaStatus}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
 	 * @apiNote This operation is blocking.
 	 */
 	@Nonnull
-	public MediaStatus stop(int mediaSessionId, long responseTimeout) throws IOException {
+	public List<MediaStatus> stop(int mediaSessionId, long responseTimeout) throws IOException {
 		return channel.stopMedia(this, mediaSessionId, responseTimeout);
 	}
 
@@ -921,9 +921,9 @@ public class Session {
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code volume} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -932,7 +932,7 @@ public class Session {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus setVolume(
+	public List<MediaStatus> setVolume(
 		int mediaSessionId,
 		@Nonnull MediaVolume volume,
 		boolean synchronous
@@ -941,25 +941,25 @@ public class Session {
 	}
 
 	/**
-	 * Requests an updated {@link MediaStatus} from the remote application. This
+	 * Requests a list of updated {@link MediaStatus}es from the remote application. This
 	 * method is always blocking.
 	 * <p>
 	 * This can only succeed if the remote application supports the
 	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
-	 * @return The resulting {@link MediaStatus} if a reply is received in time,
-	 *         or {@code null} if a timeout occurs.
-	 * @throws IOException If an error occurs during the operation.
+	 * @return The resulting {@link List} of {@link MediaStatus}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
 	 *
 	 * @apiNote This operation is blocking.
 	 */
-	@Nullable
-	public MediaStatus getMediaStatus() throws IOException {
+	@Nonnull
+	public List<MediaStatus> getMediaStatus() throws IOException {
 		return channel.getMediaStatus(this);
 	}
 
 	/**
-	 * Requests an updated {@link MediaStatus} from the remote application. This
+	 * Requests a list of updated {@link MediaStatus}es from the remote application. This
 	 * method is always blocking.
 	 * <p>
 	 * This can only succeed if the remote application supports the
@@ -968,14 +968,14 @@ public class Session {
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
 	 *            negative, {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be
 	 *            used.
-	 * @return The resulting {@link MediaStatus} if a reply is received in time,
-	 *         or {@code null} if a timeout occurs.
-	 * @throws IOException If an error occurs during the operation.
+	 * @return The resulting {@link List} of {@link MediaStatus}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
 	 *
 	 * @apiNote This operation is blocking.
 	 */
-	@Nullable
-	public MediaStatus getMediaStatus(long responseTimeout) throws IOException {
+	@Nonnull
+	public List<MediaStatus> getMediaStatus(long responseTimeout) throws IOException {
 		return channel.getMediaStatus(this, responseTimeout);
 	}
 

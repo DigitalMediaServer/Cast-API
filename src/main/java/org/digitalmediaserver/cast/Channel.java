@@ -29,6 +29,7 @@ import java.net.SocketTimeoutException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -961,38 +962,38 @@ public class Channel implements Closeable {
 	}
 
 	/**
-	 * Request a {@link MediaStatus} from the application with the specified
-	 * {@link Session}, using {@value #DEFAULT_RESPONSE_TIMEOUT} as the timeout
-	 * value.
+	 * Request a list of {@link MediaStatus}es from the application with the
+	 * specified {@link Session}, using {@value #DEFAULT_RESPONSE_TIMEOUT} as
+	 * the timeout value.
 	 *
 	 * @param session the {@link Session} to use.
-	 * @return The resulting {@link MediaStatus}.
+	 * @return The resulting {@link List} of {@link MediaStatus}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
 	 * @apiNote This operation is blocking.
 	 */
-	@Nullable
-	public MediaStatus getMediaStatus(@Nonnull Session session) throws IOException {
+	@Nonnull
+	public List<MediaStatus> getMediaStatus(@Nonnull Session session) throws IOException {
 		return getMediaStatus(session, DEFAULT_RESPONSE_TIMEOUT);
 	}
 
 	/**
-	 * Request a {@link MediaStatus} from the application with the specified
-	 * {@link Session}.
+	 * Request a list of {@link MediaStatus}es from the application with the
+	 * specified {@link Session}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
 	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus}.
+	 * @return The resulting {@link List} of {@link MediaStatus}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
 	 * @apiNote This operation is blocking.
 	 */
-	@Nullable
-	public MediaStatus getMediaStatus(@Nonnull Session session, long responseTimeout) throws IOException {
+	@Nonnull
+	public List<MediaStatus> getMediaStatus(@Nonnull Session session, long responseTimeout) throws IOException {
 		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
 			session,
@@ -1003,7 +1004,10 @@ public class Channel implements Closeable {
 			MediaStatusResponse.class,
 			responseTimeout
 		);
-		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+		if (status == null) {
+			return Collections.emptyList();
+		}
+		return status.getStatuses();
 	}
 
 	/**
@@ -1021,9 +1025,9 @@ public class Channel implements Closeable {
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code session} or
 	 *             {@code loadRequest} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
@@ -1033,7 +1037,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus load(
+	public List<MediaStatus> load(
 		@Nonnull Session session,
 		@Nonnull Load loadRequest,
 		boolean synchronous,
@@ -1050,7 +1054,13 @@ public class Channel implements Closeable {
 			synchronous ? MediaStatusResponse.class : null,
 			responseTimeout
 		);
-		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+		if (!synchronous) {
+			return null;
+		}
+		if (status == null) {
+			return Collections.emptyList();
+		}
+		return status.getStatuses();
 	}
 
 	/**
@@ -1074,9 +1084,9 @@ public class Channel implements Closeable {
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code session} or {@code media} is
 	 *             {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
@@ -1086,7 +1096,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus load(
+	public List<MediaStatus> load(
 		@Nonnull Session session,
 		@Nullable Boolean autoplay,
 		@Nullable Double currentTime,
@@ -1105,7 +1115,13 @@ public class Channel implements Closeable {
 			synchronous ? MediaStatusResponse.class : null,
 			responseTimeout
 		);
-		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+		if (!synchronous) {
+			return null;
+		}
+		if (status == null) {
+			return Collections.emptyList();
+		}
+		return status.getStatuses();
 	}
 
 	/**
@@ -1143,9 +1159,9 @@ public class Channel implements Closeable {
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1154,7 +1170,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus load(
+	public List<MediaStatus> load(
 		@Nonnull Session session,
 		@Nullable List<Integer> activeTrackIds,
 		@Nullable Boolean autoplay,
@@ -1190,7 +1206,13 @@ public class Channel implements Closeable {
 			synchronous ? MediaStatusResponse.class : null,
 			responseTimeout
 		);
-		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+		if (!synchronous) {
+			return null;
+		}
+		if (status == null) {
+			return Collections.emptyList();
+		}
+		return status.getStatuses();
 	}
 
 	/**
@@ -1207,9 +1229,9 @@ public class Channel implements Closeable {
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1218,7 +1240,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus play(
+	public List<MediaStatus> play(
 		@Nonnull Session session,
 		int mediaSessionId,
 		boolean synchronous
@@ -1238,7 +1260,7 @@ public class Channel implements Closeable {
 	 *            applies.
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
 	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1246,7 +1268,7 @@ public class Channel implements Closeable {
 	 * @apiNote This operation is blocking.
 	 */
 	@Nonnull
-	public MediaStatus play(
+	public List<MediaStatus> play(
 		@Nonnull Session session,
 		int mediaSessionId,
 		long responseTimeout
@@ -1270,9 +1292,9 @@ public class Channel implements Closeable {
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1281,7 +1303,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	protected MediaStatus play(
+	protected List<MediaStatus> play(
 		@Nonnull Session session,
 		int mediaSessionId,
 		boolean synchronous,
@@ -1297,7 +1319,13 @@ public class Channel implements Closeable {
 			synchronous ? MediaStatusResponse.class : null,
 			responseTimeout
 		);
-		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+		if (!synchronous) {
+			return null;
+		}
+		if (status == null) {
+			return Collections.emptyList();
+		}
+		return status.getStatuses();
 	}
 
 	/**
@@ -1314,9 +1342,9 @@ public class Channel implements Closeable {
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1325,7 +1353,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus pause(
+	public List<MediaStatus> pause(
 		@Nonnull Session session,
 		int mediaSessionId,
 		boolean synchronous
@@ -1345,7 +1373,7 @@ public class Channel implements Closeable {
 	 *            applies.
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
 	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1353,7 +1381,7 @@ public class Channel implements Closeable {
 	 * @apiNote This operation is blocking.
 	 */
 	@Nonnull
-	public MediaStatus pause(
+	public List<MediaStatus> pause(
 		@Nonnull Session session,
 		int mediaSessionId,
 		long responseTimeout
@@ -1377,9 +1405,9 @@ public class Channel implements Closeable {
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1388,7 +1416,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	protected MediaStatus pause(
+	protected List<MediaStatus> pause(
 		@Nonnull Session session,
 		int mediaSessionId,
 		boolean synchronous,
@@ -1404,7 +1432,13 @@ public class Channel implements Closeable {
 			synchronous ? MediaStatusResponse.class : null,
 			responseTimeout
 		);
-		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+		if (!synchronous) {
+			return null;
+		}
+		if (status == null) {
+			return Collections.emptyList();
+		}
+		return status.getStatuses();
 	}
 
 	/**
@@ -1425,9 +1459,9 @@ public class Channel implements Closeable {
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1436,7 +1470,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus seek(
+	public List<MediaStatus> seek(
 		@Nonnull Session session,
 		int mediaSessionId,
 		double currentTime,
@@ -1469,7 +1503,7 @@ public class Channel implements Closeable {
 	 *            before seeking.
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
 	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1477,7 +1511,7 @@ public class Channel implements Closeable {
 	 * @apiNote This operation is blocking.
 	 */
 	@Nonnull
-	public MediaStatus seek(
+	public List<MediaStatus> seek(
 		@Nonnull Session session,
 		int mediaSessionId,
 		double currentTime,
@@ -1507,9 +1541,9 @@ public class Channel implements Closeable {
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1518,7 +1552,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	protected MediaStatus seek(
+	protected List<MediaStatus> seek(
 		@Nonnull Session session,
 		int mediaSessionId,
 		double currentTime,
@@ -1536,7 +1570,13 @@ public class Channel implements Closeable {
 			synchronous ? MediaStatusResponse.class : null,
 			responseTimeout
 		);
-		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+		if (!synchronous) {
+			return null;
+		}
+		if (status == null) {
+			return Collections.emptyList();
+		}
+		return status.getStatuses();
 	}
 
 	/**
@@ -1553,9 +1593,9 @@ public class Channel implements Closeable {
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1564,7 +1604,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus stopMedia(@Nonnull Session session, int mediaSessionId, boolean synchronous) throws IOException {
+	public List<MediaStatus> stopMedia(@Nonnull Session session, int mediaSessionId, boolean synchronous) throws IOException {
 		return stopMedia(session, mediaSessionId, synchronous, DEFAULT_RESPONSE_TIMEOUT);
 	}
 
@@ -1580,7 +1620,7 @@ public class Channel implements Closeable {
 	 *            {@link MediaVolume} request applies.
 	 * @param responseTimeout the response timeout in milliseconds. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1588,7 +1628,7 @@ public class Channel implements Closeable {
 	 * @apiNote This operation is blocking.
 	 */
 	@Nonnull
-	public MediaStatus stopMedia(
+	public List<MediaStatus> stopMedia(
 		@Nonnull Session session,
 		int mediaSessionId,
 		long responseTimeout
@@ -1612,9 +1652,9 @@ public class Channel implements Closeable {
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
@@ -1623,7 +1663,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	protected MediaStatus stopMedia(
+	protected List<MediaStatus> stopMedia(
 		@Nonnull Session session,
 		int mediaSessionId,
 		boolean synchronous,
@@ -1639,7 +1679,13 @@ public class Channel implements Closeable {
 			synchronous ? MediaStatusResponse.class : null,
 			responseTimeout
 		);
-		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+		if (!synchronous) {
+			return null;
+		}
+		if (status == null) {
+			return Collections.emptyList();
+		}
+		return status.getStatuses();
 	}
 
 	/**
@@ -1659,9 +1705,9 @@ public class Channel implements Closeable {
 	 * @param synchronous {@code true} to make this call block until a response
 	 *            is received or times out, {@code false} to make it return
 	 *            immediately always returning {@code null}.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code session} or {@code volume} is
 	 *             {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
@@ -1671,7 +1717,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	public MediaStatus setMediaVolume(
+	public List<MediaStatus> setMediaVolume(
 		@Nonnull Session session,
 		int mediaSessionId,
 		@Nonnull MediaVolume volume,
@@ -1701,7 +1747,7 @@ public class Channel implements Closeable {
 	 * @param volume the {@link MediaVolume} to set.
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
 	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es.
 	 * @throws IllegalArgumentException If {@code sessionId} or {@code volume}
 	 *             is {@code null}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
@@ -1711,7 +1757,7 @@ public class Channel implements Closeable {
 	 * @apiNote This operation is blocking.
 	 */
 	@Nullable
-	public MediaStatus setMediaVolume(
+	public List<MediaStatus> setMediaVolume(
 		@Nonnull Session session,
 		int mediaSessionId,
 		@Nonnull MediaVolume volume,
@@ -1739,9 +1785,9 @@ public class Channel implements Closeable {
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
 	 *            {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus} if {@code synchronous} is
-	 *         {@code true}, {@code null} if {@code synchronous} is
-	 *         {@code false}.
+	 * @return The resulting {@link List} of {@link MediaStatus}es if
+	 *         {@code synchronous} is {@code true}, or {@code null} if
+	 *         {@code synchronous} is {@code false}.
 	 * @throws IllegalArgumentException If {@code sessionId} or {@code volume}
 	 *             is {@code null}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
@@ -1752,7 +1798,7 @@ public class Channel implements Closeable {
 	 *          {@code true}, otherwise non-blocking.
 	 */
 	@Nullable
-	protected MediaStatus setMediaVolume(
+	protected List<MediaStatus> setMediaVolume(
 		@Nonnull Session session,
 		int mediaSessionId,
 		@Nonnull MediaVolume volume,
@@ -1769,7 +1815,13 @@ public class Channel implements Closeable {
 			synchronous ? MediaStatusResponse.class : null,
 			responseTimeout
 		);
-		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+		if (!synchronous) {
+			return null;
+		}
+		if (status == null) {
+			return Collections.emptyList();
+		}
+		return status.getStatuses();
 	}
 
 	/**
