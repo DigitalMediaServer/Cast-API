@@ -996,7 +996,7 @@ public class Channel implements Closeable {
 		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
 			session,
-			"urn:x-cast:com.google.cast.media",
+			CastDevice.CAST_MEDIA_NAMESPACE,
 			new GetStatus(),
 			session.sourceId,
 			session.destinationId,
@@ -1011,7 +1011,7 @@ public class Channel implements Closeable {
 	 * {@link Load} request.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param loadRequest the {@link Load} request to send.
@@ -1043,7 +1043,7 @@ public class Channel implements Closeable {
 		requireNotNull(loadRequest, "loadRequest");
 		MediaStatusResponse status = send(
 			session,
-			"urn:x-cast:com.google.cast.media",
+			CastDevice.CAST_MEDIA_NAMESPACE,
 			loadRequest,
 			session.sourceId,
 			session.destinationId,
@@ -1058,7 +1058,7 @@ public class Channel implements Closeable {
 	 * using the specified parameters.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param media the {@link Media} to load.
@@ -1098,7 +1098,7 @@ public class Channel implements Closeable {
 		requireNotNull(media, "media");
 		MediaStatusResponse status = send(
 			session,
-			"urn:x-cast:com.google.cast.media",
+			CastDevice.CAST_MEDIA_NAMESPACE,
 			new Load(null, autoplay, null, null, currentTime, null, null, media, null, null),
 			session.sourceId,
 			session.destinationId,
@@ -1114,7 +1114,7 @@ public class Channel implements Closeable {
 	 * {@code media} or {@code queueData} must be non-{@code null}.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param activeTrackIds the {@link List} of track IDs that are active. If
@@ -1172,7 +1172,7 @@ public class Channel implements Closeable {
 		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
 			session,
-			"urn:x-cast:com.google.cast.media",
+			CastDevice.CAST_MEDIA_NAMESPACE,
 			new Load(
 				activeTrackIds,
 				autoplay,
@@ -1199,7 +1199,7 @@ public class Channel implements Closeable {
 	 * the timeout value.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the play request
@@ -1231,7 +1231,7 @@ public class Channel implements Closeable {
 	 * specified media session ID.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the play request
@@ -1259,7 +1259,7 @@ public class Channel implements Closeable {
 	 * specified media session ID.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the play request
@@ -1290,7 +1290,7 @@ public class Channel implements Closeable {
 		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
 			session,
-			"urn:x-cast:com.google.cast.media",
+			CastDevice.CAST_MEDIA_NAMESPACE,
 			new Play(mediaSessionId, session.id),
 			session.sourceId,
 			session.destinationId,
@@ -1306,7 +1306,7 @@ public class Channel implements Closeable {
 	 * as the timeout value.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the pause request
@@ -1338,7 +1338,7 @@ public class Channel implements Closeable {
 	 * the specified media session ID.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the pause request
@@ -1366,7 +1366,7 @@ public class Channel implements Closeable {
 	 * the specified media session ID.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the pause request
@@ -1397,7 +1397,7 @@ public class Channel implements Closeable {
 		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
 			session,
-			"urn:x-cast:com.google.cast.media",
+			CastDevice.CAST_MEDIA_NAMESPACE,
 			new Pause(mediaSessionId, session.id),
 			session.sourceId,
 			session.destinationId,
@@ -1413,7 +1413,7 @@ public class Channel implements Closeable {
 	 * using {@value #DEFAULT_RESPONSE_TIMEOUT} as the timeout value.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the pause request
@@ -1458,7 +1458,7 @@ public class Channel implements Closeable {
 	 * referenced by the specified media session ID to the specified position.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the pause request
@@ -1492,7 +1492,7 @@ public class Channel implements Closeable {
 	 * referenced by the specified media session ID to the specified position.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the pause request
@@ -1529,7 +1529,7 @@ public class Channel implements Closeable {
 		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
 			session,
-			"urn:x-cast:com.google.cast.media",
+			CastDevice.CAST_MEDIA_NAMESPACE,
 			new Seek(mediaSessionId, session.id, currentTime, resumeState),
 			session.sourceId,
 			session.destinationId,
@@ -1545,7 +1545,7 @@ public class Channel implements Closeable {
 	 * {@value #DEFAULT_RESPONSE_TIMEOUT} as the timeout value.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the
@@ -1573,7 +1573,7 @@ public class Channel implements Closeable {
 	 * referenced by the specified media session ID.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the
@@ -1601,7 +1601,7 @@ public class Channel implements Closeable {
 	 * referenced by the specified media session ID.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the
@@ -1632,7 +1632,7 @@ public class Channel implements Closeable {
 		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
 			session,
-			"urn:x-cast:com.google.cast.media",
+			CastDevice.CAST_MEDIA_NAMESPACE,
 			new StopMedia(mediaSessionId, null),
 			session.sourceId,
 			session.destinationId,
@@ -1650,7 +1650,7 @@ public class Channel implements Closeable {
 	 * {@value #DEFAULT_RESPONSE_TIMEOUT} as the timeout value.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the
@@ -1693,7 +1693,7 @@ public class Channel implements Closeable {
 	 * give the user no visual indication.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the
@@ -1727,7 +1727,7 @@ public class Channel implements Closeable {
 	 * give the user no visual indication.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the
@@ -1762,7 +1762,7 @@ public class Channel implements Closeable {
 		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
 			session,
-			"urn:x-cast:com.google.cast.media",
+			CastDevice.CAST_MEDIA_NAMESPACE,
 			new VolumeRequest(session.id, mediaSessionId, volume, null),
 			session.sourceId,
 			session.destinationId,

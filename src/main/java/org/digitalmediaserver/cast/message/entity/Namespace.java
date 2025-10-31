@@ -15,6 +15,7 @@
  */
 package org.digitalmediaserver.cast.message.entity;
 
+import java.util.Objects;
 import javax.annotation.concurrent.Immutable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -42,6 +43,23 @@ public class Namespace {
 	 */
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof Namespace)) {
+			return false;
+		}
+		Namespace other = (Namespace) obj;
+		return Objects.equals(name, other.name);
 	}
 
 	@Override
