@@ -19,6 +19,7 @@ import static org.digitalmediaserver.cast.util.Util.requireNotBlank;
 import static org.digitalmediaserver.cast.util.Util.requireNotNull;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.EventListener;
 import java.util.HashMap;
@@ -277,6 +278,9 @@ public interface CastEvent<T> {
 	 */
 	public abstract static class AbstractCastEventListenerList implements CastEventListenerList {
 
+		/** A {@link EnumSet} of all {@link CastEventType}s */
+		protected static final EnumSet<CastEventType> ALL_TYPES;
+
 		/** The identifier for the cast device used in logging */
 		@Nonnull
 		protected final String remoteName;
@@ -308,17 +312,33 @@ public interface CastEvent<T> {
 			this.remoteName = remoteName;
 		}
 
+		static {
+			ALL_TYPES = EnumSet.allOf(CastEventType.class);
+			ALL_TYPES.remove(CastEventType.ALL);
+		}
+
 		@Override
 		public boolean add(@Nullable CastEventListener listener, CastEventType... eventTypes) {
 			if (listener == null) {
 				return false;
 			}
 			synchronized (filtersLock) {
+				List<CastEventType> eventTypeList;
+				if (eventTypes == null || eventTypes.length == 0) {
+					eventTypeList = Collections.emptyList();
+				} else {
+					eventTypeList = Arrays.asList(eventTypes);
+				}
 				if (listeners.contains(listener)) {
-					if (eventTypes == null || eventTypes.length == 0) {
+					if (eventTypeList.isEmpty()) {
 						return filters.remove(listener) != null;
 					}
-					EnumSet<CastEventType> newTypes = EnumSet.copyOf(Arrays.asList(eventTypes));
+					EnumSet<CastEventType> newTypes;
+					if (eventTypeList.contains(CastEventType.ALL)) {
+						newTypes = ALL_TYPES;
+					} else {
+						newTypes = EnumSet.copyOf(eventTypeList);
+					}
 					Set<CastEventType> types = filters.get(listener);
 					if (types == null) {
 						filters.put(listener, newTypes);
@@ -328,8 +348,12 @@ public interface CastEvent<T> {
 				}
 
 				listeners.add(listener);
-				if (eventTypes != null && eventTypes.length > 0) {
-					filters.put(listener, EnumSet.copyOf(Arrays.asList(eventTypes)));
+				if (!eventTypeList.isEmpty()) {
+					if (eventTypeList.contains(CastEventType.ALL)) {
+						filters.put(listener, EnumSet.copyOf(ALL_TYPES));
+					} else {
+						filters.put(listener, EnumSet.copyOf(eventTypeList));
+					}
 				}
 				return true;
 			}
@@ -633,6 +657,11 @@ public interface CastEvent<T> {
 	 * @author Nadahar
 	 */
 	public enum CastEventType {
+
+		/**
+		 * Event is never fired, but can be used to subscribe to all event types.
+		 */
+		ALL(Object.class),
 
 		/**
 		 * Event is fired when an unclaimed {@link AppAvailabilityResponse} is
