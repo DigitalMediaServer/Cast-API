@@ -175,7 +175,7 @@ public class Session {
 	 * value.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param loadRequest the {@link Load} request to send.
 	 * @param synchronous {@code true} to make this call block until a response
@@ -203,7 +203,7 @@ public class Session {
 	 * request.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param loadRequest the {@link Load} request to send.
 	 * @param synchronous {@code true} to make this call block until a response
@@ -235,7 +235,7 @@ public class Session {
 	 * and {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the timeout value.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param mediaBuilder the {@link MediaBuilder} to use to create the
 	 *            {@link Media} to load.
@@ -281,7 +281,7 @@ public class Session {
 	 * from the specified {@link MediaBuilder} using the specified parameters.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param mediaBuilder the {@link MediaBuilder} to use to create the
 	 *            {@link Media} to load.
@@ -332,7 +332,7 @@ public class Session {
 	 * timeout value.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param media the {@link Media} to load.
 	 * @param autoplay {@code true} to ask the remote application to start
@@ -376,7 +376,7 @@ public class Session {
 	 * specified parameters.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param media the {@link Media} to load.
 	 * @param autoplay {@code true} to ask the remote application to start
@@ -425,7 +425,7 @@ public class Session {
 	 * specified parameters.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param media the {@link Media} to load.
 	 * @param activeTrackIds the {@link List} of track IDs that are active. If
@@ -484,7 +484,7 @@ public class Session {
 	 * timeout value.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param media the {@link Media} to load.
 	 * @param activeTrackIds the {@link List} of track IDs that are active. If
@@ -548,7 +548,7 @@ public class Session {
 	 * {@code media} or {@code queueData} must be non-{@code null}.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param media the {@link Media} to load.
 	 * @param activeTrackIds the {@link List} of track IDs that are active. If
@@ -619,7 +619,7 @@ public class Session {
 	 * or {@code queueData} must be non-{@code null}.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param media the {@link Media} to load.
 	 * @param activeTrackIds the {@link List} of track IDs that are active. If
@@ -694,7 +694,7 @@ public class Session {
 	 * {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the timeout value.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param mediaSessionId the media session ID for which the play request
 	 *            applies.
@@ -720,7 +720,7 @@ public class Session {
 	 * specified media session ID.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param mediaSessionId the media session ID for which the play request
 	 *            applies.
@@ -744,7 +744,7 @@ public class Session {
 	 * {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the timeout value.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param mediaSessionId the media session ID for which the pause request
 	 *            applies.
@@ -770,7 +770,7 @@ public class Session {
 	 * the specified media session ID.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param mediaSessionId the media session ID for which the pause request
 	 *            applies.
@@ -794,7 +794,7 @@ public class Session {
 	 * using {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the timeout value.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param mediaSessionId the media session ID for which the pause request
 	 *            applies.
@@ -829,7 +829,7 @@ public class Session {
 	 * referenced by the specified media session ID to the specified position.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param mediaSessionId the media session ID for which the pause request
 	 *            applies.
@@ -862,7 +862,7 @@ public class Session {
 	 * {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the timeout value.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param mediaSessionId the media session ID for which the
 	 *            {@link MediaVolume} request applies.
@@ -888,7 +888,7 @@ public class Session {
 	 * referenced by the specified media session ID.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param mediaSessionId the media session ID for which the
 	 *            {@link MediaVolume} request applies.
@@ -913,7 +913,7 @@ public class Session {
 	 * give the user no visual indication.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param mediaSessionId the media session ID for which the
 	 *            {@link MediaVolume} request applies.
@@ -945,7 +945,7 @@ public class Session {
 	 * method is always blocking.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @return The resulting {@link MediaStatus} if a reply is received in time,
 	 *         or {@code null} if a timeout occurs.
@@ -963,7 +963,7 @@ public class Session {
 	 * method is always blocking.
 	 * <p>
 	 * This can only succeed if the remote application supports the
-	 * "{@code urn:x-cast:com.google.cast.media}" namespace.
+	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
 	 *            negative, {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be

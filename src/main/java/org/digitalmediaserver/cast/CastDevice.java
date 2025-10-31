@@ -46,6 +46,7 @@ import org.digitalmediaserver.cast.event.CastEvent.CastEventListenerList;
 import org.digitalmediaserver.cast.event.CastEvent.CastEventType;
 import org.digitalmediaserver.cast.event.CastEvent.ThreadedCastEventListenerList;
 import org.digitalmediaserver.cast.message.entity.Application;
+import org.digitalmediaserver.cast.message.entity.Namespace;
 import org.digitalmediaserver.cast.message.entity.ReceiverStatus;
 import org.digitalmediaserver.cast.message.entity.Volume;
 import org.digitalmediaserver.cast.message.enumeration.VirtualConnectionType;
@@ -66,6 +67,12 @@ public class CastDevice {
 
 	/** The application ID for the "Default Media Receiver" application */
 	public static final String DEFAULT_MEDIA_RECEIVER_APP_ID = "CC1AD845";
+
+	/** The namespace string for standard cast media control */
+	public static final String CAST_MEDIA_NAMESPACE = "urn:x-cast:com.google.cast.media";
+
+	/** The {@link Namespace} string for standard cast media control */
+	public static final Namespace CAST_MEDIA = new Namespace(CAST_MEDIA_NAMESPACE);
 
 	/** The {@link ExecutorService} that is used for asynchronous operations */
 	@Nonnull
