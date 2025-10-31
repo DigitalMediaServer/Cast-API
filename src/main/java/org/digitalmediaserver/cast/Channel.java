@@ -66,6 +66,7 @@ import org.digitalmediaserver.cast.message.StandardMessage.Connect;
 import org.digitalmediaserver.cast.message.StandardMessage.Ping;
 import org.digitalmediaserver.cast.message.StandardMessage.Pong;
 import org.digitalmediaserver.cast.message.entity.Application;
+import org.digitalmediaserver.cast.message.entity.ExtendedMediaStatus;
 import org.digitalmediaserver.cast.message.entity.LoadOptions;
 import org.digitalmediaserver.cast.message.entity.Media;
 import org.digitalmediaserver.cast.message.entity.MediaStatus;
@@ -73,6 +74,7 @@ import org.digitalmediaserver.cast.message.entity.MediaVolume;
 import org.digitalmediaserver.cast.message.entity.QueueData;
 import org.digitalmediaserver.cast.message.entity.ReceiverStatus;
 import org.digitalmediaserver.cast.message.entity.Volume;
+import org.digitalmediaserver.cast.message.enumeration.ExtendedPlayerState;
 import org.digitalmediaserver.cast.message.enumeration.ResumeState;
 import org.digitalmediaserver.cast.message.enumeration.VirtualConnectionType;
 import org.digitalmediaserver.cast.message.enumeration.VolumeControlType;
@@ -98,6 +100,7 @@ import org.digitalmediaserver.cast.message.response.StandardResponse;
 import org.digitalmediaserver.cast.protobuf.CastChannel;
 import org.digitalmediaserver.cast.protobuf.CastChannel.CastMessage;
 import org.digitalmediaserver.cast.util.JacksonHelper;
+import org.digitalmediaserver.cast.util.Util;
 import org.digitalmediaserver.cast.util.X509TrustAllManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -556,10 +559,10 @@ public class Channel implements Closeable {
 			return null;
 		}
 
-		ResultProcessor<T> rp = new ResultProcessor<>(session, responseClass, responseTimeout);
-		synchronized (requests) {
-			requests.put(Long.valueOf(requestId), rp);
-		}
+		ResultProcessor<T> rp = new ResultProcessor<>(
+			session, responseClass, responseTimeout, message instanceof Load
+		);
+		insertResultProcessor(requestId, rp);
 
 		write(namespace, message, sourceId, destinationId);
 		try {
@@ -2078,12 +2081,11 @@ public class Channel implements Closeable {
 
 	/**
 	 * Claims (retrieves and removes from {@code requests}) the
-	 * {@link ResultProcessorResult} for the specified request ID if one exists.
+	 * {@link ResultProcessor} for the specified request ID if one exists.
 	 *
 	 * @param requestId the request ID to look up.
-	 * @return The one and only {@link ResultProcessor} instance for the
-	 *         specified request ID if it exists and hasn't already been
-	 *         claimed, or {@code null}.
+	 * @return The {@link ResultProcessor} instance for the specified request ID
+	 *         if it exists and hasn't already been claimed, or {@code null}.
 	 */
 	@Nullable
 	protected ResultProcessor<? extends Response> acquireResultProcessor(long requestId) {
@@ -2092,6 +2094,22 @@ public class Channel implements Closeable {
 		}
 		synchronized (requests) {
 			return requests.remove(Long.valueOf(requestId));
+		}
+	}
+
+	/**
+	 * Stores the specified {@link ResultProcessor} with the specified request ID.
+	 *
+	 * @param requestId the request ID to use.
+	 * @param rp the {@link ResultProcessor} to store with the specified request ID.
+	 */
+	protected void insertResultProcessor(long requestId, @Nonnull ResultProcessor<? extends Response> rp) {
+		Util.requireNotNull(rp, "rp");
+		if (requestId < 1L) {
+			return;
+		}
+		synchronized (requests) {
+			requests.put(Long.valueOf(requestId), rp);
 		}
 	}
 
@@ -2631,8 +2649,13 @@ public class Channel implements Closeable {
 				}
 				ResultProcessor<? extends Response> resultProcessor;
 				if (requestId > 0L && (resultProcessor = acquireResultProcessor(requestId)) != null) {
-					resultProcessor.process(jsonMessage);
-				} else if (parsedMessage == null || isCustomMessage(parsedMessage)) {
+					if (resultProcessor.process(jsonMessage)) {
+						return;
+					}
+					insertResultProcessor(requestId, resultProcessor);
+				}
+
+				if (parsedMessage == null || isCustomMessage(parsedMessage)) {
 					listeners.fire(new DefaultCastEvent<>(
 						CastEventType.CUSTOM_MESSAGE,
 						new CustomMessageEvent(
@@ -2766,6 +2789,9 @@ public class Channel implements Closeable {
 		/** The timeout in milliseconds */
 		protected final long requestTimeout;
 
+		/** {@link Load} requests needs special treatment, this flag triggers the special treatment */
+		protected final boolean isLoadRequest;
+
 		/** Whether the associated {@link Session} has been closed */
 		@GuardedBy("this")
 		protected boolean closed;
@@ -2780,11 +2806,13 @@ public class Channel implements Closeable {
 		 * @param session the {@link Session} if one applies to the request.
 		 * @param responseClass the expected response class.
 		 * @param requestTimeout the timeout value in milliseconds.
+		 * @param isLoadRequest whether the result is from a {@link Load} request.
 		 */
-		public ResultProcessor(@Nullable Session session, @Nonnull Class<T> responseClass, long requestTimeout) {
+		public ResultProcessor(@Nullable Session session, @Nonnull Class<T> responseClass, long requestTimeout, boolean isLoadRequest) {
 			requireNotNull(responseClass, "responseClass");
 			this.session = session;
 			this.responseClass = responseClass;
+			this.isLoadRequest = isLoadRequest;
 			this.requestTimeout = requestTimeout < 1 ? DEFAULT_RESPONSE_TIMEOUT : requestTimeout;
 		}
 
@@ -2804,11 +2832,12 @@ public class Channel implements Closeable {
 		 * {@link ResultProcessor} by its request ID.
 		 *
 		 * @param jsonMSG the message content formatted as JSON.
+		 * @return {@code true} if the message was processed, {@code false} if it wasn't.
 		 * @throws JsonMappingException If the JSON mapping fails.
 		 * @throws JsonProcessingException If the JSON can't be processed.
 		 */
 		@SuppressWarnings("unchecked")
-		public void process(String jsonMSG) throws JsonMappingException, JsonProcessingException {
+		public boolean process(String jsonMSG) throws JsonMappingException, JsonProcessingException {
 			Class<?> deserializeTo;
 			if (StandardResponse.class.isAssignableFrom(responseClass)) {
 				deserializeTo = StandardResponse.class;
@@ -2821,8 +2850,22 @@ public class Channel implements Closeable {
 			} catch (IllegalArgumentException e) {
 				synchronized (this) {
 					this.result = new ResultProcessorResult<>(null, null, jsonMSG);
-					this.notify();
-					return;
+					this.notifyAll();
+					return true;
+				}
+			}
+			if (isLoadRequest && object instanceof MediaStatusResponse) {
+				// The cast device will often respond twice to a load request, where the first response
+				// is merely a "LOADING" state, which is then followed up with either success or error.
+				// We don't want to react to the "LOADING" state, as this makes all requests seem a success.
+				List<MediaStatus> statuses = ((MediaStatusResponse) object).getStatuses();
+				ExtendedMediaStatus extendedStatus;
+				if (
+					!statuses.isEmpty() &&
+					(extendedStatus = statuses.get(0).getExtendedStatus()) != null &&
+					extendedStatus.getPlayerState() == ExtendedPlayerState.LOADING
+				) {
+					return false;
 				}
 			}
 			synchronized (this) {
@@ -2833,6 +2876,7 @@ public class Channel implements Closeable {
 				}
 				this.notifyAll();
 			}
+			return true;
 		}
 
 		/**
@@ -2853,9 +2897,17 @@ public class Channel implements Closeable {
 				if (result != null) {
 					return result;
 				}
-				this.wait(requestTimeout);
 				if (closed) {
 					throw new CastException("The session was closed by the cast device");
+				}
+				long start = System.currentTimeMillis();
+				long remaining = requestTimeout;
+				while (result == null && remaining > 0L) {
+					this.wait(remaining);
+					if (result == null && closed) {
+						throw new CastException("The session was closed by the cast device");
+					}
+					remaining = start + requestTimeout - System.currentTimeMillis();
 				}
 				if (result == null) {
 					throw new TimeoutException();
