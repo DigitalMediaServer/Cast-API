@@ -941,25 +941,25 @@ public class Session {
 	}
 
 	/**
-	 * Requests an updated {@link MediaStatus} from the remote application. This
+	 * Requests a list of updated {@link MediaStatus}es from the remote application. This
 	 * method is always blocking.
 	 * <p>
 	 * This can only succeed if the remote application supports the
 	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
 	 *
-	 * @return The resulting {@link MediaStatus} if a reply is received in time,
-	 *         or {@code null} if a timeout occurs.
-	 * @throws IOException If an error occurs during the operation.
+	 * @return The resulting {@link List} of {@link MediaStatus}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
 	 *
 	 * @apiNote This operation is blocking.
 	 */
-	@Nullable
-	public MediaStatus getMediaStatus() throws IOException {
+	@Nonnull
+	public List<MediaStatus> getMediaStatus() throws IOException {
 		return channel.getMediaStatus(this);
 	}
 
 	/**
-	 * Requests an updated {@link MediaStatus} from the remote application. This
+	 * Requests a list of updated {@link MediaStatus}es from the remote application. This
 	 * method is always blocking.
 	 * <p>
 	 * This can only succeed if the remote application supports the
@@ -968,14 +968,14 @@ public class Session {
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
 	 *            negative, {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be
 	 *            used.
-	 * @return The resulting {@link MediaStatus} if a reply is received in time,
-	 *         or {@code null} if a timeout occurs.
-	 * @throws IOException If an error occurs during the operation.
+	 * @return The resulting {@link List} of {@link MediaStatus}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
 	 *
 	 * @apiNote This operation is blocking.
 	 */
-	@Nullable
-	public MediaStatus getMediaStatus(long responseTimeout) throws IOException {
+	@Nonnull
+	public List<MediaStatus> getMediaStatus(long responseTimeout) throws IOException {
 		return channel.getMediaStatus(this, responseTimeout);
 	}
 

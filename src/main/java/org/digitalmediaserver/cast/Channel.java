@@ -29,6 +29,7 @@ import java.net.SocketTimeoutException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -961,38 +962,38 @@ public class Channel implements Closeable {
 	}
 
 	/**
-	 * Request a {@link MediaStatus} from the application with the specified
-	 * {@link Session}, using {@value #DEFAULT_RESPONSE_TIMEOUT} as the timeout
-	 * value.
+	 * Request a list of {@link MediaStatus}es from the application with the
+	 * specified {@link Session}, using {@value #DEFAULT_RESPONSE_TIMEOUT} as
+	 * the timeout value.
 	 *
 	 * @param session the {@link Session} to use.
-	 * @return The resulting {@link MediaStatus}.
+	 * @return The resulting {@link List} of {@link MediaStatus}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
 	 * @apiNote This operation is blocking.
 	 */
-	@Nullable
-	public MediaStatus getMediaStatus(@Nonnull Session session) throws IOException {
+	@Nonnull
+	public List<MediaStatus> getMediaStatus(@Nonnull Session session) throws IOException {
 		return getMediaStatus(session, DEFAULT_RESPONSE_TIMEOUT);
 	}
 
 	/**
-	 * Request a {@link MediaStatus} from the application with the specified
-	 * {@link Session}.
+	 * Request a list of {@link MediaStatus}es from the application with the
+	 * specified {@link Session}.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
 	 *            negative, {@value #DEFAULT_RESPONSE_TIMEOUT} will be used.
-	 * @return The resulting {@link MediaStatus}.
+	 * @return The resulting {@link List} of {@link MediaStatus}.
 	 * @throws IllegalArgumentException If {@code session} is {@code null}.
 	 * @throws IOException If the response times out or an error occurs during
 	 *             the operation.
 	 *
 	 * @apiNote This operation is blocking.
 	 */
-	@Nullable
-	public MediaStatus getMediaStatus(@Nonnull Session session, long responseTimeout) throws IOException {
+	@Nonnull
+	public List<MediaStatus> getMediaStatus(@Nonnull Session session, long responseTimeout) throws IOException {
 		requireNotNull(session, "session");
 		MediaStatusResponse status = send(
 			session,
@@ -1003,7 +1004,10 @@ public class Channel implements Closeable {
 			MediaStatusResponse.class,
 			responseTimeout
 		);
-		return status == null || status.getStatuses().isEmpty() ? null : status.getStatuses().get(0);
+		if (status == null) {
+			return Collections.emptyList();
+		}
+		return status.getStatuses();
 	}
 
 	/**
