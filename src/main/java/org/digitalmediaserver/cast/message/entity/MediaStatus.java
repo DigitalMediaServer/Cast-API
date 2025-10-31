@@ -29,6 +29,7 @@ import javax.annotation.concurrent.Immutable;
 import org.digitalmediaserver.cast.message.enumeration.IdleReason;
 import org.digitalmediaserver.cast.message.enumeration.PlayerState;
 import org.digitalmediaserver.cast.message.enumeration.RepeatMode;
+import org.digitalmediaserver.cast.message.enumeration.SupportedMediaCommand;
 import org.digitalmediaserver.cast.util.Util;
 
 
@@ -37,8 +38,11 @@ import org.digitalmediaserver.cast.util.Util;
  * etc.
  *
  * @see <a href=
- *      "https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.MediaStatus">
- *      https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.MediaStatus</a>
+ *      "https://web.archive.org/web/20170321214906/https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.MediaStatus">
+ *      Original definition</a>
+ * @see <a href=
+ *      "https://developers.google.com/cast/docs/reference/web_receiver/cast.framework.messages.MediaStatus">
+ *      Updated definition</a>
  */
 @Immutable
 public class MediaStatus {
@@ -385,6 +389,10 @@ public class MediaStatus {
 	}
 
 	/**
+	 * The sum of the codes for the various supported commends. Use
+	 * {@link SupportedMediaCommand#parseCommands(int)} to convert this value
+	 * into a set of {@link SupportedMediaCommand}s.
+	 *
 	 * @return The commands supported by this player.
 	 */
 	public int getSupportedMediaCommands() {

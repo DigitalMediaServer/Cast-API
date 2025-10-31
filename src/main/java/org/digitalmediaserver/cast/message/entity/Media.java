@@ -40,8 +40,11 @@ import org.digitalmediaserver.cast.util.MetadataUtil.MetadataType;
  * Represents the media information.
  *
  * @see <a href=
- *      "https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.MediaInformation">
- *      https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.MediaInformation</a>
+ *      "https://web.archive.org/web/20170321153824/https://developers.google.com/cast/docs/reference/receiver/cast.receiver.media.MediaInformation">
+ *      Original definition</a>
+ * @see <a href=
+ *      "https://developers.google.com/cast/docs/reference/web_receiver/cast.framework.messages.MediaInformation">
+ *      Updated definition</a>
  */
 @Immutable
 public class Media {
