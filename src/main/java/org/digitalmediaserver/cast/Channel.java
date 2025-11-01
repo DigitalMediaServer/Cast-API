@@ -354,7 +354,7 @@ public class Channel implements Closeable {
 	 * Establishes a connection to the associated remote cast device.
 	 *
 	 * @return {@code true} if a connection was established, {@code false} if
-	 *         there was no need.
+	 *         a connection was already established.
 	 *
 	 * @throws KeyManagementException If there's a problem with key management
 	 *             that prevents connection.
@@ -367,67 +367,95 @@ public class Channel implements Closeable {
 	 * @apiNote This operation is blocking.
 	 */
 	public boolean connect() throws IOException, NoSuchAlgorithmException, KeyManagementException {
-		synchronized (socketLock) {
-			if (socket != null && socket.isConnected() && !socket.isClosed()) {
-				// Already connected, nothing to do
-				return false;
+		Set<Session> closedSessions = null;
+		synchronized (sessionsLock) {
+			synchronized (socketLock) {
+				if (socket != null && socket.isConnected() && !socket.isClosed()) {
+					// Already connected, nothing to do
+					return false;
+				}
+
+				if (socket != null) {
+					if (!sessions.isEmpty()) {
+						closedSessions = new HashSet<>(sessions);
+						sessions.clear();
+					}
+
+					if (pingTimer != null) {
+						pingTimer.cancel();
+						pingTimer = null;
+					}
+
+					if (inputHandler != null) {
+						inputHandler.stopProcessing();
+						inputHandler = null;
+					}
+
+					socket.close();
+				}
+				SSLContext sc = SSLContext.getInstance("SSL");
+				sc.init(null, new TrustManager[] {new X509TrustAllManager()}, new SecureRandom());
+				socket = sc.getSocketFactory().createSocket();
+				socket.setSoTimeout(0);
+				socket.connect(address);
+
+				// Authenticate
+				CastChannel.DeviceAuthMessage authMessage = CastChannel.DeviceAuthMessage.newBuilder()
+					.setChallenge(CastChannel.AuthChallenge.newBuilder().build())
+					.build();
+
+				CastMessage msg = CastMessage.newBuilder()
+					.setDestinationId(PLATFORM_RECEIVER_ID)
+					.setNamespace("urn:x-cast:com.google.cast.tp.deviceauth")
+					.setPayloadType(CastMessage.PayloadType.BINARY)
+					.setProtocolVersion(CastMessage.ProtocolVersion.CASTV2_1_0)
+					.setSourceId(PLATFORM_SENDER_ID)
+					.setPayloadBinary(authMessage.toByteString())
+					.build();
+
+				write(msg);
+				ImmutableBinaryCastMessage response = (ImmutableBinaryCastMessage) readMessage(socket.getInputStream());
+				CastChannel.DeviceAuthMessage authResponse = CastChannel.DeviceAuthMessage.parseFrom(response.getPayload());
+				if (authResponse.hasError()) {
+					throw new CastException("Authentication failed: " + authResponse.getError().getErrorType().toString());
+				}
+
+				// Make extra sure we're not losing the reference to a live thread
+				if (inputHandler != null) {
+					inputHandler.stopProcessing();
+				}
+				// Start input handler
+				inputHandler = new InputHandler(socket.getInputStream());
+				inputHandler.start();
+
+				// Send 'CONNECT' message to start session
+				write(
+					"urn:x-cast:com.google.cast.tp.connection",
+					new Connect(null, VirtualConnectionType.STRONG),
+					PLATFORM_SENDER_ID,
+					PLATFORM_RECEIVER_ID
+				);
+
+				// Make extra sure that we're not losing the reference to a live timer
+				if (pingTimer != null) {
+					pingTimer.cancel();
+				}
+				// Start regular pinging
+				PingTask pingTask = new PingTask();
+				pingTimer = new Timer(remoteName + " PING timer");
+				pingTimer.schedule(pingTask, 1000, PING_PERIOD);
 			}
+		}
 
-			if (socket != null) {
-				socket.close();
-				socket = null;
+		cancelPendingDisconnected();
+		if (closedSessions != null) {
+			SessionClosedListener closedListener;
+			for (Session session : closedSessions) {
+				closedListener = session.getSessionClosedListener();
+				if (closedListener != null) {
+					closedListener.closed(session);
+				}
 			}
-			SSLContext sc = SSLContext.getInstance("SSL");
-			sc.init(null, new TrustManager[] {new X509TrustAllManager()}, new SecureRandom());
-			socket = sc.getSocketFactory().createSocket();
-			socket.setSoTimeout(0);
-			socket.connect(address);
-
-			// Authenticate
-			CastChannel.DeviceAuthMessage authMessage = CastChannel.DeviceAuthMessage.newBuilder()
-				.setChallenge(CastChannel.AuthChallenge.newBuilder().build())
-				.build();
-
-			CastMessage msg = CastMessage.newBuilder()
-				.setDestinationId(PLATFORM_RECEIVER_ID)
-				.setNamespace("urn:x-cast:com.google.cast.tp.deviceauth")
-				.setPayloadType(CastMessage.PayloadType.BINARY)
-				.setProtocolVersion(CastMessage.ProtocolVersion.CASTV2_1_0)
-				.setSourceId(PLATFORM_SENDER_ID)
-				.setPayloadBinary(authMessage.toByteString())
-				.build();
-
-			write(msg);
-			ImmutableBinaryCastMessage response = (ImmutableBinaryCastMessage) readMessage(socket.getInputStream());
-			CastChannel.DeviceAuthMessage authResponse = CastChannel.DeviceAuthMessage.parseFrom(response.getPayload());
-			if (authResponse.hasError()) {
-				throw new CastException("Authentication failed: " + authResponse.getError().getErrorType().toString());
-			}
-
-			// Make extra sure we're not losing the reference to a live thread
-			if (inputHandler != null) {
-				inputHandler.stopProcessing();
-			}
-			// Start input handler
-			inputHandler = new InputHandler(socket.getInputStream());
-			inputHandler.start();
-
-			// Send 'CONNECT' message to start session
-			write(
-				"urn:x-cast:com.google.cast.tp.connection",
-				new Connect(null, VirtualConnectionType.STRONG),
-				PLATFORM_SENDER_ID,
-				PLATFORM_RECEIVER_ID
-			);
-
-			// Make extra sure that we're not losing the reference to a live timer
-			if (pingTimer != null) {
-				pingTimer.cancel();
-			}
-			// Start regular pinging
-			PingTask pingTask = new PingTask();
-			pingTimer = new Timer(remoteName + " PING timer");
-			pingTimer.schedule(pingTask, 1000, PING_PERIOD);
 		}
 
 		// Reset the cached volume on every connect
