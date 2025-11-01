@@ -40,6 +40,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -188,11 +189,13 @@ public class Channel implements Closeable {
 	@GuardedBy("socketLock")
 	protected InputHandler inputHandler;
 
-	/**
-	 * Counter for producing request numbers
-	 */
+	/** Counter for producing request numbers */
 	@Nonnull
 	protected final AtomicLong requestCounter = new AtomicLong(new Random().nextInt(65536) + 1L);
+
+	/** Counter for pending {@link Pong}s */
+	@Nonnull
+	protected final AtomicInteger pingCounter = new AtomicInteger();
 
 	/**
 	 * Processors of requests by their identifiers
@@ -441,6 +444,7 @@ public class Channel implements Closeable {
 					pingTimer.cancel();
 				}
 				// Start regular pinging
+				pingCounter.set(0);
 				PingTask pingTask = new PingTask();
 				pingTimer = new Timer(remoteName + " PING timer");
 				pingTimer.schedule(pingTask, 1000, PING_PERIOD);
@@ -2362,19 +2366,48 @@ public class Channel implements Closeable {
 
 		@Override
 		public void run() {
+			int count = pingCounter.get();
+			if (count > 0) {
+				LOGGER.warn(
+					CAST_API_MARKER, "No PONG received for the previous PING from {}, disconnecting", remoteName
+				);
+				try {
+					close();
+				} catch (IOException e) {
+					LOGGER.debug(
+						CAST_API_MARKER,
+						"An error occurred while closing {} socket: {}",
+						remoteName,
+						e.getMessage()
+					);
+				}
+				cancel();
+			}
 			if (LOGGER.isTraceEnabled(CAST_API_HEARTBEAT_MARKER)) {
 				LOGGER.trace(CAST_API_HEARTBEAT_MARKER, "Pinging {}", remoteName);
 			}
 			try {
 				write(message);
+				pingCounter.incrementAndGet();
 			} catch (IOException e) {
 				LOGGER.warn(
 					CAST_API_MARKER,
-					"An error occurred while sending 'PING' to {}: {}",
+					"Disconnecting, because an error occurred while sending 'PING' to {}: {}",
 					remoteName,
 					e.getMessage()
 				);
 				LOGGER.trace(CAST_API_MARKER, "", e);
+				try {
+					close();
+				} catch (IOException ioe) {
+					LOGGER.debug(
+						CAST_API_MARKER,
+						"An error occurred while closing {} socket: {}",
+						remoteName,
+						ioe.getMessage()
+					);
+				}
+				cancel();
 			}
 		}
 	}
@@ -2564,6 +2597,21 @@ public class Channel implements Closeable {
 								write(pongMessage);
 							} else if ("PONG".equals(responseType)) {
 								LOGGER.trace(CAST_API_HEARTBEAT_MARKER, "Received PONG from {}", remoteName);
+								while (true) {
+									int current = pingCounter.get();
+									int next = current - 1;
+									if (next < 0) {
+										LOGGER.warn(
+											CAST_API_MARKER,
+											"PING PONG mismatch, received more PONGs than sent PINGs from {}",
+											remoteName
+										);
+										break;
+									}
+									if (pingCounter.compareAndSet(current, next)) {
+										break;
+									}
+								}
 							} else {
 								LOGGER.trace(
 									CAST_API_HEARTBEAT_MARKER,
