@@ -2598,7 +2598,7 @@ public class Channel implements Closeable {
 							} else if ("PONG".equals(responseType)) {
 								LOGGER.trace(CAST_API_HEARTBEAT_MARKER, "Received PONG from {}", remoteName);
 								while (true) {
-									int current = pingCounter.get();
+									int current = pingCounter.get();//TODO: (Nad) Update Load and any other methods that returns MediaStatus
 									int next = current - 1;
 									if (next < 0) {
 										LOGGER.warn(
