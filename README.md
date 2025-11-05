@@ -10,6 +10,8 @@ No explicit documentation for how to use this library exists, but every piece of
 
 ## Include
 
+### Maven
+
 Ths library is available at Maven Central, simply add the following in your project's `pom.xml` file:
 
 ```xml
@@ -23,3 +25,11 @@ Ths library is available at Maven Central, simply add the following in your proj
 ...
 </dependencies>
 ```
+
+### Manual
+
+If you don't use a build automation tool like Maven, you have to provide the library's dependencies manually, please make sure to use compatible versions. The applicable versions are listed in [pom.xml](pom.xml) under `<dependencies>`. Please note the `<scope>`, dependencies scoped with `compile` or `test` are only required to build the library, not to use it.
+
+## Discovery
+
+The library includes [CastDeviceMonitor](src/main/java/org/digitalmediaserver/cast/CastDeviceMonitor.java) for easy discovery of cast devices. The class isn't very sophisticated, and is only meant for very basic projects or to get up and running quickly. If you need more control over the network configuration, or the project already has a mDNS instance running, it's recommended that the project takes care of mDNS and uses the library to create `CastDevice` instances when devices that provide `_googlecast._tcp.local.` are found.
