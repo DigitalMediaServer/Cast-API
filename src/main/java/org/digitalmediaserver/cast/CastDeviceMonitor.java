@@ -215,55 +215,21 @@ public final class CastDeviceMonitor {
 
 		@Override
 		public void serviceAdded(ServiceEvent se) {
-			if (se.getDNS() != null && se.getInfo() != null) {
-				ServiceInfo info = se.getDNS().getServiceInfo(CastDevice.SERVICE_TYPE, se.getInfo().getName());
-				String id;
-				if (info == null || Util.isBlank(id = info.getPropertyString("id"))) {
-					return;
-				}
-				InetAddress address;
-				if (info.getInet4Addresses().length > 0) {
-					address = info.getInet4Addresses()[0];
-				} else if (info.getInet6Addresses().length > 0) {
-					address = info.getInet6Addresses()[0];
-				} else {
-					return;
-				}
-				CastDevice newDevice = null;
-				Set<DeviceDiscoveryListener> tmpListeners = null;
-				synchronized (lock) {
-					boolean found = false;
-					for (CastDevice device : castDevices) {
-						if (
-							id.equals(device.getUniqueId()) &&
-							Objects.equals(address, device.getAddress()) &&
-							info.getPort() == device.getPort()
-						) {
-							found = true;
-							break;
-						}
-					}
-					if (!found) {
-						newDevice = new CastDevice(info, true);
-						castDevices.add(newDevice);
-						if (!listeners.isEmpty()) {
-							tmpListeners = new LinkedHashSet<>(listeners);
-						}
-					}
-				}
-				if (newDevice != null && tmpListeners != null) {
-					for (DeviceDiscoveryListener discoveryListener : tmpListeners) {
-						discoveryListener.deviceDiscovered(newDevice);
-					}
-				}
-			}
+			// Wait for it to be resolved
 		}
 
 		@Override
 		public void serviceRemoved(ServiceEvent se) {
 			ServiceInfo info = se.getInfo();
+			LOGGER.trace(Channel.CAST_API_MARKER, "Cast device disappeared: {}", info);
+
 			String id, name;
 			if (info == null || Util.isBlank(id = info.getPropertyString("id")) || Util.isBlank(name = info.getName())) {
+				LOGGER.debug(
+					Channel.CAST_API_MARKER,
+					"Rejecting removal event for cast device {} because to ID was found",
+					info == null ? "null" : info.getNiceTextString()
+				);
 				return;
 			}
 
@@ -291,6 +257,7 @@ public final class CastDeviceMonitor {
 				}
 				try {
 					removed.disconnect();
+					LOGGER.debug(Channel.CAST_API_MARKER, "Cast device removed: {}", removed);
 				} catch (IOException e) {
 					LOGGER.warn(
 						Channel.CAST_API_MARKER,
@@ -305,7 +272,59 @@ public final class CastDeviceMonitor {
 
 		@Override
 		public void serviceResolved(ServiceEvent se) {
-			// Already handled under "added"
+			ServiceInfo info = se.getInfo();
+			LOGGER.trace(Channel.CAST_API_MARKER, "New cast device discovered: {}", info);
+
+			String id;
+			if (info == null || Util.isBlank(id = info.getPropertyString("id"))) {
+				LOGGER.debug(
+					Channel.CAST_API_MARKER,
+					"Rejecting new cast device {} because to ID was found",
+					info == null ? "null" : info.getNiceTextString()
+				);
+				return;
+			}
+			InetAddress address;
+			if (info.getInet4Addresses().length > 0) {
+				address = info.getInet4Addresses()[0];
+			} else if (info.getInet6Addresses().length > 0) {
+				address = info.getInet6Addresses()[0];
+			} else {
+				LOGGER.debug(
+					Channel.CAST_API_MARKER,
+					"Rejecting new cast device {} because to IP address was found",
+					info.getNiceTextString()
+				);
+				return;
+			}
+			CastDevice newDevice = null;
+			Set<DeviceDiscoveryListener> tmpListeners = null;
+			synchronized (lock) {
+				boolean found = false;
+				for (CastDevice device : castDevices) {
+					if (
+						id.equals(device.getUniqueId()) &&
+						Objects.equals(address, device.getAddress()) &&
+						info.getPort() == device.getPort()
+					) {
+						found = true;
+						break;
+					}
+				}
+				if (!found) {
+					newDevice = new CastDevice(info, true);
+					castDevices.add(newDevice);
+					if (!listeners.isEmpty()) {
+						tmpListeners = new LinkedHashSet<>(listeners);
+					}
+					LOGGER.debug(Channel.CAST_API_MARKER, "New cast device created: {}", newDevice);
+				}
+			}
+			if (newDevice != null && tmpListeners != null) {
+				for (DeviceDiscoveryListener discoveryListener : tmpListeners) {
+					discoveryListener.deviceDiscovered(newDevice);
+				}
+			}
 		}
 	}
 }
