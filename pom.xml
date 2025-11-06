@@ -8,7 +8,7 @@
 
 	<groupId>org.digitalmediaserver</groupId>
 	<artifactId>cast-api</artifactId>
-	<version>0.1.2-SNAPSHOT</version>
+	<version>0.1.2</version>
 	<packaging>jar</packaging>
 	<prerequisites>
 		<maven>3.2.5</maven>
@@ -170,6 +170,9 @@
 								<goals>
 									<goal>sign</goal>
 								</goals>
+								<configuration>
+									<keyname>${ossrh-keyname}</keyname>
+								</configuration>
 							</execution>
 						</executions>
 					</plugin>
