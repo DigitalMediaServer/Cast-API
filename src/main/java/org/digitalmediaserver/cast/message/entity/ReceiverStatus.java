@@ -35,7 +35,7 @@ public class ReceiverStatus {
 	@Nullable
 	protected final Volume volume;
 
-	/** The {@link List} of {@link Application}s */
+	/** The {@link List} of running {@link Application}s */
 	@Nonnull
 	protected final List<Application> applications;
 
@@ -83,10 +83,11 @@ public class ReceiverStatus {
 	}
 
 	/**
-	 * @return The {@link List} of {@link Application}s.
+	 * @return The {@link List} of running {@link Application} instances.
 	 */
 	@Nonnull
-	public List<Application> getApplications() {
+	@JsonProperty("applications")
+	public List<Application> getRunningApplications() {
 		return applications;
 	}
 

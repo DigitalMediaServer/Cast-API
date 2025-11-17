@@ -51,8 +51,8 @@ public class StatusResponseTest {
 		assertTrue(volume.getMuted());
 		assertEquals(0.01, volume.getStepInterval(), 0.0);
 		assertEquals(VolumeControlType.ATTENUATION, volume.getControlType());
-		assertFalse(status.getApplications().isEmpty());
-		applications = status.getApplications();
+		assertFalse(status.getRunningApplications().isEmpty());
+		applications = status.getRunningApplications();
 		assertNotNull(applications);
 		Application app = applications.get(0);
 		assertEquals("appId", app.getAppId());

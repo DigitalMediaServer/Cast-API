@@ -45,7 +45,7 @@ public class ReceiverStatusResponseTest {
 		assertTrue(status.isActiveInput());
 		assertFalse(status.isStandBy());
 
-		assertEquals(1, status.getApplications().size());
+		assertEquals(1, status.getRunningApplications().size());
 		Application app = status.getRunningApplication();
 		assertFalse(app.isIdleScreen());
 
@@ -68,7 +68,7 @@ public class ReceiverStatusResponseTest {
 		assertFalse(status.isActiveInput());
 		assertFalse(status.isStandBy());
 
-		assertEquals(1, status.getApplications().size());
+		assertEquals(1, status.getRunningApplications().size());
 		Application app = status.getRunningApplication();
 		assertTrue(app.isIdleScreen());
 
@@ -91,7 +91,7 @@ public class ReceiverStatusResponseTest {
 		assertFalse(status.isActiveInput());
 		assertFalse(status.isStandBy());
 
-		assertEquals(1, status.getApplications().size());
+		assertEquals(1, status.getRunningApplications().size());
 		Application app = status.getRunningApplication();
 		assertTrue(app.isIdleScreen());
 		assertFalse(app.isLaunchedFromCloud());
@@ -115,7 +115,7 @@ public class ReceiverStatusResponseTest {
 		assertFalse(status.isActiveInput());
 		assertFalse(status.isStandBy());
 
-		assertEquals(1, status.getApplications().size());
+		assertEquals(1, status.getRunningApplications().size());
 		Application app = status.getRunningApplication();
 		assertFalse(app.isIdleScreen());
 		assertFalse(app.isLaunchedFromCloud());
@@ -139,7 +139,7 @@ public class ReceiverStatusResponseTest {
 		assertFalse(status.isActiveInput());
 		assertFalse(status.isStandBy());
 
-		assertEquals(1, status.getApplications().size());
+		assertEquals(1, status.getRunningApplications().size());
 		Application app = status.getRunningApplication();
 		assertFalse(app.isIdleScreen());
 		assertFalse(app.isLaunchedFromCloud());
