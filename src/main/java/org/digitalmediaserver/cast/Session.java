@@ -795,6 +795,10 @@ public class Session {
 	 * <p>
 	 * This can only succeed if the remote application supports the
 	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
+	 * <p>
+	 * Please note that the web server must support <a href=
+	 * "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Range">Range
+	 * requests</a> for seeking to work.
 	 *
 	 * @param mediaSessionId the media session ID for which the pause request
 	 *            applies.
@@ -830,6 +834,10 @@ public class Session {
 	 * <p>
 	 * This can only succeed if the remote application supports the
 	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
+	 * <p>
+	 * Please note that the web server must support <a href=
+	 * "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Range">Range
+	 * requests</a> for seeking to work.
 	 *
 	 * @param mediaSessionId the media session ID for which the pause request
 	 *            applies.

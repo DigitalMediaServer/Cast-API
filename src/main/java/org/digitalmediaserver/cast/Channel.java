@@ -1483,6 +1483,10 @@ public class Channel implements Closeable {
 	 * <p>
 	 * This can only succeed if the remote application supports the
 	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
+	 * <p>
+	 * Please note that the web server must support <a href=
+	 * "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Range">Range
+	 * requests</a> for seeking to work.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the pause request
@@ -1528,6 +1532,10 @@ public class Channel implements Closeable {
 	 * <p>
 	 * This can only succeed if the remote application supports the
 	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
+	 * <p>
+	 * Please note that the web server must support <a href=
+	 * "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Range">Range
+	 * requests</a> for seeking to work.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the pause request
@@ -1562,6 +1570,10 @@ public class Channel implements Closeable {
 	 * <p>
 	 * This can only succeed if the remote application supports the
 	 * {@link CastDevice#CAST_MEDIA_NAMESPACE}.
+	 * <p>
+	 * Please note that the web server must support <a href=
+	 * "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Range">Range
+	 * requests</a> for seeking to work.
 	 *
 	 * @param session the {@link Session} to use.
 	 * @param mediaSessionId the media session ID for which the pause request
