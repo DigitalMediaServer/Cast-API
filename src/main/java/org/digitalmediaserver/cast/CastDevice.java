@@ -767,6 +767,23 @@ public class CastDevice {
 	 * Asks the cast device to launch the application represented by the
 	 * specified application ID, using {@link Channel#DEFAULT_RESPONSE_TIMEOUT}
 	 * as the timeout value.
+	 * <p>
+	 * There is no official source for application IDs, usually a company
+	 * registers their own application, gets assigned an ID, and hardcodes this
+	 * ID into their sender application.
+	 * <p>
+	 * Attempts have been made to find sources, and here are some potential
+	 * sources:
+	 * <ul>
+	 * <li><a href=
+	 * "https://clients3.google.com/cast/chromecast/device/baseconfig">
+	 * Potentially official (but unconfirmed) list of application IDs</a></li>
+	 * <li><a href="https://pwl.team-eureka.com/applist.php">
+	 * Unofficial list of application IDs from Team Eureka</a></li>
+	 * <li><a href=
+	 * "https://www.gstatic.com/eureka/config/legacy/config.json">
+	 * Legacy list of application IDs</a></li>
+	 * </ul>
 	 *
 	 * @param applicationId the application ID for the application to launch.
 	 * @param synchronous {@code true} to make this call block until a response
@@ -790,6 +807,9 @@ public class CastDevice {
 	/**
 	 * Asks the cast device to launch the application represented by the
 	 * specified application ID.
+	 * <p>
+	 * For potential sources of application IDs, see
+	 * {@link #launchApplication(String, boolean)}.
 	 *
 	 * @param applicationId the application ID for the application to launch.
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
