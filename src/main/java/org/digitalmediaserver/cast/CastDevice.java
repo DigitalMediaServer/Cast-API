@@ -721,6 +721,49 @@ public class CastDevice {
 	}
 
 	/**
+	 * Asks the cast device to launch the default media receiver application,
+	 * using {@link #DEFAULT_MEDIA_RECEIVER_APP_ID} as the application ID and
+	 * {@link Channel#DEFAULT_RESPONSE_TIMEOUT} as the timeout value.
+	 *
+	 * @param synchronous {@code true} to make this call block until a response
+	 *            is received or times out, {@code false} to make it return
+	 *            immediately always returning {@code null}.
+	 * @return The resulting {@link ReceiverStatus} or {@code null} if
+	 *         {@code synchronous} is {@code false}.
+	 * @throws SocketException If the {@link Channel} is closed and
+	 *             {@code autoReconnect} is {@code false}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking if {@code synchronous} is
+	 *          {@code true}, otherwise non-blocking.
+	 */
+	@Nullable
+	public ReceiverStatus launchDefaultMediaReceiver(boolean synchronous) throws IOException {
+		return channel().launch(DEFAULT_MEDIA_RECEIVER_APP_ID, synchronous);
+	}
+
+	/**
+	 * Asks the cast device to launch the default media receiver application,
+	 * using {@link #DEFAULT_MEDIA_RECEIVER_APP_ID} as the application ID.
+	 *
+	 * @param responseTimeout the response timeout in milliseconds. If zero or
+	 *            negative, {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be
+	 *            used.
+	 * @return The resulting {@link ReceiverStatus}.
+	 * @throws SocketException If the {@link Channel} is closed and
+	 *             {@code autoReconnect} is {@code false}.
+	 * @throws IOException If the response times out or an error occurs during
+	 *             the operation.
+	 *
+	 * @apiNote This operation is blocking.
+	 */
+	@Nonnull
+	public ReceiverStatus launchDefaultMediaReceiver(long responseTimeout) throws IOException {
+		return channel().launch(DEFAULT_MEDIA_RECEIVER_APP_ID, responseTimeout);
+	}
+
+	/**
 	 * Asks the cast device to launch the application represented by the
 	 * specified application ID, using {@link Channel#DEFAULT_RESPONSE_TIMEOUT}
 	 * as the timeout value.
@@ -761,7 +804,7 @@ public class CastDevice {
 	 * @apiNote This operation is blocking.
 	 */
 	@Nonnull
-	public ReceiverStatus launch(String applicationId, long responseTimeout) throws IOException {
+	public ReceiverStatus launchApplication(String applicationId, long responseTimeout) throws IOException {
 		return channel().launch(applicationId, responseTimeout);
 	}
 
