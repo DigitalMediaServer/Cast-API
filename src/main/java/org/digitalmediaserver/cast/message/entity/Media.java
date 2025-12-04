@@ -30,10 +30,10 @@ import javax.annotation.concurrent.Immutable;
 import org.digitalmediaserver.cast.message.enumeration.HlsSegmentFormat;
 import org.digitalmediaserver.cast.message.enumeration.HlsVideoSegmentFormat;
 import org.digitalmediaserver.cast.message.enumeration.MediaCategory;
+import org.digitalmediaserver.cast.message.enumeration.MetadataType;
 import org.digitalmediaserver.cast.message.enumeration.StreamType;
 import org.digitalmediaserver.cast.util.MetadataUtil;
 import org.digitalmediaserver.cast.util.Util;
-import org.digitalmediaserver.cast.util.MetadataUtil.MetadataType;
 
 
 /**
@@ -355,7 +355,7 @@ public class Media {
 	@Nullable
 	@JsonIgnore
 	public MetadataType getMetadataType() {
-		Object object = metadata.get(MetadataUtil.METADATA_TYPE);
+		Object object = metadata.get(Metadata.METADATA_TYPE);
 		if (object instanceof Integer) {
 			return MetadataType.typeOf(((Integer) object).intValue());
 		}

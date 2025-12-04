@@ -20,11 +20,12 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.digitalmediaserver.cast.message.entity.Image;
 import org.digitalmediaserver.cast.message.entity.Media;
 import org.digitalmediaserver.cast.message.entity.Media.MediaBuilder;
+import org.digitalmediaserver.cast.message.entity.Metadata;
 import org.digitalmediaserver.cast.message.enumeration.MediaCategory;
+import org.digitalmediaserver.cast.message.enumeration.MetadataType;
 import org.digitalmediaserver.cast.message.enumeration.StreamType;
 import org.digitalmediaserver.cast.util.JacksonHelper;
 import org.digitalmediaserver.cast.util.MetadataUtil;
-import org.digitalmediaserver.cast.util.MetadataUtil.MetadataType;
 import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -115,8 +116,8 @@ public class MediaTest {
 		MediaBuilder builder = Media.builder("http://somevideo.mpg", "video/mpeg", StreamType.BUFFERED)
 			.duration(Double.valueOf(120d)).mediaCategory(MediaCategory.VIDEO);
 		Map<String, Object> metadata = new LinkedHashMap<>();
-		metadata.put(MetadataUtil.Generic.TITLE, "Title");
-		metadata.put(MetadataUtil.Generic.SUBTITLE, "Subtitle");
+		metadata.put(Metadata.Generic.TITLE, "Title");
+		metadata.put(Metadata.Generic.SUBTITLE, "Subtitle");
 		List<Image> images = new ArrayList<>();
 		images.add(new Image("http://somevideo.png", 1024, 768));
 		images.add(new Image("http://someVideo_thumb.jpg"));
@@ -143,8 +144,8 @@ public class MediaTest {
 		assertTrue(result.getImages().isEmpty());
 
 		MetadataUtil.setImages(metadata, new Image("http://somevideo.png", 1024, 768), new Image("http://someVideo_thumb.jpg"));
-		assertTrue(metadata.get(MetadataUtil.IMAGES) instanceof List);
-		assertEquals(2, ((List<?>) metadata.get(MetadataUtil.IMAGES)).size());
+		assertTrue(metadata.get(Metadata.IMAGES) instanceof List);
+		assertEquals(2, ((List<?>) metadata.get(Metadata.IMAGES)).size());
 
 		assertFalse(MetadataUtil.setImages(null));
 		assertFalse(MetadataUtil.setImages(null, (Collection<Image>) null));
