@@ -43,7 +43,10 @@ public enum PlayerState {
 	PAUSED,
 
 	/** The player is in BUFFERING state */
-	BUFFERING;
+	BUFFERING,
+
+	/** The player is in LOADING state (this isn't a valid state, but try telling that to Disney) */
+	LOADING;
 
 	/**
 	 * Parses the specified string and returns the corresponding

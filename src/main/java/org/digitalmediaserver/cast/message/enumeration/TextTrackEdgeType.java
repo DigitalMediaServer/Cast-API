@@ -15,6 +15,7 @@
  */
 package org.digitalmediaserver.cast.message.enumeration;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 
 /**
  * Defines the text track edge type.
@@ -22,17 +23,22 @@ package org.digitalmediaserver.cast.message.enumeration;
 public enum TextTrackEdgeType {
 
 	/** No edge is displayed around text */
+	@JsonAlias("none")
 	NONE,
 
 	/** Solid outline is displayed around text */
+	@JsonAlias("outline")
 	OUTLINE,
 
 	/** A fading shadow is casted around text */
+	@JsonAlias("drop_shadow")
 	DROP_SHADOW,
 
 	/** Text is embossed on background */
+	@JsonAlias("raised")
 	RAISED,
 
 	/** Text is debossed on background */
+	@JsonAlias("depressed")
 	DEPRESSED
 }

@@ -72,6 +72,7 @@ public class MediaStatusResponseDeserializer extends StdDeserializer<MediaStatus
 	public MediaStatusResponseDeserializer(StdDeserializer<?> src) {
 		super(src);
 	}
+
 	@Override
 	public MediaStatusResponse deserialize(
 		JsonParser parser,

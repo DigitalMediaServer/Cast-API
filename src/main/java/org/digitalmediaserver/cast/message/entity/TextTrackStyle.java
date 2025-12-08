@@ -26,8 +26,10 @@ import org.digitalmediaserver.cast.message.enumeration.TextTrackEdgeType;
 import org.digitalmediaserver.cast.message.enumeration.TextTrackFontGenericFamily;
 import org.digitalmediaserver.cast.message.enumeration.TextTrackFontStyle;
 import org.digitalmediaserver.cast.message.enumeration.TextTrackWindowType;
+import org.digitalmediaserver.cast.util.FontFamilyDeserializer;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 
 /**
@@ -73,6 +75,7 @@ public class TextTrackStyle {
 	@Nullable
 	@JsonProperty
 	@JsonInclude(JsonInclude.Include.NON_NULL)
+	@JsonDeserialize(using = FontFamilyDeserializer.class)
 	protected final String fontFamily;
 
 	/** The text track generic font family */
