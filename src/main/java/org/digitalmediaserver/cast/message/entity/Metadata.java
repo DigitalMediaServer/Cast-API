@@ -15,6 +15,7 @@
  */
 package org.digitalmediaserver.cast.message.entity;
 
+import org.digitalmediaserver.cast.message.enumeration.MetadataType;
 
 /**
  * A collection of constants for "cast metadata".

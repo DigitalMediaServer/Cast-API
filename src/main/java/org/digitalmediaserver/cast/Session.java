@@ -211,7 +211,7 @@ public class Session {
 	 *            immediately always returning {@code null}.
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
-	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 *            {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link List} of {@link MediaStatus}es if
 	 *         {@code synchronous} is {@code true}, or {@code null} if
 	 *         {@code synchronous} is {@code false}.
@@ -296,7 +296,7 @@ public class Session {
 	 *            return immediately always returning {@code null}.
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
-	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 *            {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link List} of {@link MediaStatus}es if
 	 *         {@code synchronous} is {@code true}, or {@code null} if
 	 *         {@code synchronous} is {@code false}.
@@ -390,7 +390,7 @@ public class Session {
 	 *            immediately always returning {@code null}.
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
-	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 *            {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link List} of {@link MediaStatus}es if
 	 *         {@code synchronous} is {@code true}, or {@code null} if
 	 *         {@code synchronous} is {@code false}.
@@ -503,7 +503,7 @@ public class Session {
 	 *            immediately always returning {@code null}.
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
-	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 *            {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link List} of {@link MediaStatus}es if
 	 *         {@code synchronous} is {@code true}, or {@code null} if
 	 *         {@code synchronous} is {@code false}.
@@ -646,7 +646,7 @@ public class Session {
 	 *            immediately always returning {@code null}.
 	 * @param responseTimeout the response timeout in milliseconds if
 	 *            {@code synchronous} is {@code true}. If zero or negative,
-	 *            {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
+	 *            {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be used.
 	 * @return The resulting {@link List} of {@link MediaStatus}es if
 	 *         {@code synchronous} is {@code true}, or {@code null} if
 	 *         {@code synchronous} is {@code false}.
@@ -725,7 +725,7 @@ public class Session {
 	 * @param mediaSessionId the media session ID for which the play request
 	 *            applies.
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
-	 *            negative, {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be
+	 *            negative, {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be
 	 *            used.
 	 * @return The resulting {@link List} of {@link MediaStatus}es.
 	 * @throws IOException If the response times out or an error occurs during
@@ -775,7 +775,7 @@ public class Session {
 	 * @param mediaSessionId the media session ID for which the pause request
 	 *            applies.
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
-	 *            negative, {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be
+	 *            negative, {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be
 	 *            used.
 	 * @return The resulting {@link List} of {@link MediaStatus}es.
 	 * @throws IOException If the response times out or an error occurs during
@@ -846,7 +846,7 @@ public class Session {
 	 *            complete. If {@code null}, it will retain the state it had
 	 *            before seeking.
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
-	 *            negative, {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be
+	 *            negative, {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be
 	 *            used.
 	 * @return The resulting {@link List} of {@link MediaStatus}es.
 	 * @throws IOException If the response times out or an error occurs during
@@ -901,7 +901,7 @@ public class Session {
 	 * @param mediaSessionId the media session ID for which the
 	 *            {@link MediaVolume} request applies.
 	 * @param responseTimeout the response timeout in milliseconds. If zero or
-	 *            negative, {@value Channel#DEFAULT_RESPONSE_TIMEOUT} will be
+	 *            negative, {@link Channel#DEFAULT_RESPONSE_TIMEOUT} will be
 	 *            used.
 	 * @return The resulting {@link List} of {@link MediaStatus}es.
 	 * @throws IOException If the response times out or an error occurs during

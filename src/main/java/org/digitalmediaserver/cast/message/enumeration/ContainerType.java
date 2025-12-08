@@ -16,6 +16,7 @@
 package org.digitalmediaserver.cast.message.enumeration;
 
 import javax.annotation.Nullable;
+import org.digitalmediaserver.cast.message.entity.ContainerMetadata;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 

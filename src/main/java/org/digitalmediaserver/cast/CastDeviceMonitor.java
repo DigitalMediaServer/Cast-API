@@ -44,7 +44,7 @@ import java.util.Set;
  * projects or to get up and running quickly. If you need more control over the
  * network configuration, or the project already has a mDNS instance running,
  * use another mDNS instance and use the library to create {@link CastDevice}
- * instances when devices that provide {@value CastDevice#SERVICE_TYPE} are
+ * instances when devices that provide {@link CastDevice#SERVICE_TYPE} are
  * found.
  */
 public final class CastDeviceMonitor {

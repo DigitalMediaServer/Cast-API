@@ -37,6 +37,7 @@ import javax.annotation.concurrent.Immutable;
 import javax.annotation.concurrent.ThreadSafe;
 import org.digitalmediaserver.cast.Channel;
 import org.digitalmediaserver.cast.message.response.AppAvailabilityResponse;
+import org.digitalmediaserver.cast.message.response.CloseResponse;
 import org.digitalmediaserver.cast.message.response.DeviceAddedResponse;
 import org.digitalmediaserver.cast.message.response.DeviceRemovedResponse;
 import org.digitalmediaserver.cast.message.response.DeviceUpdatedResponse;

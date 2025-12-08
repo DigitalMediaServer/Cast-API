@@ -350,7 +350,7 @@ public class Media {
 
 	/**
 	 * @return The {@link MetadataType} defined by the key
-	 *         {@link MetadataUtil#METADATA_TYPE} or {@code null}.
+	 *         {@link Metadata#METADATA_TYPE} or {@code null}.
 	 */
 	@Nullable
 	@JsonIgnore

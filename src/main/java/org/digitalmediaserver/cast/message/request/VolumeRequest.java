@@ -18,6 +18,7 @@ package org.digitalmediaserver.cast.message.request;
 import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import org.digitalmediaserver.cast.message.StandardMessage;
 import org.digitalmediaserver.cast.message.entity.MediaVolume;
 import org.digitalmediaserver.cast.util.Util;
 import com.fasterxml.jackson.annotation.JsonInclude;
