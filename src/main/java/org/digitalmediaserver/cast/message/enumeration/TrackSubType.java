@@ -15,6 +15,7 @@
  */
 package org.digitalmediaserver.cast.message.enumeration;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 
 /**
  * The type of text track. For text tracks only.
@@ -22,6 +23,7 @@ package org.digitalmediaserver.cast.message.enumeration;
 public enum TrackSubType {
 
 	/** Subtitles track */
+	@JsonAlias("SUBTITLE")
 	SUBTITLES,
 
 	/** Captions track */
