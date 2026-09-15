@@ -8,7 +8,7 @@
 
 	<groupId>org.digitalmediaserver</groupId>
 	<artifactId>cast-api</artifactId>
-	<version>0.2.0</version>
+	<version>0.2.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<prerequisites>
 		<maven>3.2.5</maven>
